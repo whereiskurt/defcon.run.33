@@ -1,0 +1,36 @@
+FROM golang:latest AS build
+
+WORKDIR /build
+
+COPY meshmap/meshmap.net/go.mod ./
+COPY meshmap/meshmap.net/cmd/meshobserv/ ./
+COPY meshmap/meshmap.net/internal ./internal/
+RUN go mod tidy
+RUN go build -v -o meshobserv
+
+FROM nginx:latest
+
+RUN apt-get update && apt-get install -y supervisor && rm -rf /var/lib/apt/lists/*
+RUN mkdir -p /etc/nginx/html/map /var/log/supervisor
+COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+
+COPY --from=build /build/meshobserv /usr/bin/
+
+COPY certs/nginx-selfsigned.crt /etc/nginx/ssl/nginx-selfsigned.crt
+COPY certs/nginx-selfsigned.key /etc/nginx/ssl/nginx-selfsigned.key
+
+COPY nginx.conf /etc/nginx/nginx.conf
+
+RUN mkdir -p /etc/nginx/html/map
+
+COPY meshmap/meshmap.net/website/ /etc/nginx/html/map/
+#COPY meshmap/nodes.json /etc/nginx/html/map/nodes.json
+
+EXPOSE 443
+
+HEALTHCHECK --interval=5m --timeout=3s \
+  CMD curl -k -f https://localhost/ || exit 1
+
+ENV NGINX_ENTRYPOINT_QUIET_LOGS=1
+
+CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]

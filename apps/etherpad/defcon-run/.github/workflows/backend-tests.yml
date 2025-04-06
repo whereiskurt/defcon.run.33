@@ -1,0 +1,290 @@
+name: "Backend tests"
+
+# any branch is useful for testing before a PR is submitted
+on:
+  push:
+    paths-ignore:
+      - "doc/**"
+  pull_request:
+    paths-ignore:
+      - "doc/**"
+
+permissions:
+  contents: read
+
+jobs:
+  withoutpluginsLinux:
+    # run on pushes to any branch
+    # run on PRs from external forks
+    if: |
+      (github.event_name != 'pull_request')
+      || (github.event.pull_request.head.repo.id != github.event.pull_request.base.repo.id)
+    name: Linux without plugins
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node: [18, 20, 22]
+    steps:
+      -
+        name: Checkout repository
+        uses: actions/checkout@v4
+      -
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+      - uses: pnpm/action-setup@v4
+        name: Install pnpm
+        with:
+            version: 9.0.4
+            run_install: false
+      - name: Get pnpm store directory
+        shell: bash
+        run: |
+            echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+      - uses: actions/cache@v4
+        name: Setup pnpm cache
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+      - name: Only install direct dependencies
+        run: pnpm config set auto-install-peers false
+      -
+        name: Install libreoffice
+        uses: awalsh128/cache-apt-pkgs-action@v1.4.3
+        with:
+          packages: libreoffice libreoffice-pdfimport
+          version: 1.0
+      -
+        name: Install all dependencies and symlink for ep_etherpad-lite
+        run: bin/installDeps.sh
+      - name: Install admin ui
+        working-directory: admin
+        run: pnpm install
+      - name: Build admin ui
+        working-directory: admin
+        run: pnpm build
+      -
+        name: Run the backend tests
+        run: pnpm test
+      - name: Run the new vitest tests
+        working-directory: src
+        run: pnpm run test:vitest
+
+  withpluginsLinux:
+    # run on pushes to any branch
+    # run on PRs from external forks
+    if: |
+      (github.event_name != 'pull_request')
+      || (github.event.pull_request.head.repo.id != github.event.pull_request.base.repo.id)
+    name: Linux with Plugins
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node: [18, 20, 22]
+    steps:
+      -
+        name: Checkout repository
+        uses: actions/checkout@v4
+      -
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+      - uses: pnpm/action-setup@v4
+        name: Install pnpm
+        with:
+          version: 9.0.4
+          run_install: false
+      - name: Get pnpm store directory
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+      - uses: actions/cache@v4
+        name: Setup pnpm cache
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+      - name: Only install direct dependencies
+        run: pnpm config set auto-install-peers false
+      -
+        name: Install libreoffice
+        uses: awalsh128/cache-apt-pkgs-action@v1.4.3
+        with:
+          packages: libreoffice libreoffice-pdfimport
+          version: 1.0
+      -
+        name: Install all dependencies and symlink for ep_etherpad-lite
+        run: bin/installDeps.sh
+      - name: Install admin ui
+        working-directory: admin
+        run: pnpm install
+      - name: Build admin ui
+        working-directory: admin
+        run: pnpm build
+      -
+        name: Install Etherpad plugins
+        run: >
+          pnpm install --workspace-root
+          ep_align
+          ep_author_hover
+          ep_cursortrace
+          ep_font_size
+          ep_hash_auth
+          ep_headings2
+          ep_markdown
+          ep_readonly_guest
+          ep_set_title_on_pad
+          ep_spellcheck
+          ep_subscript_and_superscript
+          ep_table_of_contents
+      -
+        name: Run the backend tests
+        run: pnpm test
+      - name: Run the new vitest tests
+        working-directory: src
+        run: pnpm run test:vitest
+
+  withoutpluginsWindows:
+    # run on pushes to any branch
+    # run on PRs from external forks
+    if: |
+      (github.event_name != 'pull_request')
+      || (github.event.pull_request.head.repo.id != github.event.pull_request.base.repo.id)
+    name: Windows without plugins
+    runs-on: windows-latest
+    steps:
+      -
+        name: Checkout repository
+        uses: actions/checkout@v4
+      -
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - uses: pnpm/action-setup@v4
+        name: Install pnpm
+        with:
+          version: 9.0.4
+          run_install: false
+      - name: Get pnpm store directory
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+      - uses: actions/cache@v4
+        name: Setup pnpm cache
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+      - name: Only install direct dependencies
+        run: pnpm config set auto-install-peers false
+      -
+        name: Install all dependencies and symlink for ep_etherpad-lite
+        run: bin/installOnWindows.bat
+      - name: Install admin ui
+        working-directory: admin
+        run: pnpm install
+      - name: Build admin ui
+        working-directory: admin
+        run: pnpm build
+      -
+        name:  Fix up the settings.json
+        run: |
+          powershell -Command "(gc settings.json.template) -replace '\"max\": 10', '\"max\": 10000' | Out-File -encoding ASCII settings.json.holder"
+          powershell -Command "(gc settings.json.holder) -replace '\"points\": 10', '\"points\": 1000' | Out-File -encoding ASCII settings.json"
+      -
+        name: Run the backend tests
+        working-directory: src
+        run: pnpm test
+      - name: Run the new vitest tests
+        working-directory: src
+        run: pnpm run test:vitest
+
+  withpluginsWindows:
+    # run on pushes to any branch
+    # run on PRs from external forks
+    if: |
+      (github.event_name != 'pull_request')
+      || (github.event.pull_request.head.repo.id != github.event.pull_request.base.repo.id)
+    name: Windows with Plugins
+    runs-on: windows-latest
+
+    steps:
+      -
+        name: Checkout repository
+        uses: actions/checkout@v4
+      -
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: pnpm/action-setup@v4
+        name: Install pnpm
+        with:
+          version: 9.0.4
+          run_install: false
+      - name: Get pnpm store directory
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+      - uses: actions/cache@v4
+        name: Setup pnpm cache
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+      - name: Only install direct dependencies
+        run: pnpm config set auto-install-peers false
+      - name: Install admin ui
+        working-directory: admin
+        run: pnpm install
+      - name: Build admin ui
+        working-directory: admin
+        run: pnpm build
+      -
+        name: Install Etherpad plugins
+        # The --legacy-peer-deps flag is required to work around a bug in npm
+        # v7: https://github.com/npm/cli/issues/2199
+        run: >
+          pnpm install --workspace-root
+          ep_align
+          ep_author_hover
+          ep_cursortrace
+          ep_font_size
+          ep_hash_auth
+          ep_headings2
+          ep_markdown
+          ep_readonly_guest
+          ep_set_title_on_pad
+          ep_spellcheck
+          ep_subscript_and_superscript
+          ep_table_of_contents
+      # Etherpad core dependencies must be installed after installing the
+      # plugin's dependencies, otherwise npm will try to hoist common
+      # dependencies by removing them from src/node_modules and installing them
+      # in the top-level node_modules. As of v6.14.10, npm's hoist logic appears
+      # to be buggy, because it sometimes removes dependencies from
+      # src/node_modules but fails to add them to the top-level node_modules.
+      # Even if npm correctly hoists the dependencies, the hoisting seems to
+      # confuse tools such as `npm outdated`, `npm update`, and some ESLint
+      # rules.
+      -
+        name: Install all dependencies and symlink for ep_etherpad-lite
+        run: bin/installOnWindows.bat
+      -
+        name:  Fix up the settings.json
+        run: |
+          powershell -Command "(gc settings.json.template) -replace '\"max\": 10', '\"max\": 10000' | Out-File -encoding ASCII settings.json.holder"
+          powershell -Command "(gc settings.json.holder) -replace '\"points\": 10', '\"points\": 1000' | Out-File -encoding ASCII settings.json"
+      -
+        name: Run the backend tests
+        working-directory: src
+        run: pnpm test
+      - name: Run the new vitest tests
+        working-directory: src
+        run: pnpm run test:vitest

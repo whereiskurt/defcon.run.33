@@ -1,0 +1,13 @@
+{
+  "name": "mosquitto",
+  "targets": {
+    "deploy": {
+      "executor": "nx:run-commands",
+      "timeout": 120000,
+      "options": {
+        "command": "source ./deploy.mosquitto.sh && ./force-new-deployment.sh",
+        "cwd": "apps/mqtt/mosquitto"
+      }
+    }
+  }
+}

@@ -1,0 +1,19 @@
+services:
+  postgres-etherpad:
+    container_name: postgres-etherpad
+    image: postgres:16.0
+    user: postgres
+    restart: always
+    # ports:
+    #   - "5432:5432"
+    env_file:
+      - ./local.env
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready", "-U", "postgres"]
+      interval: 1s
+      timeout: 5s
+      retries: 10
+    volumes:
+      - postgres_etherpad_data:/var/lib/postgresql/data
+volumes:
+  postgres_etherpad_data:

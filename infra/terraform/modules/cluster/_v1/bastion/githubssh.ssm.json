@@ -1,0 +1,22 @@
+{
+    "schemaVersion": "2.2",
+    "description": "Check instances for the specified patch group",
+    "parameters": {
+      "cmd": {
+        "type": "String",
+        "description": "A script to run on the instance."
+      }
+      
+    },
+    "mainSteps": [
+      {
+        "action": "aws:runShellScript",
+        "name": "runCommands",
+        "inputs": {
+          "runCommand": [
+            "{{cmd}}"
+          ]
+        }
+      }
+    ]
+  }

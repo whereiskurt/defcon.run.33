@@ -1,0 +1,13 @@
+{
+  "name": "terragrunt",
+  "targets": {
+    "init": {
+      "executor": "nx:run-commands",
+      "timeout": 60000,
+      "options": {
+        "command": "source ./terragrunt-base.sh | tee ../.env.terragrunt.sh && chmod +x ../.env.terragrunt.sh",
+        "cwd": "terragrunt"
+      }
+    }
+  }
+}

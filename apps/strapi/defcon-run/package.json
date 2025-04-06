@@ -1,0 +1,39 @@
+{
+  "name": "defcon-run",
+  "version": "0.1.0",
+  "private": true,
+  "description": "A Strapi application",
+  "scripts": {
+    "build": "strapi build",
+    "deploy": "strapi deploy",
+    "develop": "strapi develop",
+    "start": "strapi start",
+    "strapi": "strapi"
+  },
+  "dependencies": {
+    "@strapi/plugin-cloud": "5.10.4",
+    "@strapi/plugin-users-permissions": "5.10.4",
+    "@strapi/provider-email-amazon-ses": "^5.10.4",
+    "@strapi/provider-upload-aws-s3": "^5.7.0",
+    "@strapi/strapi": "5.10.4",
+    "better-sqlite3": "11.3.0",
+    "pg": "^8.13.1",
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0",
+    "react-router-dom": "^6.0.0",
+    "styled-components": "^6.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
+    "typescript": "^5"
+  },
+  "engines": {
+    "node": ">=18.0.0 <=22.x.x",
+    "npm": ">=6.0.0"
+  },
+  "strapi": {
+    "uuid": "371678de-54e2-4a68-a965-4347af398d0e"
+  }
+}

@@ -1,0 +1,218 @@
+[
+  {
+    "name": "${name["nginx"]}",
+    "image": "${image["nginx"]}",
+    "cpu": ${cpu["nginx"]},
+    "memory": ${memory["nginx"]},
+    "memoryReservation": ${memoryReservation["nginx"]},
+    "essential": true,
+    "command": [
+      "nginx",
+      "-g",
+      "daemon off;"
+    ],
+    "dependsOn": [
+    {
+      "containerName": "${name["app"]}",
+      "condition": "START"
+    }
+    ],
+    "environment": [
+      {
+          "name": "APP_URL",
+          "value": "${app_url["nginx"]}"
+      }
+    ],
+    "portMappings": [
+      {
+        "containerPort": 443,
+        "hostPort": 443
+      }
+    ],
+    "logConfiguration": {
+      "logDriver": "awslogs",
+      "options": {
+        "awslogs-region": "${log_region["nginx"]}",
+        "awslogs-group": "/ecs/${name["nginx"]}-${safedomain}",
+        "awslogs-stream-prefix": "nginx",
+        "awslogs-create-group": "true"
+      }
+    },
+    "healthCheck": {
+      "command": [
+        "CMD-SHELL",
+        "curl -k -f ${healthcheck_url["nginx"]}|| exit 1"
+      ],
+      "interval": 60,
+      "timeout": 5,
+      "retries": 3,
+      "startPeriod": 120
+    }
+  }, 
+  {
+    "name": "${name["app"]}",
+    "image": "${image["app"]}",
+    "cpu": ${cpu["app"]},
+    "memory": ${memory["app"]},
+    "memoryReservation": ${memoryReservation["app"]},
+    "essential": true,
+    "command": [
+      "npm",
+      "run",
+      "start"
+    ],
+    "environment": [
+      {
+        "name": "NODE_ENV",
+        "value": "production"
+      },
+      {
+        "name": "AWS_REGION",
+        "value": "${region}"
+      }, 
+      {
+        "name": "DATABASE_POOL_MIN",
+        "value": "0"
+      }
+    ],
+    "secrets": [
+      {
+        "name": "DATABASE_CLIENT",
+        "valueFrom": "${p_cluster}/rds/strapi/db_engine"
+      },
+      {
+        "name": "DATABASE_HOST",
+        "valueFrom": "${p_cluster}/rds/strapi/db_endpoint_writer"
+      },
+      {
+        "name": "DATABASE_PORT",
+        "valueFrom": "${p_cluster}/rds/strapi/db_port"
+      },
+      {
+        "name": "DATABASE_USERNAME",
+        "valueFrom": "${p_cluster}/rds/strapi/db_username"
+      },
+      {
+        "name": "DATABASE_PASSWORD",
+        "valueFrom": "${p_cluster}/rds/strapi/db_password"
+      },
+      {
+        "name": "DATABASE_NAME",
+        "valueFrom": "${p_cluster}/rds/strapi/db_name"
+      },
+      {
+        "name": "APP_KEYS",
+        "valueFrom": "${p_app}/secrets/app_keys"
+      },
+      {
+        "name": "JWT_SECRET",
+        "valueFrom": "${p_app}/secrets/jwt_secret"
+      },
+      {
+        "name": "API_TOKEN_SALT",
+        "valueFrom": "${p_app}/secrets/api_token_salt"
+      },
+      {
+        "name": "ADMIN_JWT_SECRET",
+        "valueFrom": "${p_app}/secrets/admin_jwt_secret"
+      },
+      {
+        "name": "TRANSFER_TOKEN_SALT",
+        "valueFrom": "${p_app}/secrets/transfer_token_salt"
+      },
+      {
+        "name": "CF_ROOT_PATH",
+        "valueFrom": "${p_app}/cf/root_path"
+      },
+      {
+        "name": "CF_ACCESS_KEY",
+        "valueFrom": "${p_app}/cf/access_key"
+      },
+      {
+        "name": "CF_BUCKET_NAME",
+        "valueFrom": "${p_app}/cf/bucket_name"
+      },
+      {
+        "name": "CF_CDN_URL",
+        "valueFrom": "${p_app}/cf/cdn_url"
+      },
+      {
+        "name": "CF_SECRET_KEY",
+        "valueFrom": "${p_app}/cf/secret_key"
+      },
+      {
+        "name": "DYNAMODB_ACCESS_KEY",
+        "valueFrom": "${p_app}/dynamodb/access_key"
+      },
+      {
+        "name": "DYNAMODB_SECRET_KEY",
+        "valueFrom": "${p_app}/dynamodb/secret_key"
+      },
+      {
+        "name": "ECR_NODECMS_APP_URL",
+        "valueFrom": "${p_app}/ecr/strapi/app/url"
+      },
+      {
+        "name": "ECR_NODECMS_NGINX_URL",
+        "valueFrom": "${p_app}/ecr/strapi/nginx/url"
+      },
+      {
+        "name": "SES_ACCESS_KEY",
+        "valueFrom": "${p_email}/ses/access_key"
+      },
+      {
+        "name": "SES_EMAIL_URI",
+        "valueFrom": "${p_email}/ses/email_uri"
+      },
+      {
+        "name": "SES_EMAIL_ZONENAME",
+        "valueFrom": "${p_email}/ses/email_zonename"
+      },
+      {
+        "name": "SES_SECRET_KEY",
+        "valueFrom": "${p_email}/ses/secret_key"
+      },
+      {
+        "name": "SES_SMTP_HOST",
+        "valueFrom": "${p_email}/ses/smtp_host"
+      },
+      {
+        "name": "SES_SMTP_URL",
+        "valueFrom": "${p_email}/ses/smtp_url"
+      },
+      {
+        "name": "SES_FROM_ADDRESS",
+        "valueFrom": "${p_email}/ses/from_address"
+      },
+      {
+        "name": "SES_REPLYTO_ADDRESS",
+        "valueFrom": "${p_email}/ses/replyto_address"
+      }
+    ],
+    "portMappings": [
+      {
+        "containerPort": 1337,
+        "hostPort": 1337
+      }
+    ],
+    "logConfiguration": {
+      "logDriver": "awslogs",
+      "options": {
+        "awslogs-region": "${log_region["app"]}",
+        "awslogs-group": "/ecs/${name["app"]}-${safedomain}",
+        "awslogs-stream-prefix": "app",
+        "awslogs-create-group": "true"
+      }
+    },
+    "healthCheck": {
+      "command": [
+        "CMD-SHELL",
+        "curl -f -k ${healthcheck_url["app"]} || exit 1"
+      ],
+      "interval": 30,
+      "timeout": 5,
+      "retries": 3,
+      "startPeriod": 120
+    }
+  }
+]

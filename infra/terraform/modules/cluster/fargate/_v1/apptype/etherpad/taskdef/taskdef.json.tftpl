@@ -1,0 +1,146 @@
+[
+  {
+    "name": "${name["nginx"]}",
+    "image": "${image["nginx"]}",
+    "cpu": ${cpu["nginx"]},
+    "memory": ${memory["nginx"]},
+    "memoryReservation": ${memoryReservation["nginx"]},
+    "essential": true,
+    "command": [
+      "nginx",
+      "-g",
+      "daemon off;"
+    ],
+    "dependsOn": [
+    {
+      "containerName": "${name["app"]}",
+      "condition": "START"
+    }
+    ],
+    "environment": [
+      {
+          "name": "APP_URL",
+          "value": "${app_url["nginx"]}"
+      }
+    ],
+    "portMappings": [
+      {
+        "containerPort": 443,
+        "hostPort": 443
+      }
+    ],
+    "logConfiguration": {
+      "logDriver": "awslogs",
+      "options": {
+        "awslogs-region": "${log_region["nginx"]}",
+        "awslogs-group": "/ecs/${name["nginx"]}-${safedomain}",
+        "awslogs-stream-prefix": "nginx",
+        "awslogs-create-group": "true"
+      }
+    },
+    "healthCheck": {
+      "command": [
+        "CMD-SHELL",
+        "curl -k -f ${healthcheck_url["nginx"]}|| exit 1"
+      ],
+      "interval": 60,
+      "timeout": 5,
+      "retries": 3,
+      "startPeriod": 120
+    }
+  }, 
+  {
+    "name": "${name["app"]}",
+    "image": "${image["app"]}",
+    "cpu": ${cpu["app"]},
+    "memory": ${memory["app"]},
+    "memoryReservation": ${memoryReservation["app"]},
+    "essential": true,
+    "command": [
+      "pnpm",
+      "run",
+      "prod"
+    ],
+    "environment": [
+      {
+          "name": "NODE_ENV",
+          "value": "production"
+      },
+      {
+          "name": "DB_CHARSET",
+          "value": "utf8mb4"
+      },
+      {
+          "name": "DEFAULT_PAD_TEXT",
+          "value": " "
+      },
+      {
+          "name": "DISABLE_IP_LOGGING",
+          "value": "false"
+      },
+      {
+          "name": "DOCKER_COMPOSE_APP_SOFFICE",
+          "value": "null"
+      },
+      {
+          "name": "TRUST_PROXY",
+          "value": "true"
+      }      
+    ],
+    "secrets": [
+      {
+        "name": "ADMIN_PASSWORD",
+        "valueFrom": "${p_app}/admin_password"
+      },
+      {
+        "name": "DB_TYPE",
+        "valueFrom": "${p_cluster}/rds/etherpad/db_engine"
+      },
+      {
+        "name": "DB_HOST",
+        "valueFrom": "${p_cluster}/rds/etherpad/db_endpoint_writer"
+      },
+      {
+        "name": "DB_PORT",
+        "valueFrom": "${p_cluster}/rds/etherpad/db_port"
+      },
+      {
+        "name": "DB_USER",
+        "valueFrom": "${p_cluster}/rds/etherpad/db_username"
+      },
+      {
+        "name": "DB_PASS",
+        "valueFrom": "${p_cluster}/rds/etherpad/db_password"
+      },
+      {
+        "name": "DB_NAME",
+        "valueFrom": "${p_cluster}/rds/etherpad/db_name"
+      }
+    ],
+    "portMappings": [
+      {
+        "containerPort": 9001,
+        "hostPort": 9001
+      }
+    ],
+    "logConfiguration": {
+      "logDriver": "awslogs",
+      "options": {
+        "awslogs-region": "${log_region["app"]}",
+        "awslogs-group": "/ecs/${name["app"]}-${safedomain}",
+        "awslogs-stream-prefix": "app",
+        "awslogs-create-group": "true"
+      }
+    },
+    "healthCheck": {
+      "command": [
+        "CMD-SHELL",
+        "curl -f -k ${healthcheck_url["app"]} || exit 1"
+      ],
+      "interval": 30,
+      "timeout": 5,
+      "retries": 3,
+      "startPeriod": 120
+    }
+  }
+]

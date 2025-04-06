@@ -1,0 +1,23 @@
+{
+  "name": "use1.email",
+  "targets": {
+    "destroy": {
+      "executor": "nx:run-commands",
+      "timeout": 120000,
+      "options": {
+        "command": "terragrunt destroy --terragrunt-log-level debug --terragrunt-debug || true",
+        "cwd": "infra/terraform/defcon-run/us-east-1/cluster/apps/email/",
+        "parallel": false,
+        "interactively": true
+      }
+    },
+    "apply": {
+      "executor": "nx:run-commands",
+      "timeout": 120000,
+      "options": {
+        "command": "terragrunt apply --terragrunt-log-level debug --terragrunt-debug || true",
+        "cwd": "infra/terraform/defcon-run/us-east-1/cluster/apps/email/"
+      }
+    }
+  }
+}

@@ -1,0 +1,20 @@
+services:
+  postgres-etherpad:
+    extends:
+      file: ./local/postgres/docker-compose.yaml
+      service: postgres-etherpad
+  etherpad-local:
+    build:
+      context: ./defcon-run/
+      dockerfile: ./Dockerfile
+    extends:
+      file: ./defcon-run/docker-compose.yaml
+      service: app-etherpad
+    depends_on:
+      postgres-etherpad:
+        condition: service_healthy
+
+volumes:
+  postgres_etherpad_data:
+  plugins:
+  etherpad-var:

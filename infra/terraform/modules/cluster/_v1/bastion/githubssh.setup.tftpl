@@ -1,0 +1,14 @@
+echo "${githubkey}" >> /home/ec2-user/.ssh/github.deploy.key
+
+chown ec2-user:ec2-user /home/ec2-user/.ssh/github.deploy.key
+chmod 600 /home/ec2-user/.ssh/github.deploy.key 
+
+cat <<- "EOF" > /home/ec2-user/.ssh/config
+Host dc32.github.com
+  Hostname github.com
+  StrictHostKeyChecking no
+  UserKnownHostsFile=/dev/null
+  IdentityFile /home/ec2-user/.ssh/github.deploy.key
+EOF
+
+chown ec2-user:ec2-user /home/ec2-user/.ssh/config

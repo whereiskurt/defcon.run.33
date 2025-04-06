@@ -1,0 +1,114 @@
+[
+  {
+    "name": "${name["mosquitto"]}",
+    "image": "${image["mosquitto"]}",
+    "cpu": ${cpu["mosquitto"]},
+    "memory": ${memory["mosquitto"]},
+    "memoryReservation": ${memoryReservation["mosquitto"]},
+    "essential": true,
+    "command": [
+      "/usr/sbin/mosquitto", 
+      "-c", 
+      "/mosquitto/config/mosquitto.conf"
+    ],
+    "environment": [
+    ],
+    "portMappings": [
+      {
+        "containerPort": 1883,
+        "hostPort": 1883
+      },
+      {
+        "containerPort": 9001,
+        "hostPort": 9001
+      }
+    ],
+    "logConfiguration": {
+      "logDriver": "awslogs",
+      "options": {
+        "awslogs-region": "${log_region["mosquitto"]}",
+        "awslogs-group": "/ecs/${name["mosquitto"]}-${safedomain}",
+        "awslogs-stream-prefix": "mosquitto",
+        "awslogs-create-group": "true"
+      }
+    },
+    "healthCheck": {
+      "command": [
+        "CMD-SHELL",
+        "nc -z localhost 1883 || exit 1"
+      ],
+      "interval": 60,
+      "timeout": 15,
+      "retries": 3,
+      "startPeriod": 60
+    }
+  },
+  {
+    "name": "${name["nginx"]}",
+    "image": "${image["nginx"]}",
+    "cpu": ${cpu["nginx"]},
+    "memory": ${memory["nginx"]},
+    "memoryReservation": ${memoryReservation["nginx"]},
+    "essential": true,
+    "command": ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"],
+    "dependsOn": [
+    {
+      "containerName": "${name["mosquitto"]}",
+      "condition": "HEALTHY"
+    }
+    ],
+    "environment": [
+      {
+          "name": "APP_URL",
+          "value": "${app_url["nginx"]}"
+      }
+    ],
+    "secrets": [
+      {
+        "name": "MQTT_USERNAME",
+        "valueFrom": "${p_app}/meshmap/mqtt_username"
+      },
+      {
+        "name": "MQTT_PASSWORD",
+        "valueFrom": "${p_app}/meshmap/mqtt_password"
+      },
+      {
+        "name": "MQTT_BROKER",
+        "valueFrom": "${p_app}/meshmap/mqtt_broker"
+      },
+      {
+        "name": "MQTT_CHANNEL_NAME",
+        "valueFrom": "${p_app}/meshmap/mqtt_channel_name"
+      },
+      {
+        "name": "MQTT_CHANNEL_KEY",
+        "valueFrom": "${p_app}/meshmap/mqtt_channel_key"
+      }
+    ],
+    "portMappings": [
+      {
+        "containerPort": 443,
+        "hostPort": 443
+      }
+    ],
+    "logConfiguration": {
+      "logDriver": "awslogs",
+      "options": {
+        "awslogs-region": "${log_region["nginx"]}",
+        "awslogs-group": "/ecs/${name["nginx"]}-${safedomain}",
+        "awslogs-stream-prefix": "nginx",
+        "awslogs-create-group": "true"
+      }
+    },
+    "healthCheck": {
+      "command": [
+        "CMD-SHELL",
+        "curl -k -f https://localhost/hello || exit 1"
+      ],
+      "interval": 60,
+      "timeout": 5,
+      "retries": 3,
+      "startPeriod": 120
+    }
+  }
+]

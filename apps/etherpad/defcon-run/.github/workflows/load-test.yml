@@ -1,0 +1,173 @@
+name: "Loadtest"
+
+# any branch is useful for testing before a PR is submitted
+on:
+  push:
+    paths-ignore:
+      - "doc/**"
+  pull_request:
+    paths-ignore:
+      - "doc/**"
+
+permissions:
+  contents: read
+
+jobs:
+  withoutplugins:
+    # run on pushes to any branch
+    # run on PRs from external forks
+    if: |
+      (github.event_name != 'pull_request')
+      || (github.event.pull_request.head.repo.id != github.event.pull_request.base.repo.id)
+    name: without plugins
+    runs-on: ubuntu-latest
+    steps:
+      -
+        name: Checkout repository
+        uses: actions/checkout@v4
+      -
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - uses: pnpm/action-setup@v4
+        name: Install pnpm
+        with:
+          version: 9.0.4
+          run_install: false
+      - name: Get pnpm store directory
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+      - uses: actions/cache@v4
+        name: Setup pnpm cache
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+      - name: Only install direct dependencies
+        run: pnpm config set auto-install-peers false
+      -
+        name: Install all dependencies and symlink for ep_etherpad-lite
+        run: bin/installDeps.sh
+      -
+        name: Install etherpad-load-test
+        run: sudo npm install -g etherpad-load-test-socket-io
+      -
+        name: Run load test
+        run: src/tests/frontend/travis/runnerLoadTest.sh 25 50
+
+  withplugins:
+    # run on pushes to any branch
+    # run on PRs from external forks
+    if: |
+      (github.event_name != 'pull_request')
+      || (github.event.pull_request.head.repo.id != github.event.pull_request.base.repo.id)
+    name: with Plugins
+    runs-on: ubuntu-latest
+    steps:
+      -
+        name: Checkout repository
+        uses: actions/checkout@v4
+      -
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - uses: pnpm/action-setup@v4
+        name: Install pnpm
+        with:
+          version: 9.0.4
+          run_install: false
+      - name: Get pnpm store directory
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+      - uses: actions/cache@v4
+        name: Setup pnpm cache
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+      - name: Only install direct dependencies
+        run: pnpm config set auto-install-peers false
+      -
+        name: Install etherpad-load-test
+        run:  pnpm install -g etherpad-load-test-socket-io
+      -
+        name: Install etherpad plugins
+        # The --legacy-peer-deps flag is required to work around a bug in npm v7:
+        # https://github.com/npm/cli/issues/2199
+        run: >
+          pnpm install --workspace-root
+          ep_align
+          ep_author_hover
+          ep_cursortrace
+          ep_font_size
+          ep_hash_auth
+          ep_headings2
+          ep_markdown
+          ep_readonly_guest
+          ep_set_title_on_pad
+          ep_spellcheck
+          ep_subscript_and_superscript
+          ep_table_of_contents
+      # Etherpad core dependencies must be installed after installing the
+      # plugin's dependencies, otherwise npm will try to hoist common
+      # dependencies by removing them from src/node_modules and installing them
+      # in the top-level node_modules. As of v6.14.10, npm's hoist logic appears
+      # to be buggy, because it sometimes removes dependencies from
+      # src/node_modules but fails to add them to the top-level node_modules.
+      # Even if npm correctly hoists the dependencies, the hoisting seems to
+      # confuse tools such as `npm outdated`, `npm update`, and some ESLint
+      # rules.
+      -
+        name: Install all dependencies and symlink for ep_etherpad-lite
+        run: bin/installDeps.sh
+      -
+        name: Run load test
+        run: src/tests/frontend/travis/runnerLoadTest.sh 25 50
+
+  long:
+    # run on pushes to any branch
+    # run on PRs from external forks
+    if: |
+      (github.event_name != 'pull_request')
+      || (github.event.pull_request.head.repo.id != github.event.pull_request.base.repo.id)
+    name: long running
+    runs-on: ubuntu-latest
+    steps:
+      -
+        name: Checkout repository
+        uses: actions/checkout@v4
+      -
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - uses: pnpm/action-setup@v4
+        name: Install pnpm
+        with:
+          version: 9.0.4
+          run_install: false
+      - name: Get pnpm store directory
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+      - uses: actions/cache@v4
+        name: Setup pnpm cache
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+      - name: Only install direct dependencies
+        run: pnpm config set auto-install-peers false
+      -
+        name: Install all dependencies and symlink for ep_etherpad-lite
+        run: bin/installDeps.sh
+      -
+        name: Install etherpad-load-test
+        run: sudo npm install -g etherpad-load-test-socket-io
+      -
+        name: Run load test
+        run: src/tests/frontend/travis/runnerLoadTest.sh 5000 5

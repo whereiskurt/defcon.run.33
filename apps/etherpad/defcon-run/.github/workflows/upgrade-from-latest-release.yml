@@ -1,0 +1,116 @@
+name: "Upgrade from latest release"
+
+# any branch is useful for testing before a PR is submitted
+on:
+  push:
+    paths-ignore:
+      - "doc/**"
+  pull_request:
+    paths-ignore:
+      - "doc/**"
+
+permissions:
+  contents: read
+
+jobs:
+  withpluginsLinux:
+    # run on pushes to any branch
+    # run on PRs from external forks
+    if: |
+      (github.event_name != 'pull_request')
+      || (github.event.pull_request.head.repo.id != github.event.pull_request.base.repo.id)
+    name: Linux with Plugins
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node: [18, 20, 22]
+    steps:
+      -
+        name: Check out latest release
+        uses: actions/checkout@v4
+        with:
+          ref: develop #FIXME change to master when doing release
+      -
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+      - uses: pnpm/action-setup@v4
+        name: Install pnpm
+        with:
+          version: 9.0.4
+          run_install: false
+      - name: Only install direct dependencies
+        run: pnpm config set auto-install-peers false
+      - name: Install libreoffice
+        uses: awalsh128/cache-apt-pkgs-action@v1.4.3
+        with:
+          packages: libreoffice libreoffice-pdfimport
+          version: 1.0
+      - name: Get pnpm store directory
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+      - uses: actions/cache@v4
+        name: Setup pnpm cache
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+      - name: Only install direct dependencies
+        run: pnpm config set auto-install-peers false
+      -
+        name: Install libreoffice
+        uses: awalsh128/cache-apt-pkgs-action@v1.4.3
+        with:
+          packages: libreoffice libreoffice-pdfimport
+          version: 1.0
+      -
+        name: Install all dependencies and symlink for ep_etherpad-lite
+        run: bin/installDeps.sh
+      - name: Install admin ui
+        working-directory: admin
+        run: pnpm install
+      - name: Build admin ui
+        working-directory: admin
+        run: pnpm build
+      -
+        name: Install Etherpad plugins
+        run: >
+          pnpm run install-plugins
+          ep_align
+          ep_author_hover
+          ep_cursortrace
+          ep_font_size
+          ep_hash_auth
+          ep_headings2
+          ep_markdown
+          ep_readonly_guest
+          ep_set_title_on_pad
+          ep_spellcheck
+          ep_subscript_and_superscript
+          ep_table_of_contents
+      -
+        name: Run the backend tests
+        run: pnpm run test
+      -
+        name: Install all dependencies and symlink for ep_etherpad-lite
+        run: ./bin/installDeps.sh
+      # Because actions/checkout@v4 is called with "ref: master" and without
+      # "fetch-depth: 0", the local clone does not have the ${GITHUB_SHA}
+      # commit. Fetch ${GITHUB_REF} to get the ${GITHUB_SHA} commit. Note that a
+      # plain "git fetch" only fetches "normal" references (refs/heads/* and
+      # refs/tags/*), and for pull requests none of the normal references
+      # include ${GITHUB_SHA}, so we have to explicitly tell Git to fetch
+      # ${GITHUB_REF}.
+      -
+        name: Fetch the new Git commits
+        run: git fetch --depth=1 origin "${GITHUB_REF}"
+      -
+        name: Upgrade to the new Git revision
+        # For pull requests, ${GITHUB_SHA} is the automatically generated merge
+        # commit that merges the PR's source branch to its destination branch.
+        run: git checkout "${GITHUB_SHA}"
+      - name: Run the backend tests
+        run: pnpm run test

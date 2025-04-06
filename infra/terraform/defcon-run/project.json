@@ -1,0 +1,45 @@
+{
+  "name": "site",
+  "targets": {
+    "down": {
+      "executor": "nx:run-commands",
+      "timeout": 120000,
+      "options": {
+        "command": "terragrunt run-all destroy --terragrunt-log-level debug --terragrunt-debug || true",
+        "cwd": "infra/terraform/defcon-run"
+      }
+    },
+    "up": {
+      "executor": "nx:run-commands",
+      "timeout": 120000,
+      "options": {
+        "command": "terragrunt run-all apply --terragrunt-log-level debug --terragrunt-debug || true",
+        "cwd": "infra/terraform/defcon-run"
+      }
+    },
+    "apply": {
+      "executor": "nx:run-commands",
+      "timeout": 120000,
+      "options": {
+        "command": "terragrunt apply --terragrunt-log-level debug --terragrunt-debug || true",
+        "cwd": "infra/terraform/defcon-run"
+      }
+    },
+    "destroy": {
+      "executor": "nx:run-commands",
+      "timeout": 120000,
+      "options": {
+        "command": "terragrunt destroy --terragrunt-log-level debug --terragrunt-debug || true",
+        "cwd": "infra/terraform/defcon-run"
+      }
+    },
+    "plan": {
+      "executor": "nx:run-commands",
+      "timeout": 120000,
+      "options": {
+        "command": "terragrunt plan --terragrunt-log-level debug --terragrunt-debug || true",
+        "cwd": "infra/terraform/defcon-run"
+      }
+    }
+  }
+}

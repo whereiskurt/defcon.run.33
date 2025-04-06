@@ -1,0 +1,17 @@
+name: defcon-run-strapi-postgres-local
+services:
+  postgres-local:
+    container_name: postgres-cms
+    image: postgres:16.0
+    platform: linux/arm64
+    user: postgres
+    restart: always
+    # ports:
+    #   - "5432:5432"
+    env_file:
+      - ./env.template
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready", "-U", "postgres"]
+      interval: 1s
+      timeout: 5s
+      retries: 10

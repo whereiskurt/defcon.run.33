@@ -1,0 +1,168 @@
+[
+  {
+    "name": "${name["nginx"]}",
+    "image": "${image["nginx"]}",
+    "cpu": ${cpu["nginx"]},
+    "memory": ${memory["nginx"]},
+    "memoryReservation": ${memoryReservation["nginx"]},
+    "essential": true,
+    "command": [
+      "nginx",
+      "-g",
+      "daemon off;"
+    ],
+    "environment": [
+      {
+          "name": "APP_URL",
+          "value": "${app_url["nginx"]}"
+      }
+    ],
+    "portMappings": [
+      {
+        "containerPort": 443,
+        "hostPort": 443
+      }
+    ],
+    "logConfiguration": {
+      "logDriver": "awslogs",
+      "options": {
+        "awslogs-region": "${log_region["nginx"]}",
+        "awslogs-group": "/ecs/${name["nginx"]}-${safedomain}",
+        "awslogs-stream-prefix": "nginx",
+        "awslogs-create-group": "true"
+      }
+    },
+    "healthCheck": {
+      "command": [
+        "CMD-SHELL",
+        "curl -k -f ${healthcheck_url["nginx"]}|| exit 1"
+      ],
+      "interval": 60,
+      "timeout": 5,
+      "retries": 3,
+      "startPeriod": 120
+    }
+  }, 
+  {
+    "name": "${name["app"]}",
+    "image": "${image["app"]}",
+    "cpu": ${cpu["app"]},
+    "memory": ${memory["app"]},
+    "memoryReservation": ${memoryReservation["app"]},
+    "essential": true,
+    "command": [
+      "npm",
+      "run",
+      "start"
+    ],
+    "environment": [
+      {
+          "name": "NEXTAUTH_URL",
+          "value": "https://use1.webapp.defcon.run"
+      },
+      {
+          "name": "STRAPI_URL",
+          "value": "https://use1.strapi.defcon.run"
+      }, 
+      {
+          "name": "USER_DYNAMODB_REGION",
+          "value": "us-east-1"
+      },
+      {
+          "name": "AUTH_DYNAMODB_REGION",
+          "value": "us-east-1"
+      }
+    ],
+    "secrets": [
+      {
+        "name": "AUTH_SECRET",
+        "valueFrom": "${parameter_arn["app"]}/defcon.run/auth/secret"
+      },
+      {
+        "name": "AUTH_GITHUB_ID",
+        "valueFrom": "${parameter_arn["app"]}/defcon.run/auth/github/id"
+      },
+      {
+        "name": "AUTH_GITHUB_SECRET",
+        "valueFrom": "${parameter_arn["app"]}/defcon.run/auth/github/secret"
+      },
+      {
+        "name": "AUTH_STRAVA_CLIENT_ID",
+        "valueFrom": "${parameter_arn["app"]}/defcon.run/auth/strava/id"
+      },
+      {
+        "name": "AUTH_STRAVA_CLIENT_SECRET",
+        "valueFrom": "${parameter_arn["app"]}/defcon.run/auth/strava/secret"
+      },
+      {
+        "name": "AUTH_DISCORD_CLIENT_ID",
+        "valueFrom": "${parameter_arn["app"]}/defcon.run/auth/discord/id"
+      },
+      {
+        "name": "AUTH_DISCORD_CLIENT_SECRET",
+        "valueFrom": "${parameter_arn["app"]}/defcon.run/auth/discord/secret"
+      },
+      {
+        "name": "AUTH_DYNAMODB_ID",
+        "valueFrom": "${parameter_arn["app"]}/use1.webapp.defcon.run/dynamodb/access_key"
+      },
+      {
+        "name": "AUTH_DYNAMODB_SECRET",
+        "valueFrom": "${parameter_arn["app"]}/use1.webapp.defcon.run/dynamodb/secret_key"
+      },
+      {
+        "name": "AUTH_SMTP_FROM",
+        "valueFrom": "${parameter_arn["app"]}/use1.email.defcon.run/ses/smtp_url"
+      },
+      {
+        "name": "AUTH_SMTP_URL",
+        "valueFrom": "${parameter_arn["app"]}/use1.email.defcon.run/ses/smtp_url"
+      },
+      {
+        "name": "USER_DYNAMODB_ID",
+        "valueFrom": "${parameter_arn["app"]}/use1.webapp.defcon.run/dynamodb/access_key"
+      },
+      {
+        "name": "USER_DYNAMODB_SECRET",
+        "valueFrom": "${parameter_arn["app"]}/use1.webapp.defcon.run/dynamodb/secret_key"
+      },
+      {
+        "name": "AUTH_ALLOWED_EMAILS",
+        "valueFrom": "${parameter_arn["app"]}/defcon.run/auth/emails_allowed"
+      },
+      {
+        "name": "AUTH_INVITE_CODES",
+        "valueFrom": "${parameter_arn["app"]}/defcon.run/auth/invite_codes"
+      },
+      {
+        "name": "AUTH_STRAPI_TOKEN",
+        "valueFrom": "${parameter_arn["app"]}/defcon.run/auth/strapi_token"
+      }
+    ],
+    "portMappings": [
+      {
+        "containerPort": 3000,
+        "hostPort": 3000
+      }
+    ],
+    "logConfiguration": {
+      "logDriver": "awslogs",
+      "options": {
+        "awslogs-region": "${log_region["app"]}",
+        "awslogs-group": "/ecs/${name["app"]}-${safedomain}",
+        "awslogs-stream-prefix": "app",
+        "awslogs-create-group": "true"
+      }
+    },
+    "healthCheck": {
+      "command": [
+        "CMD-SHELL",
+        "curl -f -k ${healthcheck_url["app"]} || exit 1"
+      ],
+      "interval": 30,
+      "timeout": 5,
+      "retries": 3,
+      "startPeriod": 120
+    }
+  }
+]

@@ -1,0 +1,52 @@
+{
+  "name": "tf",
+  "targets": {
+    "destroy": {
+      "executor": "nx:run-commands",
+      "timeout": 120000,
+      "options": {
+        "command": "terragrunt run-all destroy --terragrunt-log-level debug --terragrunt-debug|| true",
+        "cwd": "infra/terraform/defcon-run/"
+      }
+    },
+    "plan": {
+      "executor": "nx:run-commands",
+      "timeout": 60000,
+      "options": {
+        "command": "terragrunt run-all plan --terragrunt-non-interactive  || true",
+        "cwd": "infra/terraform/defcon-run/"
+      }
+    },
+    "init": {
+      "executor": "nx:run-commands",
+      "timeout": 60000,
+      "options": {
+        "command": "terragrunt run-all init --terragrunt-non-interactive  || true",
+        "cwd": "infra/terraform/defcon-run/"
+      }
+    },
+    "apply": {
+      "executor": "nx:run-commands",
+      "timeout": 120000,
+      "options": {
+        "command": "terragrunt run-all apply  || true",
+        "cwd": "infra/terraform/defcon-run/"
+      }
+    },
+    "output": {
+      "executor": "nx:run-commands",
+      "timeout": 120000,
+      "options": {
+        "command": "terragrunt run-all output || true",
+        "cwd": "infra/terraform/defcon-run/"
+      }
+    },
+    "lint": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "find . -name \".terragrunt-cache\" -prune -o -type f \\( -name \"*.tf\" -o -name \"*.hcl\" \\)  -exec hclfmt -w {} \\;",
+        "cwd": "apps/"
+      }
+    }
+  }
+}

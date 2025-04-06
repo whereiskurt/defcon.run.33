@@ -1,0 +1,13 @@
+name: defcon-run-strapi-full-local
+services:
+  postgres-local:
+    extends:
+      file: ./local/postgres/docker-compose.yaml
+      service: postgres-local
+  strapi-local:
+    extends:
+      file: ./defcon-run/docker-compose.yaml
+      service: strapi-local
+    depends_on:
+      postgres-local:
+        condition: service_healthy
