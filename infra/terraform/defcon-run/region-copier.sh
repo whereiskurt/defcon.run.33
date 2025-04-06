@@ -9,7 +9,7 @@ set -e
 
 # Check if all required arguments are provided
 if [ $# -ne 4 ]; then
-    echo "Usage: $0 <input_folder> <input_region> <output_folder> <output_region>"
+    echo "Usage: $0 <input_long_region> <input_short_region> <output_long_region> <output_short_region>"
     echo "Example: $0 us-east-1 use1 us-west-2 usw2"
     exit 1
 fi
