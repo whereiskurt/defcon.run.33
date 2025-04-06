@@ -58,7 +58,7 @@ resource "aws_ecs_task_definition" "service" {
         app : "http://${var.env_zonename}:9001" ##HTTP proxying from nginx
       },
 
-      p_email : "${local.parameter_arn}/use1.email.defcon.run",
+      p_email : "${local.parameter_arn}/${var.region_label}.email.defcon.run",
       p_app : "${local.parameter_arn}/${var.region_zonename}",
       p_cluster : "${local.parameter_arn}/${var.region_label}.defcon.run",
 
