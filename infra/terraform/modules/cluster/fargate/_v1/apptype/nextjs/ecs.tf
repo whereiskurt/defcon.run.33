@@ -40,10 +40,12 @@ resource "aws_ecs_task_definition" "service" {
         nginx : "https://${var.env_zonename}"   ##HTTPS proxying in from load balancer
         app : "http://${var.env_zonename}:3000" ##HTTP proxying from nginx
       },
-      parameter_arn : {
-        nginx : "${local.parameter_arn}"
-        app : "${local.parameter_arn}"
-      },
+      
+      p_email : "${local.parameter_arn}/${var.region_label}.email.${var.account_zonename}",
+      p_app : "${local.parameter_arn}/${var.region_zonename}",
+      p_cluster : "${local.parameter_arn}/${var.region_label}.${var.account_zonename}",
+      p_account : "${local.parameter_arn}/${var.account_zonename}",
+
       cpu : {
         nginx : 256
         app : 256

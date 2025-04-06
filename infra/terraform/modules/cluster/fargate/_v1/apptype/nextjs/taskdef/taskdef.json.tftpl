@@ -76,67 +76,67 @@
     "secrets": [
       {
         "name": "AUTH_SECRET",
-        "valueFrom": "${parameter_arn["app"]}/defcon.run/auth/secret"
+        "valueFrom": "${p_account}/auth/secret"
       },
       {
         "name": "AUTH_GITHUB_ID",
-        "valueFrom": "${parameter_arn["app"]}/defcon.run/auth/github/id"
+        "valueFrom": "${p_account}/auth/github/id"
       },
       {
         "name": "AUTH_GITHUB_SECRET",
-        "valueFrom": "${parameter_arn["app"]}/defcon.run/auth/github/secret"
+        "valueFrom": "${p_account}/auth/github/secret"
       },
       {
         "name": "AUTH_STRAVA_CLIENT_ID",
-        "valueFrom": "${parameter_arn["app"]}/defcon.run/auth/strava/id"
+        "valueFrom": "${p_account}/auth/strava/id"
       },
       {
         "name": "AUTH_STRAVA_CLIENT_SECRET",
-        "valueFrom": "${parameter_arn["app"]}/defcon.run/auth/strava/secret"
+        "valueFrom": "${p_account}/auth/strava/secret"
       },
       {
         "name": "AUTH_DISCORD_CLIENT_ID",
-        "valueFrom": "${parameter_arn["app"]}/defcon.run/auth/discord/id"
+        "valueFrom": "${p_account}/auth/discord/id"
       },
       {
         "name": "AUTH_DISCORD_CLIENT_SECRET",
-        "valueFrom": "${parameter_arn["app"]}/defcon.run/auth/discord/secret"
+        "valueFrom": "${p_account}/auth/discord/secret"
       },
       {
         "name": "AUTH_DYNAMODB_ID",
-        "valueFrom": "${parameter_arn["app"]}/use1.webapp.defcon.run/dynamodb/access_key"
+        "valueFrom": "${p_app}/dynamodb/access_key"
       },
       {
         "name": "AUTH_DYNAMODB_SECRET",
-        "valueFrom": "${parameter_arn["app"]}/use1.webapp.defcon.run/dynamodb/secret_key"
+        "valueFrom": "${p_app}/dynamodb/secret_key"
       },
       {
         "name": "AUTH_SMTP_FROM",
-        "valueFrom": "${parameter_arn["app"]}/use1.email.defcon.run/ses/smtp_url"
+        "valueFrom": "${p_email}/ses/smtp_url"
       },
       {
         "name": "AUTH_SMTP_URL",
-        "valueFrom": "${parameter_arn["app"]}/use1.email.defcon.run/ses/smtp_url"
+        "valueFrom": "${p_email}/ses/smtp_url"
       },
       {
         "name": "USER_DYNAMODB_ID",
-        "valueFrom": "${parameter_arn["app"]}/use1.webapp.defcon.run/dynamodb/access_key"
+        "valueFrom": "${p_app}/dynamodb/access_key"
       },
       {
         "name": "USER_DYNAMODB_SECRET",
-        "valueFrom": "${parameter_arn["app"]}/use1.webapp.defcon.run/dynamodb/secret_key"
+        "valueFrom": "${p_app}/dynamodb/secret_key"
       },
       {
         "name": "AUTH_ALLOWED_EMAILS",
-        "valueFrom": "${parameter_arn["app"]}/defcon.run/auth/emails_allowed"
+        "valueFrom": "${p_account}/auth/emails_allowed"
       },
       {
         "name": "AUTH_INVITE_CODES",
-        "valueFrom": "${parameter_arn["app"]}/defcon.run/auth/invite_codes"
+        "valueFrom": "${p_account}/auth/invite_codes"
       },
       {
         "name": "AUTH_STRAPI_TOKEN",
-        "valueFrom": "${parameter_arn["app"]}/defcon.run/auth/strapi_token"
+        "valueFrom": "${p_account}/auth/strapi_token"
       }
     ],
     "portMappings": [
