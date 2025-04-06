@@ -2,8 +2,7 @@ export PAGER=
 export AWS_PROFILE=${AWS_PROFILE:-application}
 export AWS_REGION=${AWS_REGION:-"us-east-1"}
 export CLUSTER=${CLUSTER:-"ecs-use1-defcon-run"}
-
-export ETHERPAD="etherpad-defcon-run"
+export ETHERPAD=${ETHERPAD:-"etherpad-defcon-run"}
 
 ## We need to add the taskdef version to deploy, this is how to get the family name:
 ##  aws ecs list-task-definition-families --region $REGION --status "ACTIVE"
