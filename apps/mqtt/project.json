@@ -5,8 +5,8 @@
       "options": {
         "env": {
           "AWS_REGION": "us-east-1",
-          "CLUSTER": "ecs-use1-guelph-run",
-          "MQTT": "mqtt-guelph-run"
+          "CLUSTER": "ecs-use1-defcon-run",
+          "MQTT": "mqtt-defcon-run"
         },
         "commands": [
           "cd nginx && ./deploy.nginx.sh",
@@ -23,8 +23,8 @@
       "options": {
         "env": {
           "AWS_REGION": "ca-central-1",
-          "CLUSTER": "ecs-cac1-guelph-run",
-          "MQTT": "mqtt-guelph-run"
+          "CLUSTER": "ecs-cac1-defcon-run",
+          "MQTT": "mqtt-defcon-run"
         },
         "commands": [
           "cd nginx && ./deploy.nginx.sh",
@@ -41,8 +41,8 @@
       "options": {
         "env": {
           "AWS_REGION": "us-west-2",
-          "CLUSTER": "ecs-usw2-guelph-run",
-          "MQTT": "mqtt-guelph-run"
+          "CLUSTER": "ecs-usw2-defcon-run",
+          "MQTT": "mqtt-defcon-run"
         },
         "commands": [
           "cd nginx && ./deploy.nginx.sh",
