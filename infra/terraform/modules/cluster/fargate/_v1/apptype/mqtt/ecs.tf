@@ -54,9 +54,9 @@ resource "aws_ecs_task_definition" "service" {
         mosquitto : "${var.env_zonename}:1883"
       },
 
-      p_email : "${local.parameter_arn}/${var.region_label}.email.defcon.run",
+      p_email : "${local.parameter_arn}/${var.region_label}.email.${var.account_zonename}",
       p_app : "${local.parameter_arn}/${var.region_zonename}",
-      p_cluster : "${local.parameter_arn}/${var.region_label}.defcon.run",
+      p_cluster : "${local.parameter_arn}/${var.region_label}.${var.account_zonename}",
 
       cpu : {
         mosquitto : 128,
