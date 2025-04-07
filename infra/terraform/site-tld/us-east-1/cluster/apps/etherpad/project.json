@@ -6,7 +6,7 @@
       "timeout": 120000,
       "options": {
         "command": "terragrunt destroy --terragrunt-log-level debug --terragrunt-debug || true",
-        "cwd": "infra/terraform/defcon-run/us-east-1/cluster/apps/etherpad/",
+        "cwd": "infra/terraform/site-tld/us-east-1/cluster/apps/etherpad/",
         "parallel": false,
         "interactively": true
       }
@@ -16,7 +16,7 @@
       "timeout": 120000,
       "options": {
         "command": "terragrunt apply --terragrunt-log-level debug --terragrunt-debug || true",
-        "cwd": "infra/terraform/defcon-run/us-east-1/cluster/apps/etherpad/"
+        "cwd": "infra/terraform/site-tld/us-east-1/cluster/apps/etherpad/"
       }
     },
     "plan": {
@@ -24,7 +24,7 @@
       "timeout": 120000,
       "options": {
         "command": "terragrunt plan --terragrunt-log-level debug --terragrunt-debug || true",
-        "cwd": "infra/terraform/defcon-run/us-east-1/cluster/apps/etherpad/"
+        "cwd": "infra/terraform/site-tld/us-east-1/cluster/apps/etherpad/"
       }
     }
   }

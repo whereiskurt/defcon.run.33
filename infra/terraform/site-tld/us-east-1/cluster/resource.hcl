@@ -28,11 +28,11 @@ locals {
   ## It's way cheaper to not deploy a NAT Gateway, and just VPC endpoints like we did.
   ## Using public subnets means we don't need these, however it's a security tradeoff.
   ## Also using public subnets iccurs a small surcharge from AWS.
-  use_nat_gateway   = tobool(get_env("TF_VAR_use_nat_gateway", "true"))
+  use_nat_gateway   = tobool(get_env("TF_VAR_use_nat_gateway", "false"))
   use_vpc_endpoints = tobool(get_env("TF_VAR_use_vpc_endpoints", "false"))
 
   ## Controls whether to use RDS or not
-  use_rds_serverless = tobool(get_env("TF_VAR_use_rds_serverless", "true"))
+  use_rds_serverless = tobool(get_env("TF_VAR_use_rds_serverless", "false"))
 
   rds_serverless = [
     {
