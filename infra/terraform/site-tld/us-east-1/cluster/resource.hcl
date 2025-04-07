@@ -34,7 +34,7 @@ locals {
   use_vpc_endpoints = tobool(get_env("TF_VAR_use_vpc_endpoints", "false"))
 
   ## Controls whether to use RDS or not
-  use_rds_serverless = tobool(get_env("TF_VAR_use_rds_serverless", "false"))
+  use_rds_serverless = tobool(get_env("TF_VAR_use_rds_serverless", "true"))
 
   rds_serverless = [
     {
