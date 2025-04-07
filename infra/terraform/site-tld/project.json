@@ -6,7 +6,7 @@
       "timeout": 120000,
       "options": {
         "command": "terragrunt run-all destroy --terragrunt-log-level debug --terragrunt-debug || true",
-        "cwd": "infra/terraform/defcon-run"
+        "cwd": "infra/terraform/site-tld"
       }
     },
     "up": {
@@ -14,7 +14,7 @@
       "timeout": 120000,
       "options": {
         "command": "terragrunt run-all apply --terragrunt-log-level debug --terragrunt-debug || true",
-        "cwd": "infra/terraform/defcon-run"
+        "cwd": "infra/terraform/site-tld"
       }
     },
     "apply": {
@@ -22,7 +22,7 @@
       "timeout": 120000,
       "options": {
         "command": "terragrunt apply --terragrunt-log-level debug --terragrunt-debug || true",
-        "cwd": "infra/terraform/defcon-run"
+        "cwd": "infra/terraform/site-tld"
       }
     },
     "destroy": {
@@ -30,7 +30,7 @@
       "timeout": 120000,
       "options": {
         "command": "terragrunt destroy --terragrunt-log-level debug --terragrunt-debug || true",
-        "cwd": "infra/terraform/defcon-run"
+        "cwd": "infra/terraform/site-tld"
       }
     },
     "plan": {
@@ -38,7 +38,7 @@
       "timeout": 120000,
       "options": {
         "command": "terragrunt plan --terragrunt-log-level debug --terragrunt-debug || true",
-        "cwd": "infra/terraform/defcon-run"
+        "cwd": "infra/terraform/site-tld"
       }
     }
   }
