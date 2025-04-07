@@ -39,13 +39,9 @@ module.exports = ({ env }) => ({
           amazon: env('SES_EMAIL_URI'),
         },
         settings: {
-          defaultFrom:  env('SES_FROM_ADDRESS'), // 'strapi@email.defcon.run',
-          defaultReplyTo: env('SES_REPLYTO_ADDRESS'), //'strapi@email.defcon.run',
+          defaultFrom:  env('SES_FROM_ADDRESS'),  
+          defaultReplyTo: env('SES_REPLYTO_ADDRESS'),
         },
       }
     }
   });
-
-////////
-//SES_FROM_ADDRESS
-//SES_REPLYTO_ADDRESS
