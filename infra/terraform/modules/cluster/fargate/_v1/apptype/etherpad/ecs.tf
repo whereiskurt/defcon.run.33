@@ -8,6 +8,11 @@ data "aws_region" "current" {
 
 locals {
   parameter_arn = "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter"
+  region_label_map = {
+    use1 = "us-east-1"
+    cac1 = "ca-central-1"
+    usw2 = "us-west-2"
+  }
 }
 
 resource "aws_service_discovery_service" "service_discovery" {
