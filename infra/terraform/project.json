@@ -47,6 +47,15 @@
         "command": "find . -name \".terragrunt-cache\" -prune -o -type f \\( -name \"*.tf\" -o -name \"*.hcl\" \\)  -exec hclfmt -w {} \\;",
         "cwd": "apps/"
       }
+    },
+    "clean": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "find . -type f -name '*tfvars.json' -o -name '.terragrunt-cache' -exec rm -fr -I {} \\;"
+        ],
+        "cwd": "apps/"
+      }
     }
   }
 }
