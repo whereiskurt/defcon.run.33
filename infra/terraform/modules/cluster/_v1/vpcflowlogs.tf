@@ -4,7 +4,7 @@ resource "aws_flow_log" "vpc_flow_logs" {
   traffic_type             = "ALL" # Captures ACCEPT, REJECT, and ALL traffic
   vpc_id                   = aws_vpc.vpc.id
   max_aggregation_interval = 60
-  provider      = aws.application
+  provider                 = aws.application
 }
 
 ###
@@ -15,8 +15,8 @@ resource "aws_s3_bucket" "vpc_flow_logs" {
 }
 
 resource "aws_s3_bucket_policy" "vpc_flow_logs_bucket_policy" {
-  bucket = aws_s3_bucket.vpc_flow_logs.id
-  provider      = aws.application
+  bucket   = aws_s3_bucket.vpc_flow_logs.id
+  provider = aws.application
 
   policy = jsonencode({
     Version = "2012-10-17",

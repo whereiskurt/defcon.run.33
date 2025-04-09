@@ -17,7 +17,7 @@ locals {
   dynamo_tables = [
     "${local.env_zonename}.StrapiWatchdog"
   ]
-  
+
   use_cloudfront = true
 
   app_type = "strapi"

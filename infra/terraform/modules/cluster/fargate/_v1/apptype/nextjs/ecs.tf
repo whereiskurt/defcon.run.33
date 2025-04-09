@@ -40,7 +40,7 @@ resource "aws_ecs_task_definition" "service" {
         nginx : "https://${var.env_zonename}"   ##HTTPS proxying in from load balancer
         app : "http://${var.env_zonename}:3000" ##HTTP proxying from nginx
       },
-      
+
       p_email : "${local.parameter_arn}/${var.region_label}.email.${var.account_zonename}",
       p_app : "${local.parameter_arn}/${var.region_zonename}",
       p_cluster : "${local.parameter_arn}/${var.region_label}.${var.account_zonename}",
@@ -158,7 +158,7 @@ resource "aws_ecs_service" "this" {
 }
 
 resource "aws_appautoscaling_target" "ecs_service" {
-  count = var.use_alarms ? 1 : 0
+  count              = var.use_alarms ? 1 : 0
   depends_on         = [aws_ecs_service.this]
   service_namespace  = "ecs"
   resource_id        = "service/${var.cluster_name}/${aws_ecs_service.this.name}"
@@ -169,7 +169,7 @@ resource "aws_appautoscaling_target" "ecs_service" {
 }
 
 resource "aws_appautoscaling_policy" "scale_out" {
-  count = var.use_alarms ? 1 : 0
+  count              = var.use_alarms ? 1 : 0
   name               = "scale-out-${aws_ecs_service.this.name}"
   service_namespace  = "ecs"
   resource_id        = aws_appautoscaling_target.ecs_service[0].resource_id
@@ -187,7 +187,7 @@ resource "aws_appautoscaling_policy" "scale_out" {
 }
 
 resource "aws_appautoscaling_policy" "scale_in" {
-  count = var.use_alarms ? 1 : 0
+  count              = var.use_alarms ? 1 : 0
   name               = "scale-in-${aws_ecs_service.this.name}"
   service_namespace  = "ecs"
   resource_id        = aws_appautoscaling_target.ecs_service[0].resource_id
@@ -205,8 +205,8 @@ resource "aws_appautoscaling_policy" "scale_in" {
 }
 
 resource "aws_cloudwatch_metric_alarm" "cpu_high" {
-  count = var.use_alarms ? 1 : 0
-  alarm_name          =  "high-cpu-${aws_ecs_service.this.name}"
+  count               = var.use_alarms ? 1 : 0
+  alarm_name          = "high-cpu-${aws_ecs_service.this.name}"
   comparison_operator = "GreaterThanThreshold"
   evaluation_periods  = 2
   metric_name         = "CPUUtilization"
@@ -225,7 +225,7 @@ resource "aws_cloudwatch_metric_alarm" "cpu_high" {
 }
 
 resource "aws_cloudwatch_metric_alarm" "cpu_low" {
-  count = var.use_alarms ? 1 : 0
+  count               = var.use_alarms ? 1 : 0
   alarm_name          = "low-cpu-${aws_ecs_service.this.name}"
   comparison_operator = "LessThanThreshold"
   evaluation_periods  = 2

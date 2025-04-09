@@ -35,20 +35,20 @@ resource "random_id" "rnd" {
 # }
 
 resource "aws_s3_bucket" "cf_bucket" {
-  count   = var.use_cloudfront ? 1 : 0
+  count         = var.use_cloudfront ? 1 : 0
   bucket        = "origin-${replace(var.region_zonename, ".", "-")}-${random_id.rnd.hex}"
   provider      = aws.application
   force_destroy = true ##WILL NUKE BUCKET!
 }
 
 resource "aws_iam_user" "cf_user" {
-  count   = var.use_cloudfront ? 1 : 0
+  count    = var.use_cloudfront ? 1 : 0
   name     = "cf-${var.region_zonename}-${random_id.rnd.hex}"
   provider = aws.application
 }
 
 resource "aws_iam_access_key" "cf_user_key" {
-  count   = var.use_cloudfront ? 1 : 0
+  count    = var.use_cloudfront ? 1 : 0
   user     = aws_iam_user.cf_user[0].name
   provider = aws.application
 }
@@ -59,7 +59,7 @@ resource "aws_iam_access_key" "cf_user_key" {
 
 ## Used in CloudFront
 resource "aws_acm_certificate" "region" {
-  count   = var.use_cloudfront ? 1 : 0
+  count                     = var.use_cloudfront ? 1 : 0
   provider                  = aws.global-application
   validation_method         = "DNS"
   domain_name               = var.region_zonename
@@ -69,7 +69,7 @@ resource "aws_acm_certificate" "region" {
 resource "aws_route53_record" "cert_verify" {
   provider = aws.global-application
   for_each = {
-    for dvo in ( var.use_cloudfront ? aws_acm_certificate.region[0].domain_validation_options : []) : "${dvo.domain_name}_validation_record" => {
+    for dvo in(var.use_cloudfront ? aws_acm_certificate.region[0].domain_validation_options : []) : "${dvo.domain_name}_validation_record" => {
       name   = dvo.resource_record_name
       type   = dvo.resource_record_type
       record = dvo.resource_record_value
@@ -85,7 +85,7 @@ resource "aws_route53_record" "cert_verify" {
 }
 
 resource "aws_acm_certificate_validation" "region_validation" {
-  count   = var.use_cloudfront ? 1 : 0
+  count                   = var.use_cloudfront ? 1 : 0
   provider                = aws.global-application
   certificate_arn         = aws_acm_certificate.region[0].arn
   validation_record_fqdns = [for record in aws_route53_record.cert_verify : record.fqdn]
@@ -250,11 +250,11 @@ resource "aws_s3_bucket_policy" "cf_public_policy" {
 }
 
 resource "aws_route53_record" "cf_cname_region" {
-  count   = var.use_cloudfront ? 1 : 0
-  zone_id = var.zone_map[var.env_zonename].zone_id
-  name    = var.region_zonename
-  type    = "A"
-  allow_overwrite=true
+  count           = var.use_cloudfront ? 1 : 0
+  zone_id         = var.zone_map[var.env_zonename].zone_id
+  name            = var.region_zonename
+  type            = "A"
+  allow_overwrite = true
   alias {
     name                   = aws_cloudfront_distribution.cf_public[0].domain_name
     zone_id                = aws_cloudfront_distribution.cf_public[0].hosted_zone_id

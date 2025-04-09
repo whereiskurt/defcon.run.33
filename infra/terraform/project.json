@@ -45,7 +45,7 @@
       "executor": "nx:run-commands",
       "options": {
         "command": "find . -name \".terragrunt-cache\" -prune -o -type f \\( -name \"*.tf\" -o -name \"*.hcl\" \\)  -exec hclfmt -w {} \\;",
-        "cwd": "apps/"
+        "cwd": "infra/"
       }
     },
     "clean": {

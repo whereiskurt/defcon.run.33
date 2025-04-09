@@ -68,20 +68,20 @@ variable "service_namespace" {
 }
 
 variable "app_type" {
-  type        = string
+  type = string
 }
 
 variable "use_alarms" {
-  type = bool
+  type    = bool
   default = false
 }
 
 variable "min_capacity" {
-  type = number
+  type    = number
   default = 1
 }
 
 variable "max_capacity" {
-  type = number
+  type    = number
   default = 1
 }

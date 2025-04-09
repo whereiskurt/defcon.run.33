@@ -95,13 +95,13 @@ variable "use_bastion" {
 variable "bastion_config" {
   description = "Configuration for the EC2 instance"
   type = object({
-    spot_price_multiplier = number
-    spot_price_offset     = number
+    spot_price_multiplier  = number
+    spot_price_offset      = number
     block_duration_minutes = number
-    ec2key_name           = string # The EC2 keyname to create and assign
-    ec2key_filename       = string # The filename to write the SSH key to
-    instance_type         = string # Instance type
-    githubdeploykey       = string # The SSM keyname with Github deploy key (sensitive)
+    ec2key_name            = string # The EC2 keyname to create and assign
+    ec2key_filename        = string # The filename to write the SSH key to
+    instance_type          = string # Instance type
+    githubdeploykey        = string # The SSM keyname with Github deploy key (sensitive)
   })
   sensitive = false
 }
@@ -119,6 +119,6 @@ variable "efs_private_config" {
 }
 
 variable "use_container_insights" {
-  type = bool
+  type    = bool
   default = false
 }

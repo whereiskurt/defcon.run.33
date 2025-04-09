@@ -159,7 +159,7 @@ resource "aws_lb_listener_rule" "this" {
 }
 
 resource "aws_appautoscaling_target" "ecs_service" {
-  count = var.use_alarms ? 1 : 0
+  count              = var.use_alarms ? 1 : 0
   depends_on         = [aws_ecs_service.this]
   service_namespace  = "ecs"
   resource_id        = "service/${var.cluster_name}/${aws_ecs_service.this.name}"
@@ -170,7 +170,7 @@ resource "aws_appautoscaling_target" "ecs_service" {
 }
 
 resource "aws_appautoscaling_policy" "scale_out" {
-  count = var.use_alarms ? 1 : 0
+  count              = var.use_alarms ? 1 : 0
   name               = "scale-out-${aws_ecs_service.this.name}"
   service_namespace  = "ecs"
   resource_id        = aws_appautoscaling_target.ecs_service[0].resource_id
@@ -188,7 +188,7 @@ resource "aws_appautoscaling_policy" "scale_out" {
 }
 
 resource "aws_appautoscaling_policy" "scale_in" {
-  count = var.use_alarms ? 1 : 0
+  count              = var.use_alarms ? 1 : 0
   name               = "scale-in-${aws_ecs_service.this.name}"
   service_namespace  = "ecs"
   resource_id        = aws_appautoscaling_target.ecs_service[0].resource_id
@@ -206,8 +206,8 @@ resource "aws_appautoscaling_policy" "scale_in" {
 }
 
 resource "aws_cloudwatch_metric_alarm" "cpu_high" {
-  count = var.use_alarms ? 1 : 0
-  alarm_name          =  "high-cpu-${aws_ecs_service.this.name}"
+  count               = var.use_alarms ? 1 : 0
+  alarm_name          = "high-cpu-${aws_ecs_service.this.name}"
   comparison_operator = "GreaterThanThreshold"
   evaluation_periods  = 2
   metric_name         = "CPUUtilization"
@@ -226,7 +226,7 @@ resource "aws_cloudwatch_metric_alarm" "cpu_high" {
 }
 
 resource "aws_cloudwatch_metric_alarm" "cpu_low" {
-  count = var.use_alarms ? 1 : 0
+  count               = var.use_alarms ? 1 : 0
   alarm_name          = "low-cpu-${aws_ecs_service.this.name}"
   comparison_operator = "LessThanThreshold"
   evaluation_periods  = 2

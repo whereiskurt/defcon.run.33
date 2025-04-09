@@ -56,7 +56,7 @@ resource "aws_wafv2_web_acl" "this" {
 
   rule {
     name     = "AllowAuthHeaderOnStrapiUpload"
-    priority =11
+    priority = 11
 
     action {
       allow {}
@@ -466,7 +466,7 @@ resource "aws_cloudwatch_log_group" "waf_logs" {
   count = var.use_global_waf && !var.use_global_waf_realtime ? 1 : 0
 
   name              = "aws-waf-logs-${replace(var.account_zonename, ".", "-")}-${random_id.rnd.hex}"
-  retention_in_days = 30  # Adjust retention as needed
+  retention_in_days = 30 # Adjust retention as needed
   provider          = aws.global-application
 }
 
@@ -489,8 +489,8 @@ resource "aws_cloudwatch_log_resource_policy" "waf_logs_policy" {
 }
 
 resource "aws_wafv2_web_acl_logging_configuration" "waf_logs" {
-  count = var.use_global_waf && !var.use_global_waf_realtime ? 1 : 0
+  count                   = var.use_global_waf && !var.use_global_waf_realtime ? 1 : 0
   log_destination_configs = [aws_cloudwatch_log_group.waf_logs[0].arn]
-  resource_arn            = aws_wafv2_web_acl.this[0].arn  # Ensure correct reference to WAF ACL
-  provider = aws.global-application
+  resource_arn            = aws_wafv2_web_acl.this[0].arn # Ensure correct reference to WAF ACL
+  provider                = aws.global-application
 }

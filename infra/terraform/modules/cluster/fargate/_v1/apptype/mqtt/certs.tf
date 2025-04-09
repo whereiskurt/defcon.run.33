@@ -15,11 +15,11 @@ resource "aws_route53_record" "validation" {
     for domain, cert in aws_acm_certificate.env_certs :
     domain => {
       validations = cert.domain_validation_options
-      zone_id     =var.zone_map[cert.domain_name].zone_id
+      zone_id     = var.zone_map[cert.domain_name].zone_id
     }
   }
   allow_overwrite = true
-  zone_id = each.value.zone_id
+  zone_id         = each.value.zone_id
 
   # Use a for loop to extract values from the set
   name    = [for v in each.value.validations : v.resource_record_name][0]
@@ -32,7 +32,7 @@ resource "aws_route53_record" "validation" {
 # Validate ACM certificates
 resource "aws_acm_certificate_validation" "env_cert_validation" {
   provider        = aws.application
-  for_each                  = toset([var.app_type])
+  for_each        = toset([var.app_type])
   certificate_arn = aws_acm_certificate.env_certs[each.key].arn
 
   validation_record_fqdns = [

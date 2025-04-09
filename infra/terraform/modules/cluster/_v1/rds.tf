@@ -1,6 +1,6 @@
 resource "aws_db_subnet_group" "postgres" {
-  for_each                     = var.use_rds_serverless ? { for idx, db in var.rds_serverless : idx => db } : {}
-  name                         = replace("${each.value.db_dbname}-${var.env_zonename}", ".", "-")
+  for_each   = var.use_rds_serverless ? { for idx, db in var.rds_serverless : idx => db } : {}
+  name       = replace("${each.value.db_dbname}-${var.env_zonename}", ".", "-")
   subnet_ids = aws_subnet.private_subnet.*.id
   provider   = aws.application
 }
@@ -26,9 +26,9 @@ resource "aws_rds_cluster" "aurora_serverless" {
   preferred_backup_window      = "02:00-03:00"
   preferred_maintenance_window = "Mon:03:00-Mon:04:00"
   skip_final_snapshot          = true
-  
+
   ##This is what triggers a password change right away.
-  apply_immediately            = true
+  apply_immediately = true
 
   serverlessv2_scaling_configuration {
     min_capacity = 0.0

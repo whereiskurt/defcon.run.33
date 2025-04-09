@@ -13,7 +13,7 @@ data "aws_lb" "nlb" {
 
 locals {
   parameter_arn = "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter"
-  
+
   region_label_map = {
     use1 = "us-east-1"
     cac1 = "ca-central-1"
@@ -150,7 +150,7 @@ resource "null_resource" "wait_for_acm_cert" {
   }
 
   provisioner "local-exec" {
-    command = <<EOT
+    command     = <<EOT
     for i in {1..30}; do
       status=$(aws acm describe-certificate --certificate-arn ${aws_acm_certificate.env_certs[var.app_type].arn} --query 'Certificate.Status' --output text --region ${local.region_label_map[var.region_label]})
       echo "Certificate status: $status"
@@ -212,7 +212,7 @@ resource "aws_lb_listener" "mosquitto_tcp" {
     type             = "forward"
     target_group_arn = aws_lb_target_group.mosquitto_target.arn
   }
-  provider   = aws.application
+  provider = aws.application
   depends_on = [
     data.aws_lb.nlb,
     aws_acm_certificate.env_certs,

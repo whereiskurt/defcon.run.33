@@ -96,7 +96,7 @@ module "mosquitto" {
   nlb_subnet              = var.nlb_subnet
   cert_map                = var.cert_map
   region_label            = var.region_label
-  zone_map = var.zone_map
+  zone_map                = var.zone_map
   providers = {
     aws.application = aws.application
   }

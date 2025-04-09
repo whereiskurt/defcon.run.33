@@ -12,5 +12,5 @@ locals {
   email_zonename    = "${local.label}.${local.account_zonename}"
   region_zonename   = "${local.region_label}.${local.email_zonename}"
   smtpfrom_zonename = "s.${local.region_zonename}"
-  region            = local.region_vars.locals.region  
+  region            = local.region_vars.locals.region
 }

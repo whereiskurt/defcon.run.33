@@ -133,25 +133,25 @@ resource "aws_ssm_association" "ec2_githubkey" {
 }
 
 resource "aws_iam_instance_profile" "ec2ssm-profile" {
-  count = var.use_bastion ? 1 : 0
+  count    = var.use_bastion ? 1 : 0
   provider = aws.application
   name     = "${var.region_zonename}-ec2vm-sssm-profile"
   role     = aws_iam_role.ec2ssm-role[0].name
 }
 resource "aws_iam_role" "ec2ssm-role" {
-  count = var.use_bastion ? 1 : 0
+  count              = var.use_bastion ? 1 : 0
   provider           = aws.application
   name               = "${var.region_zonename}-ssm-role"
   assume_role_policy = file("${path.module}/bastion/ec2.trustpolicy.json")
 }
 resource "aws_iam_role_policy_attachment" "resource-ssm-policy" {
-  count = var.use_bastion ? 1 : 0
+  count      = var.use_bastion ? 1 : 0
   provider   = aws.application
   role       = aws_iam_role.ec2ssm-role[0].name
   policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
 }
 resource "aws_ssm_document" "githubkey_conf" {
-  count = var.use_bastion ? 1 : 0
+  count         = var.use_bastion ? 1 : 0
   provider      = aws.application
   document_type = "Command"
   name          = "${var.region_zonename}-github"

@@ -17,7 +17,7 @@ locals {
   dynamo_tables = [
     "${local.env_zonename}.EtherpadWatchdog"
   ]
-  
+
   use_cloudfront = true
 
   app_type = "etherpad"
