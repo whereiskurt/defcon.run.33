@@ -52,9 +52,9 @@
       "executor": "nx:run-commands",
       "options": {
         "commands": [
-          "find . -type f -name '*tfvars.json' -o -name '.terragrunt-cache' -exec rm -fr -I {} \\;"
+          "find . -type f -name '*tfvars.json' -o -name '.terragrunt-cache' -exec rm -fr {} \\; || true"
         ],
-        "cwd": "apps/"
+        "cwd": "infra/"
       }
     }
   }
