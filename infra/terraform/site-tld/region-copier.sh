@@ -50,7 +50,7 @@ find "$TGT_LONG_REGION" -name "project.json" -type f -exec grep -l "\"name\":" {
     sed -i '' "s/$SRC_LONG_REGION/$TGT_LONG_REGION/g" "$file"
 done
 
-echo "Updating region references in region.hcl files..."
+echo "Updating region references in region.hcl and resources.hcl files..."
 find "$TGT_LONG_REGION" \( -name "region.hcl" -o -name "resource.hcl" \) -type f -exec grep -l "$SRC_SHORT_REGION" {} \; | while read -r file; do
     echo "Processing: $file"
     # Replace input_region with output_region
