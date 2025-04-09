@@ -68,15 +68,15 @@ def delete_files(file_list):
     except Exception as e:
       print(f"Error deleting {file}: {e}")
 
-ssm_to_env("/use1.webapp.defcon.run/", "defcon-run/.env.generate")
-env_scrub([("use1.webapp.defcon.run_", "")], "defcon-run/.env.generate" )
-env_name_trans([lambda s: s.upper()], "defcon-run/.env.generate")
+ssm_to_env("/use1.webapp.defcon.run/", "site-tld/.env.generate")
+env_scrub([("use1.webapp.defcon.run_", "")], "site-tld/.env.generate" )
+env_name_trans([lambda s: s.upper()], "site-tld/.env.generate")
 
-ssm_to_env("/use1.email.defcon.run/", "defcon-run/.env.smtp.generate")
-env_scrub([("use1.email.defcon.run_", "")], "defcon-run/.env.smtp.generate" )
-env_name_trans([lambda s: s.upper()], "defcon-run/.env.smtp.generate")
+ssm_to_env("/use1.email.defcon.run/", "site-tld/.env.smtp.generate")
+env_scrub([("use1.email.defcon.run_", "")], "site-tld/.env.smtp.generate" )
+env_name_trans([lambda s: s.upper()], "site-tld/.env.smtp.generate")
 
-cat_sort_uniq(["defcon-run/.env.generate", "defcon-run/.env.smtp.generate"], "defcon-run/.env.local" )
-cat_sort_uniq(["defcon-run/env.template", "defcon-run/.env.local"], "defcon-run/.env.local", sort=False, uniq=False)
+cat_sort_uniq(["site-tld/.env.generate", "site-tld/.env.smtp.generate"], "site-tld/.env.local" )
+cat_sort_uniq(["site-tld/env.template", "site-tld/.env.local"], "site-tld/.env.local", sort=False, uniq=False)
 
-delete_files(["defcon-run/.env.generate", "defcon-run/.env.smtp.generate"])
+delete_files(["site-tld/.env.generate", "site-tld/.env.smtp.generate"])

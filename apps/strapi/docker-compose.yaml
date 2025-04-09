@@ -1,4 +1,4 @@
-name: defcon-run-strapi-full-local
+name: site-tld-strapi-full-local
 services:
   postgres-local:
     extends:
@@ -6,7 +6,7 @@ services:
       service: postgres-local
   strapi-local:
     extends:
-      file: ./defcon-run/docker-compose.yaml
+      file: ./site-tld/docker-compose.yaml
       service: strapi-local
     depends_on:
       postgres-local:

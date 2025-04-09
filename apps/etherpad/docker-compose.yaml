@@ -5,10 +5,10 @@ services:
       service: postgres-etherpad
   etherpad-local:
     build:
-      context: ./defcon-run/
+      context: ./site-tld/
       dockerfile: ./Dockerfile
     extends:
-      file: ./defcon-run/docker-compose.yaml
+      file: ./site-tld/docker-compose.yaml
       service: app-etherpad
     depends_on:
       postgres-etherpad:

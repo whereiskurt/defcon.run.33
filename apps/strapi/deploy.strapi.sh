@@ -7,10 +7,10 @@ export AWS_ACCOUNT_ID=${AWS_ACCOUNT_ID:-$(aws sts get-caller-identity --query "A
 export IMAGE_TAG=${IMAGE_TAG:-"v0.0.1"}
 export REPO_NAME="app.strapi.defcon.run"
 
-npm --prefix ./defcon-run install 
+npm --prefix ./site-tld install 
 
-npm --prefix ./defcon-run run build && \
-  docker-compose -f ./defcon-run/docker-compose.yaml build
+npm --prefix ./site-tld run build && \
+  docker-compose -f ./site-tld/docker-compose.yaml build
 
 aws ecr get-login-password --region ${AWS_REGION} \
   | docker login --username AWS --password-stdin "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
