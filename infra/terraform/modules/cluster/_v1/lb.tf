@@ -42,7 +42,7 @@ resource "aws_lb_listener" "https" {
 }
 
 resource "aws_s3_bucket" "alb_log_bucket" {
-  bucket        = "logs-lb-${replace(var.region_zonename, ".", "-")}-${random_id.rnd.hex}"
+  bucket        = "logs-alb-${replace(var.region_zonename, ".", "-")}-${random_id.rnd.hex}"
   provider      = aws.application
   force_destroy = true
 }

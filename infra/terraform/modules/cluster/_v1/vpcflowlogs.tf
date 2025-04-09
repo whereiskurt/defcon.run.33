@@ -9,7 +9,7 @@ resource "aws_flow_log" "vpc_flow_logs" {
 
 ###
 resource "aws_s3_bucket" "vpc_flow_logs" {
-  bucket        = "logs-vpc-flow-${var.env_zonename}"
+  bucket        = "logs-vpc-flow-${var.env_zonename}-${random_id.rnd.hex}"
   provider      = aws.application
   force_destroy = true
 }

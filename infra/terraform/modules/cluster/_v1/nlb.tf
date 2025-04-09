@@ -50,8 +50,8 @@ resource "aws_route_table_association" "nlb_private" {
 }
 
 resource "aws_s3_bucket" "nlb_logs" {
-  provider                = aws.application
-  bucket = "nlb-access-logs-${var.env_zonename}"
+  provider      = aws.application
+  bucket        = "logs-nlb-${replace(var.region_zonename, ".", "-")}-${random_id.rnd.hex}"
   force_destroy = true
 }
 resource "aws_s3_bucket_ownership_controls" "nlb_logs" {
@@ -59,7 +59,7 @@ resource "aws_s3_bucket_ownership_controls" "nlb_logs" {
   rule {
     object_ownership = "BucketOwnerEnforced"
   }
-  provider                = aws.application
+  provider = aws.application
 }
 resource "aws_s3_bucket_policy" "nlb_logs_policy" {
   bucket = aws_s3_bucket.nlb_logs.id
@@ -71,7 +71,7 @@ resource "aws_s3_bucket_policy" "nlb_logs_policy" {
         Principal = {
           Service = "delivery.logs.amazonaws.com"
         },
-        Action = "s3:PutObject",
+        Action   = "s3:PutObject",
         Resource = "${aws_s3_bucket.nlb_logs.arn}/*",
         Condition = {
           StringEquals = {
@@ -84,10 +84,10 @@ resource "aws_s3_bucket_policy" "nlb_logs_policy" {
         Principal = {
           Service = "delivery.logs.amazonaws.com"
         },
-        Action = "s3:GetBucketAcl",
+        Action   = "s3:GetBucketAcl",
         Resource = aws_s3_bucket.nlb_logs.arn
       }
     ]
   })
-  provider                = aws.application
+  provider = aws.application
 }
