@@ -6,8 +6,19 @@ data "aws_region" "current" {
   provider = aws.application
 }
 
+data "aws_lb" "nlb" {
+  arn      = var.nlb
+  provider = aws.application
+}
+
 locals {
   parameter_arn = "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter"
+  
+  region_label_map = {
+    use1 = "us-east-1"
+    cac1 = "ca-central-1"
+    usw2 = "us-west-2"
+  }
 }
 
 resource "aws_service_discovery_service" "service_discovery" {
@@ -132,6 +143,29 @@ resource "aws_ecs_service" "this" {
 }
 
 
+## This little ditty is curtiousy of terraform not being able to wait for ACM certs to be issued natively (300sec is 5mins)
+resource "null_resource" "wait_for_acm_cert" {
+  triggers = {
+    cert_arn = aws_acm_certificate.env_certs[var.app_type].arn
+  }
+
+  provisioner "local-exec" {
+    command = <<EOT
+    for i in {1..30}; do
+      status=$(aws acm describe-certificate --certificate-arn ${aws_acm_certificate.env_certs[var.app_type].arn} --query 'Certificate.Status' --output text --region ${local.region_label_map[var.region_label]})
+      echo "Certificate status: $status"
+      if [ "$status" = "ISSUED" ]; then
+        exit 0
+      fi
+      sleep 10
+    done
+    echo "Timed out waiting for certificate to be ISSUED"
+    exit 1
+    EOT
+    interpreter = ["/bin/bash", "-c"]
+  }
+}
+
 resource "aws_lb_target_group" "mosquitto_target" {
   name        = replace("mosquitto-${var.env_zonename}", ".", "-")
   port        = 1883
@@ -152,7 +186,7 @@ resource "aws_lb_target_group" "mqtt_nginx_target" {
 
 ## As per this policy: https://docs.aws.amazon.com/elasticloadbalancing/latest/application/describe-ssl-policies.html
 resource "aws_lb_listener" "mqtt_nginx_tls" {
-  load_balancer_arn = var.nlb
+  load_balancer_arn = data.aws_lb.nlb.arn
   port              = "443"
   protocol          = "TLS"
   ssl_policy        = "ELBSecurityPolicy-TLS13-1-0-2021-06"
@@ -162,10 +196,15 @@ resource "aws_lb_listener" "mqtt_nginx_tls" {
     type             = "forward"
     target_group_arn = aws_lb_target_group.mqtt_nginx_target.arn
   }
+  depends_on = [
+    data.aws_lb.nlb,
+    aws_acm_certificate.env_certs,
+    null_resource.wait_for_acm_cert
+  ]
 }
 
 resource "aws_lb_listener" "mosquitto_tcp" {
-  load_balancer_arn = var.nlb
+  load_balancer_arn = data.aws_lb.nlb.arn
   port              = 1883
   protocol          = "TCP"
 
@@ -174,10 +213,15 @@ resource "aws_lb_listener" "mosquitto_tcp" {
     target_group_arn = aws_lb_target_group.mosquitto_target.arn
   }
   provider   = aws.application
+  depends_on = [
+    data.aws_lb.nlb,
+    aws_acm_certificate.env_certs,
+    null_resource.wait_for_acm_cert
+  ]
 }
 
 resource "aws_lb_listener" "mosquitto_tls" {
-  load_balancer_arn = var.nlb
+  load_balancer_arn = data.aws_lb.nlb.arn
   port              = "8883"
   protocol          = "TLS"
   ssl_policy        = "ELBSecurityPolicy-TLS13-1-0-2021-06"
@@ -188,6 +232,12 @@ resource "aws_lb_listener" "mosquitto_tls" {
     type             = "forward"
     target_group_arn = aws_lb_target_group.mosquitto_target.arn
   }
+  depends_on = [
+    # Reference to the data source that provides the NLB
+    data.aws_lb.nlb,
+    aws_acm_certificate.env_certs,
+    null_resource.wait_for_acm_cert
+  ]
 }
 
 
@@ -199,8 +249,9 @@ resource "aws_lb_target_group" "mosquitto_websocket_target" {
   target_type = "ip"
   provider    = aws.application
 }
+
 resource "aws_lb_listener" "mosquitto_websocket_tls" {
-  load_balancer_arn = var.nlb
+  load_balancer_arn = data.aws_lb.nlb.arn
   port              = "8443"
   protocol          = "TLS"
   ssl_policy        = "ELBSecurityPolicy-TLS13-1-0-2021-06"
@@ -211,6 +262,13 @@ resource "aws_lb_listener" "mosquitto_websocket_tls" {
     type             = "forward"
     target_group_arn = aws_lb_target_group.mosquitto_websocket_target.arn
   }
+
+  depends_on = [
+    # Reference to the data source that provides the NLB
+    data.aws_lb.nlb,
+    aws_acm_certificate.env_certs,
+    null_resource.wait_for_acm_cert
+  ]
 }
 
 resource "aws_appautoscaling_target" "ecs_service" {
