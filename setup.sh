@@ -3,8 +3,8 @@
 ## ESCAPE THE REGULAR EXPRESSIONS!!!!
 ## Run it like this:
 #
-#   ./domain-rename.sh 'defcon\.run' 'defcon\-run' 'guelph\.run' 'guelph\-run'
-#   ./domain-rename.sh 'guelph\.run' 'guelph\-run' 'defcon\.run' 'defcon\-run'
+#   ./setup.sh 'defcon\.run' 'defcon\-run' 'guelph\.run' 'guelph\-run'
+#   ./setup.sh 'guelph\.run' 'guelph\-run' 'defcon\.run' 'defcon\-run'
 #
 ## ESCAPE THE REGULAR EXPRESSIONS!!!!
 
@@ -22,7 +22,7 @@ NEW_DOMAIN_LABEL=$4
 
 echo \#1. 👀 Updating account.hcl and init.sh with ${NEW_DOMAIN} and ${NEW_DOMAIN_LABEL}
 sed -i '' "s/$ORIG_DOMAIN/$NEW_DOMAIN/g" infra/terraform/site-tld/account.hcl
-sed -i '' "s/$ORIG_DOMAIN_LABEL/$NEW_DOMAIN_LABEL/g" ./init.sh
+sed -i '' "s/$ORIG_DOMAIN_LABEL/$NEW_DOMAIN_LABEL/g" ./env.sh
 
 echo \#2. 👀 Finding project.json files and do the ORIG_DOMAIN_LABEL to NEW_DOMAIN_LABEL replacement  
 find apps/ -type f -name 'project.json' \
