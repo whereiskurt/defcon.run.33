@@ -18,5 +18,7 @@ unset AWS_CREDENTIAL_EXPIRATION
 
 aws sso logout
 aws sso login --sso-session=Developer
-$(aws configure export-credentials --profile terraform --format env) 
 
+## Terragrunt uses AWS to setup s3/dynamo and uses the default profile,
+## doing this sets makes terragrunt use the terraform profile for it's s3/dynamo creations
+$(aws configure export-credentials --profile terraform --format env) 
