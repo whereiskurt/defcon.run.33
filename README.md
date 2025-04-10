@@ -8,9 +8,14 @@ I think you could use this as a template for deploying most containerized apps, 
 # Diagrams
 
 ## All the things
-Looking at this diagram you can see it deploys WAF, CloudFront w/ ALB+S3 orgins, ALB and NLB, ECS. It ties into a bunch of AWS services, they can all be turned off / tweaked (ie. alarms.) 
+Looking at this handmade diagram you can see we deploy WAF, CloudFront w/ ALB+S3 orgins, ALB and NLB, ECS. It ties into a bunch of AWS services, but they can all be turned off / tweaked (ie. WAF, alarms, vpc endpoints/nat gateway, public subnets.) 
+![ServiceLayout-Full](https://github.com/user-attachments/assets/0f631149-7046-43f2-9890-5fd04b23762d)
+
+## Simpler View
+![ServiceLayout-Simpler](https://github.com/user-attachments/assets/b8fa513b-24a7-439e-a596-bfa3936f6fc7)
 
 ## More to come...
+Sharing is caring.
 
 ## How to Run it?
 Here are some execution steps below. If you already know `terragrunt` you can use `terragrunt run-all ...` raw etc. or use the `nx` directives in the `project.json` files.
