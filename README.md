@@ -73,4 +73,12 @@ nx run mqtt:use1.deploy     #mqtt/etherpath/strapi
 nx run use1.mqtt:destroy    #mqtt/etherpath/strapi
 nx run use1.cluster:destroy
 
+### OR!!!
+cd infra/terraform/site-tld/us-east-1/cluster
+terragrunt run-all apply
+
+## OR !!
+cd infra/terraform/site-tld/us-east-1/cluster/apps/mqtt
+terragrunt run-all apply
+terragrunt run-all destroy
 ```
