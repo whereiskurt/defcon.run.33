@@ -1,4 +1,7 @@
 # DEFCON.run Infrastructure as Code - Template
+
+[TODO: INSERT VIDEO OF BUILD AND DEPLOY]
+
 This is a hobby AWS 'infrastructure as code' project that deploys Strapi/Etherpad/mosquitto applications into a ECS cluster. I wanted to get this out the door incase it's useful to others and to showcase where we are headed with defcon.run 33! :-)
 
 The last few defcon.run events has had a website and infrastructure. This year we're trying to add an meshtastic MQTT service to the fun - see the diagram. FYI - MQTT traffic is NOT HTTP, so it needs a AWS network load balancer for the TLS. 
