@@ -16,6 +16,7 @@ unset AWS_SECRET_ACCESS_KEY
 unset AWS_SESSION_TOKEN                                                  
 unset AWS_CREDENTIAL_EXPIRATION                                          
 
+### Comment this out if you're not using SSO
 aws sso logout
 aws sso login --sso-session=Developer
 
