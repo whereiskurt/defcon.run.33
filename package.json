@@ -1,0 +1,15 @@
+{
+  "name": "defcon.run.33",
+  "version": "0.0.1",
+  "description": "Annual defcon.run project site with infrastructure and code",
+  "main": "index.js",
+  "dependencies": {
+    "nx": "^20.7.1"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "whereiskurt@gmail.com",
+  "license": "ISC"
+}
