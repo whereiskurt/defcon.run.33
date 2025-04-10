@@ -10,8 +10,11 @@
 
 # Check if all required arguments are provided
 if [ $# -ne 4 ]; then
+    echo "Set the domain and domain label to be used in the infrastructure:"
+    echo ""
     echo "Usage: $0 <original_domain> <original_domain_label> <new_domain> <new_domain_label>"
-    echo "Example: $0 defcon.run defcon-run guelph.run guelph-run"
+    echo ""
+    echo "Example: ./setup.sh defcon\.run defcon\-run guelph\.run guelph\-run"
     exit 1
 fi
 
