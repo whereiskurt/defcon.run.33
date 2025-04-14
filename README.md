@@ -4,7 +4,7 @@ This is a hobby AWS 'infrastructure as code' project that deploys [Strapi](https
 
 This repo solves the 'multi-region' problem - and lets you easily deploy to `use1`, `usw2`, `cac1`, and more. The code base manages and assume an AWS Route53 registered domain.
 
-There is A LOT of [AWS magic](https://github.com/user-attachments/assets/0f631149-7046-43f2-9890-5fd04b23762d) used in this repo that I'm happy to share. 🙇‍♂️ For exampoe, we CloudFront our Load Balancers and Buckets, have WAF, VPC endpoints, NAT Gateway, EFS toggles, and lots of others goodies.. this repo shows how to do meaningful AWS infrastructure.
+There is A LOT of [AWS magic](https://github.com/user-attachments/assets/0f631149-7046-43f2-9890-5fd04b23762d) used in this repo that I'm happy to share. 🙇‍♂️ For exampoe, we CloudFront our Load Balancers and Buckets, have WAF, VPC endpoints, NAT Gateway, EFS toggles, and lots of others goodies.. this repo shows how to do meaningful AWS infrastructure. I learned a bunch of lessons along the way, but overall I think this approach is good. :) 
 
 All of the `terraform / terragrunt` state is stored in AWS (Dyanmo/S3).
 
