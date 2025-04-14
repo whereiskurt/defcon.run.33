@@ -4,10 +4,11 @@ This is a hobby AWS 'infrastructure as code' project that deploys [Strapi](https
 
 This repo solves the 'multi-region' problem - and lets you easily deploy to use1, usw2, cac1, and more. The code base manages and assume an AWS Route53 registered domain.
 
-All of the `terraform / terragrunt` state is stored in AWS (Dyanmo/S3).
-
 There is A LOT of AWS magic used in this repo that I'm happy to share. 🙇‍♂️ For exampoe, we CloudFront our Load Balancers and Buckets, have WAF, VPC endpoints, NAT Gateway, EFS toggles, and lots of others goodies.. this repo shows how to do meaningful AWS infrastructure.
 
+All of the `terraform / terragrunt` state is stored in AWS (Dyanmo/S3).
+
+### Motivation
 I wanted to get this out the door incase it's useful to others and to showcase where we are headed with defcon.run 33! :-) The last few defcon.run events has had a website and infrastructure. This year we're trying to add an meshtastic MQTT service to the fun - see the diagram. FYI - MQTT traffic is NOT HTTP, so it needs a AWS network load balancer for the TLS. 
 
 ## Getting it going for you! :) 
