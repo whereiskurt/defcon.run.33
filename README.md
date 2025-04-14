@@ -28,11 +28,12 @@ Deploy apps after `nx run site:up`:
 
 Executing this code gives access to fully configured applications at URLS like:
 - `https://use1.mqtt.defcon.run/map`
-- `https://usw2.etherpad.defcon.run`
-- `https://cac1.strapi.defcon.run`
-
+- `https://use1.etherpad.defcon.run`
+- `https://use1.strapi.defcon.run`
 
 Because of `terragrunt` it's very easy to do separate multi-region deployments. 
+
+Going into the `infra/terraform/site.tld/` and running the `region-copier.sh` creates a new region with the correct regions variables.
 
 You can configure your meshtastic radio to use this MQTT mosquitto server even with TLS. 
 
