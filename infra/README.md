@@ -5,7 +5,7 @@ This isn't a new approach (`terragrunt+terraform`) and this is just my first per
 
 ```
 ├── terraform
-│   ├── defcon-run ## <-- terragrunt folder structure
+│   ├── site-tld ## <-- terragrunt folder structure
 │   │   └── us-east-1
 │   │       └── cluster
 │   │           └── apps
