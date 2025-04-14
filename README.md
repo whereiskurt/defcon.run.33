@@ -41,38 +41,38 @@ Here are some execution steps below. If you already know `terragrunt` you can us
 ## resource creation.
 
 ##### SSO uses ~/.aws/config 
-cat ~/.aws/config 
-    [profile management]
-    sso_session = Developer
-    sso_account_id = 012342342342
-    sso_role_name = HostedZoneAdmin
+% cat ~/.aws/config 
+[profile management]
+sso_session = Developer
+sso_account_id = 012342342342
+sso_role_name = HostedZoneAdmin
 
-    [profile application]
-    sso_session = Developer
-    sso_account_id = 012342342342
-    sso_role_name = AdministratorAccess
+[profile application]
+sso_session = Developer
+sso_account_id = 012342342342
+sso_role_name = AdministratorAccess
 
-    [profile terraform]
-    sso_session = Developer
-    sso_account_id = 012342342342
-    sso_role_name = AdministratorAccess
+[profile terraform]
+sso_session = Developer
+sso_account_id = 012342342342
+sso_role_name = AdministratorAccess
 
 ##### IAM uses ~/.aws/credentials
-cat ~/.aws/credentials
-    [application]
-    aws_access_key_id=ASIA..........01
-    aws_secret_access_key=Isi................NxFb7
-    aws_session_token=IQoJb3JpZ........LWVsd....
+% cat ~/.aws/credentials
+[application]
+aws_access_key_id=ASIA..........01
+aws_secret_access_key=Isi................NxFb7
+aws_session_token=IQoJb3JpZ........LWVsd....
 
-    [management]
-    aws_access_key_id=ASIA..........33
-    aws_secret_access_key=Isi................NxFb7
-    aws_session_token=IQoJb3JpZ........LWVsd....
+[management]
+aws_access_key_id=ASIA..........33
+aws_secret_access_key=Isi................NxFb7
+aws_session_token=IQoJb3JpZ........LWVsd....
 
-    [terraform]
-    aws_access_key_id=ASIA..........22
-    aws_secret_access_key=Isi................NxFb7
-    aws_session_token=IQoJb3JpZ........LWVsd....
+[terraform]
+aws_access_key_id=ASIA..........22
+aws_secret_access_key=Isi................NxFb7
+aws_session_token=IQoJb3JpZ........LWVsd....
 
 #####
 ## Set terragrunt bucket names
