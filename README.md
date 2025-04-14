@@ -21,10 +21,15 @@ Clone the repo and run the 'replace' script:
 Add additional regions:
 <img width="874" alt="Adding Regions" src="https://github.com/user-attachments/assets/a58fdfd3-73b4-4981-9829-83c28e8fcdf8" />
 
+Deploy apps after `nx run site:up`:
+
+<img width="852" alt="Deploying the app" src="https://github.com/user-attachments/assets/c1600105-6e99-4b5f-a8a4-2199264fa0f6" />
+
 Executing this code gives access to fully configured applications at URLS like:
 - `https://use1.mqtt.defcon.run/map`
 - `https://usw2.etherpad.defcon.run`
 - `https://cac1.strapi.defcon.run`
+
 
 Because of `terragrunt` it's very easy to do separate multi-region deployments. 
 
