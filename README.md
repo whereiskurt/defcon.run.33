@@ -1,12 +1,12 @@
 # DEFCON.run Infrastructure as Code - Template
 
-This is a hobby AWS 'infrastructure as code' project that deploys [Strapi](https://strapi.io/)/[Etherpad](https://etherpad.org/)/[mosquitto](https://mosquitto.org/) applications into multi-regional ECS clusters with email and severless RDS configurations. All necessary AWS infrastructure is deployed and the applications (strapi/etherpad/mqtt/etc) are built locally into docker images and deployed to AWS ECR. All of the `terraform\terragrunt` state is stored in AWS (Dyanmo/S3).
+This is a hobby AWS 'infrastructure as code' project that deploys [Strapi](https://strapi.io/)/[Etherpad](https://etherpad.org/)/[mosquitto](https://mosquitto.org/) applications into multi-regional ECS clusters with email and severless RDS configurations. All necessary AWS infrastructure is deployed and the applications (strapi/etherpad/mqtt/etc) are built locally into docker images and deployed to AWS ECR. 
 
 This repo solves the 'multi-region' problem - and lets you easily deploy to use1, usw2, cac1, and more. The code base manages and assume an AWS Route53 registered domain.
 
-We CloudFront our Load Balancers and Buckets, have WAF, VPC endpoints, NAT Gateway, EFS, and lots of others goodies.. this repo shows how to do meaningful AWS infrastructure.
+All of the `terraform\terragrunt` state is stored in AWS (Dyanmo/S3).
 
-Overall, there is A LOT of AWS magic in this repo that I'm happy to share. 🙇‍♂️
+There is A LOT of AWS magic used in this repo that I'm happy to share. 🙇‍♂️ For exampoe, we CloudFront our Load Balancers and Buckets, have WAF, VPC endpoints, NAT Gateway, EFS toggles, and lots of others goodies.. this repo shows how to do meaningful AWS infrastructure.
 
 I wanted to get this out the door incase it's useful to others and to showcase where we are headed with defcon.run 33! :-) The last few defcon.run events has had a website and infrastructure. This year we're trying to add an meshtastic MQTT service to the fun - see the diagram. FYI - MQTT traffic is NOT HTTP, so it needs a AWS network load balancer for the TLS. 
 
