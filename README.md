@@ -19,9 +19,6 @@ I think you could use this as a template for deploying most containerized apps, 
 Clone the repo and run the 'replace' script:
 <img width="1210" alt="" src="https://github.com/user-attachments/assets/ee22d41d-e383-43e1-baf8-3d2e30905827" />
 
-Add additional regions:
-<img width="874" alt="Adding Regions" src="https://github.com/user-attachments/assets/a58fdfd3-73b4-4981-9829-83c28e8fcdf8" />
-
 Deploy apps after `nx run site:up`:
 
 <img width="852" alt="Deploying the app" src="https://github.com/user-attachments/assets/c1600105-6e99-4b5f-a8a4-2199264fa0f6" />
@@ -34,6 +31,9 @@ Executing this code gives access to fully configured applications at URLS like:
 Because of `terragrunt` it's very easy to do separate multi-region deployments. 
 
 Going into the `infra/terraform/site.tld/` and running the `region-copier.sh` creates a new region with the correct regions variables.
+
+Add additional regions:
+<img width="874" alt="Adding Regions" src="https://github.com/user-attachments/assets/a58fdfd3-73b4-4981-9829-83c28e8fcdf8" />
 
 You can configure your meshtastic radio to use this MQTT mosquitto server even with TLS. 
 
