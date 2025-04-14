@@ -48,9 +48,6 @@ Looking at this handmade diagram you can see we deploy WAF, CloudFront w/ ALB+S3
 ## Simpler View
 ![ServiceLayout-Simpler](https://github.com/user-attachments/assets/b8fa513b-24a7-439e-a596-bfa3936f6fc7)
 
-## More to come...
-Sharing is caring.
-
 ## How to Run it?
 Here are some execution steps below. If you already know `terragrunt` you can use `terragrunt run-all ...` raw etc. or use the `nx` directives in the `project.json` files.
 
