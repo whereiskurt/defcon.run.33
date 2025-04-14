@@ -12,6 +12,8 @@ All of the `terraform / terragrunt` state is stored in AWS (Dyanmo/S3).
 I wanted to get this out the door incase it's useful to others and to showcase where we are headed with defcon.run 33! :-) The last few defcon.run events has had a website and infrastructure. This year we're trying to add an meshtastic MQTT service to the fun - see the diagram. FYI - MQTT traffic is NOT HTTP, so it needs a AWS network load balancer for the TLS. 
 
 ## Getting it going for you! :) 
+The repo is setup for `defcon.run` but it can run for any AWS Route53 domain.
+
 The base cost to run this full-tilt 24x7 is between $2 and $3 day (per region), before scaling ECS taskdefs etc. I tend to spin-up/down the infra as I'm doing development. It feels good to 'zero out' the environment with `nx run site:down` 🤷.
 
 I think you could use this as a template for deploying most containerized apps, just by looking at the examples that are already working. I tried to strike a balance between 'cut+paste' in the `apptype` concept (`infra/terraform/modules/cluster/fargate/_v1/apptype/mqtt`) but there is likely more to be done.
