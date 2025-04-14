@@ -1,20 +1,30 @@
 # DEFCON.run Infrastructure as Code - Template
 
-[TODO: INSERT VIDEO OF BUILD AND DEPLOY]
-
 This is a hobby AWS 'infrastructure as code' project that deploys Strapi/Etherpad/mosquitto applications into a ECS cluster. I wanted to get this out the door incase it's useful to others and to showcase where we are headed with defcon.run 33! :-)
 
 The last few defcon.run events has had a website and infrastructure. This year we're trying to add an meshtastic MQTT service to the fun - see the diagram. FYI - MQTT traffic is NOT HTTP, so it needs a AWS network load balancer for the TLS. 
 
-Executing this code gives access to fully configured applications at URLS like `https://use1.mqtt.defcon.run/map` or `https://usw2.etherpad.defcon.run` or `https://cac1.strapi.defcon.run`. Because of `terragrunt` it's very easy to do separate multi-region deployments. 
-
-You can configure your meshtastic radio to use this MQTT mosquitto server even with TLS. 
-
 Overall, there is A LOT of AWS magic in this repo that I'm happy to share. 🙇‍♂️
 
-The base cost to run this full-tilt 24x7 is between $2 and $3 day (per region), before scaling ECS taskdefs etc. I tend to spin-up/down the infra as I'm doing development. It feels good to 'zero out' the environment. 🤷
+## Getting it going for you! :) 
+The base cost to run this full-tilt 24x7 is between $2 and $3 day (per region), before scaling ECS taskdefs etc. I tend to spin-up/down the infra as I'm doing development. It feels good to 'zero out' the environment with `nx run site:down` 🤷.
 
 I think you could use this as a template for deploying most containerized apps, just by looking at the examples that are already working. I tried to strike a balance between 'cut+paste' in the `apptype` concept (`infra/terraform/modules/cluster/fargate/_v1/apptype/mqtt`) but there is likely more to be done.
+
+Clone the repo and run the 'replace' script:
+<img width="1210" alt="" src="https://github.com/user-attachments/assets/ee22d41d-e383-43e1-baf8-3d2e30905827" />
+
+Add additional regions:
+<img width="874" alt="Adding Regions" src="https://github.com/user-attachments/assets/a58fdfd3-73b4-4981-9829-83c28e8fcdf8" />
+
+Executing this code gives access to fully configured applications at URLS like:
+- `https://use1.mqtt.defcon.run/map`
+- `https://usw2.etherpad.defcon.run`
+- `https://cac1.strapi.defcon.run`
+
+Because of `terragrunt` it's very easy to do separate multi-region deployments. 
+
+You can configure your meshtastic radio to use this MQTT mosquitto server even with TLS. 
 
 # Diagrams
 
