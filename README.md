@@ -18,7 +18,7 @@ The base cost to run this full-tilt 24x7 is between $2 and $3 day (per region), 
 
 I think you could use this as a template for deploying most containerized apps, just by looking at the examples that are already working. I tried to strike a balance between 'cut+paste' in the `apptype` concept (`infra/terraform/modules/cluster/fargate/_v1/apptype/mqtt`) but there is likely more to be done.
 
-Clone the repo and run the 'replace' script:
+Clone the repo and run the `setup.sh` script to replace a `defcon.run` with `guelph.run`:
 <img width="1210" alt="" src="https://github.com/user-attachments/assets/ee22d41d-e383-43e1-baf8-3d2e30905827" />
 
 Deploy apps after `nx run site:up`:
