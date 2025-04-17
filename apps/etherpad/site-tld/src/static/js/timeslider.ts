@@ -31,7 +31,7 @@ import {randomString, Cookies} from "./pad_utils";
 const hooks = require('./pluginfw/hooks');
 import padutils from './pad_utils'
 const socketio = require('./socketio');
-import html10n from '../js/vendors/html10n'
+import html10n from './vendors/html10n'
 let token, padId, exportLinks, socket, changesetLoader, BroadcastSlider;
 
 const init = () => {

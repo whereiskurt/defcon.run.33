@@ -25,7 +25,7 @@
 import padutils,{Cookies} from "./pad_utils";
 const padcookie = require('./pad_cookie').padcookie;
 const Ace2Editor = require('./ace').Ace2Editor;
-import html10n from '../js/vendors/html10n'
+import html10n from './vendors/html10n'
 
 const padeditor = (() => {
   let pad = undefined;
