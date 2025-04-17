@@ -1,5 +1,5 @@
 # DEFCON.run Infrastructure as Code - Template
-> "Full AWS IaC stack: Route53 + CloudFront + ALB/NLB + WAF → ECS Fargate apps (Strapi, Etherpad, Next.js, Mosquitto) via Nginx ingress. Logs to S3/Kinesis. Secrets in SSM. DBs on RDS Serverless + DynamoDB. All Terraform+Terragrunt."
+> "Full AWS IaC stack: Route53 + CloudFront + WAF + ALB/NLB → ECS Fargate apps (Strapi, Etherpad, Next.js, Mosquitto) via Nginx ingress. Logs to S3/Kinesis. Secrets in SSM. DBs on RDS Serverless + DynamoDB. All Terraform+Terragrunt."
 
 This is a hobby AWS 'infrastructure as code' project that deploys [Strapi](https://strapi.io/)/[Etherpad](https://etherpad.org/)/[mosquitto](https://mosquitto.org/)+[meshmap](https://github.com/brianshea2/meshmap.net) applications into multi-regional ECS clusters with SES email and RDS serverless postgres configurations. All necessary AWS infrastructure is deployed and the applications (Strapi/Etherpad/mosquitto+meshmap/etc) are built locally into Docker images and deployed to AWS ECR. 
 
