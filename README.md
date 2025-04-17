@@ -29,6 +29,9 @@ Deploy apps after `nx run site:up`:
 
 <img width="800" alt="Deploying the app" src="https://github.com/user-attachments/assets/c1600105-6e99-4b5f-a8a4-2199264fa0f6" />
 
+You can deploy any combination mqtt/etherpad/strapi apps:
+![deploys](https://github.com/user-attachments/assets/a1cf6207-a3a1-4f3d-ae32-e08268d16880)
+
 Executing this code gives access to fully configured applications at URLS like:
 - `https://use1.mqtt.defcon.run/map`
 - `https://use1.etherpad.defcon.run`
