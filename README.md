@@ -1,8 +1,10 @@
 # DEFCON.run Infrastructure as Code - Template
 
-This is a hobby AWS 'infrastructure as code' project that deploys [Strapi](https://strapi.io/)/[Etherpad](https://etherpad.org/)/[mosquitto](https://mosquitto.org/) applications into multi-regional ECS clusters with SES email and RDS serverless postgres configurations. All necessary AWS infrastructure is deployed and the applications (Strapi/Etherpad/mosquitto/etc) are built locally into Docker images and deployed to AWS ECR. 
+This is a hobby AWS 'infrastructure as code' project that deploys [Strapi](https://strapi.io/)/[Etherpad](https://etherpad.org/)/[mosquitto](https://mosquitto.org/)+[meshmap](https://github.com/brianshea2/meshmap.net) applications into multi-regional ECS clusters with SES email and RDS serverless postgres configurations. All necessary AWS infrastructure is deployed and the applications (Strapi/Etherpad/mosquitto+meshmap/etc) are built locally into Docker images and deployed to AWS ECR. 
 
 This repo solves the 'multi-region' problem - and lets you easily deploy to `use1`, `usw2`, `cac1`, and more. The code base manages and assume an AWS Route53 registered domain.
+
+The actually resources are defined in `terraform` modules, and 'instantiated' using `terragrunt`. Looking in the `infra/terraform/site-tld` you can see creating a new region is just copying the folder 'us-east-1' and setting a few variable values.
 
 There is A LOT of [AWS magic](https://github.com/user-attachments/assets/0f631149-7046-43f2-9890-5fd04b23762d) used in this repo that I'm happy to share. 🙇‍♂️ For exampoe, we CloudFront our Load Balancers and Buckets, have WAF, VPC endpoints, NAT Gateway, EFS toggles, and lots of others goodies.. this repo shows how to do meaningful AWS infrastructure. I learned a bunch of lessons along the way, but overall I think this approach is good. :) 
 
