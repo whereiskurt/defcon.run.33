@@ -7,7 +7,7 @@ This repo solves the 'multi-region' problem - and lets you easily deploy to `use
 
 The actually resources are defined in `terraform` modules, and 'instantiated' using `terragrunt`. Looking in the `infra/terraform/site-tld` you can see creating a new region is just copying the folder 'us-east-1' and setting a few variable values. All of the `terraform / terragrunt` IAC state is stored in AWS DyanmoDB and S3.
 
-There is A LOT of [AWS magic](https://github.com/user-attachments/assets/0f631149-7046-43f2-9890-5fd04b23762d) used in this repo that I'm happy to share. 🙇‍♂️ For exampoe, we CloudFront our Load Balancers and Buckets, have WAF, VPC endpoints, NAT Gateway, EFS toggles, and lots of others goodies.. this repo shows how to do meaningful AWS infrastructure. I learned a bunch of lessons along the way, but overall I think this approach is good. :) 
+There is A LOT of [AWS magic](https://github.com/user-attachments/assets/0f631149-7046-43f2-9890-5fd04b23762d) used in this repo that I'm happy to share. 🙇‍♂️ For example, we CloudFront our Load Balancers and Buckets, have WAF, VPC endpoints, NAT Gateway, EFS toggles, and lots of others goodies.. this repo shows how to do meaningful AWS infrastructure. I learned a bunch of lessons along the way, but overall I think this approach is good. :) 
 
 ![ServiceLayout-Full](https://github.com/user-attachments/assets/0f631149-7046-43f2-9890-5fd04b23762d)
 
