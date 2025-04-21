@@ -14,8 +14,9 @@
 #include <pb_decode.h>
 #include <pb_encode.h>
 
-#define MAX_BUFFER 1024
+#define MAX_BUFFER 2048
 
+int callback_count = 0;
 
 const char* get_inspector_host() {
     const char* host = getenv("INSPECTOR_HOST");
@@ -52,19 +53,19 @@ static int send_packet_to_inspector(meshtasticplugin_PacketRequest *request, mes
     pb_istream_t istream;
     int sent_bytes, recv_bytes;
 
-    fprintf(stdout, "send_packet_to_inspector called\n");
-    fprintf(stdout, "send_packet_to_inspector called\n");
-
-    /* Create socket */
     sock = socket(AF_INET, SOCK_STREAM, 0);
     if (sock == -1) {
         perror("socket creation failed");
         return -1;
     }
 
-    server.sin_addr.s_addr = inet_addr(get_inspector_host());
+    const char* inspector_host = get_inspector_host();
+    int inspector_port = get_inspector_port();
+    //fprintf(stderr, "Connecting to inspector at %s:%d\n", inspector_host, inspector_port);
+
+    server.sin_addr.s_addr = inet_addr(inspector_host);
     server.sin_family = AF_INET;
-    server.sin_port = htons(get_inspector_port());
+    server.sin_port = htons(inspector_port);
 
     /* Connect to Inspector server */
     if (connect(sock, (struct sockaddr *)&server, sizeof(server)) < 0) {
@@ -72,14 +73,15 @@ static int send_packet_to_inspector(meshtasticplugin_PacketRequest *request, mes
         close(sock);
         return -1;
     }
+    //fprintf(stderr, "Connection established to inspector server\n");
 
-    /* Encode PacketRequest */
     ostream = pb_ostream_from_buffer(buffer, sizeof(buffer));
     if (!pb_encode(&ostream, meshtasticplugin_PacketRequest_fields, request)) {
-        fprintf(stderr, "Encoding failed: %s\n", PB_GET_ERROR(&ostream));
+        fprintf(stderr, "Encoding failed: %d: %s\n", callback_count, PB_GET_ERROR(&ostream));
         close(sock);
         return -1;
     }
+    //fprintf(stderr, "Request encoded successfully, %zu bytes\n", ostream.bytes_written);
 
     sent_bytes = send(sock, buffer, ostream.bytes_written, 0);
     if (sent_bytes <= 0) {
@@ -87,27 +89,34 @@ static int send_packet_to_inspector(meshtasticplugin_PacketRequest *request, mes
         close(sock);
         return -1;
     }
+    //fprintf(stderr, "Sent %d bytes to inspector server\n", sent_bytes);
 
-    /* Receive PacketResponse */
     recv_bytes = recv(sock, buffer, sizeof(buffer), 0);
     if (recv_bytes <= 0) {
         perror("recv failed");
         close(sock);
         return -1;
     }
+    //fprintf(stderr, "Received %d bytes from inspector server\n", recv_bytes);
 
     istream = pb_istream_from_buffer(buffer, recv_bytes);
     if (!pb_decode(&istream, meshtasticplugin_PacketResponse_fields, response)) {
-        fprintf(stderr, "Decoding failed: %s\n", PB_GET_ERROR(&istream));
+        fprintf(stderr, "Decoding failed: %d: %s\n", callback_count, PB_GET_ERROR(&istream));
         close(sock);
         return -1;
+    }
+
+    //fprintf(stderr, "Decoding success: %d\n", callback_count);
+    if (response->shouldBlock) {
+        fprintf(stderr, "Inspector response: BLOCK\n");
+    } else {
+        fprintf(stderr, "Inspector response: ALLOW\n");
     }
 
     close(sock);
     return 0;
 }
 
-int callback_count = 0;
 static int callback_message(int event, void *event_data, void *userdata)
 {
 	struct mosquitto_evt_message *msg = event_data;

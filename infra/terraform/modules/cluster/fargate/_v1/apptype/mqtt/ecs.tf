@@ -41,8 +41,8 @@ resource "aws_ecs_task_definition" "service" {
   family                   = replace("${var.env_zonename}", ".", "-")
   requires_compatibilities = ["FARGATE"]
   execution_role_arn       = var.task_execution_role_arn
-  cpu                      = 256
-  memory                   = 512
+  cpu                      = 512
+  memory                   = 1024
   network_mode             = "awsvpc"
 
   container_definitions = templatefile(
@@ -50,15 +50,18 @@ resource "aws_ecs_task_definition" "service" {
       safedomain = replace(var.env_zonename, ".", "-")
       name : {
         mosquitto : replace("mosquitto-${var.env_zonename}", ".", "-"),
-        nginx : replace("nginx-${var.env_zonename}", ".", "-")
+        nginx : replace("nginx-${var.env_zonename}", ".", "-"),
+        grpc : replace("grpc-${var.env_zonename}", ".", "-")
       },
       image : {
         mosquitto : "${aws_ecr_repository.repos["mosquitto"].repository_url}:${var.repo_versions["mosquitto"]}",
-        nginx : "${aws_ecr_repository.repos["nginx"].repository_url}:${var.repo_versions["nginx"]}"
+        nginx : "${aws_ecr_repository.repos["nginx"].repository_url}:${var.repo_versions["nginx"]}",
+        grpc : "${aws_ecr_repository.repos["grpc"].repository_url}:${var.repo_versions["grpc"]}"
       },
       log_region : {
         mosquitto : data.aws_region.current.name,
-        nginx : data.aws_region.current.name
+        nginx : data.aws_region.current.name,
+        grpc : data.aws_region.current.name
       },
       app_url : {
         nginx : "https://${var.env_zonename}",
@@ -71,15 +74,18 @@ resource "aws_ecs_task_definition" "service" {
 
       cpu : {
         mosquitto : 128,
-        nginx : 128
+        nginx : 128,
+        grpc : 128
       },
       memory : {
         mosquitto : 256,
-        nginx : 256
+        nginx : 256,
+        grpc : 256
       },
       memoryReservation : {
-        mosquitto : 256
-        nginx : 256
+        mosquitto : 256,
+        nginx : 256,
+        grpc : 256
       }
     }
   )
