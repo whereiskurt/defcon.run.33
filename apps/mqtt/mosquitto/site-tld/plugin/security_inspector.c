@@ -1,74 +1,45 @@
 #include <arpa/inet.h>
-#include <pb_decode.h>
-#include <pb_encode.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
 #include <sys/socket.h>
 #include <time.h>
 #include <unistd.h>
-#include "meshtastic_inspector.pb.h"
-#include "mosquitto_broker.h"
 #include "mosquitto_plugin.h"
 #include "mosquitto.h"
 #include "mqtt_protocol.h"
+//This is protobuf generated code for meshtastic_inspector.proto
+#include "meshtastic_inspector.pb.h"
+//These are the nanopb generated headers
+#include <pb_decode.h>
+#include <pb_encode.h>
 
-#define INSPECTOR_HOST "127.0.0.1"
-#define INSPECTOR_PORT 50051
 #define MAX_BUFFER 1024
+
+
+const char* get_inspector_host() {
+    const char* host = getenv("INSPECTOR_HOST");
+    return host ? host : "127.0.0.1";
+}
+
+int get_inspector_port() {
+    const char* port_str = getenv("INSPECTOR_PORT");
+    return port_str ? atoi(port_str) : 50051;
+}
 
 #define UNUSED(A) (void)(A)
 
 static mosquitto_plugin_id_t *mosq_pid = NULL;
 
-int callback_count = 0;
-static int callback_message(int event, void *event_data, void *userdata)
+bool encode_callback_string(pb_ostream_t *stream, const pb_field_t *field, void * const *arg)
 {
-	struct mosquitto_evt_message *ed = event_data;
+    const char *str = (const char *)(*arg);
+    size_t len = strlen(str);
 
-	UNUSED(event);
-	UNUSED(userdata);
+    if (!pb_encode_tag_for_field(stream, field))
+        return false;
 
-	callback_count++;
-    if (callback_count % 10 == 0 || callback_count < 9) {
-        fprintf(stderr, "callback called (%d)\n", callback_count);
-    }
-
-	return MOSQ_ERR_SUCCESS;
-}
-
-int mosquitto_plugin_version(int supported_version_count, const int *supported_versions)
-{
-	int i;
-    printf("mosquitto_plugin_version called\n");
-
-	for(i=0; i<supported_version_count; i++){
-		if(supported_versions[i] == 5){
-			return 5;
-		}
-	}
-	return -1;
-}
-
-int mosquitto_plugin_init(mosquitto_plugin_id_t *identifier, void **user_data, struct mosquitto_opt *opts, int opt_count)
-{
-	UNUSED(user_data);
-	UNUSED(opts);
-	UNUSED(opt_count);
-    fprintf(stderr, "mosquitto_plugin_init called\n");
-
-	mosq_pid = identifier;
-	return mosquitto_callback_register(mosq_pid, MOSQ_EVT_MESSAGE, callback_message, NULL, NULL);
-}
-
-int mosquitto_plugin_cleanup(void *user_data, struct mosquitto_opt *opts, int opt_count)
-{
-	UNUSED(user_data);
-	UNUSED(opts);
-	UNUSED(opt_count);
-    fprintf(stderr, "mosquitto_plugin_cleanup called\n");
-
-	return mosquitto_callback_unregister(mosq_pid, MOSQ_EVT_MESSAGE, callback_message, NULL);
+    return pb_encode_string(stream, (const pb_byte_t *)str, len);
 }
 
 static int send_packet_to_inspector(meshtasticplugin_PacketRequest *request, meshtasticplugin_PacketResponse *response)
@@ -91,9 +62,9 @@ static int send_packet_to_inspector(meshtasticplugin_PacketRequest *request, mes
         return -1;
     }
 
-    server.sin_addr.s_addr = inet_addr(INSPECTOR_HOST);
+    server.sin_addr.s_addr = inet_addr(get_inspector_host());
     server.sin_family = AF_INET;
-    server.sin_port = htons(INSPECTOR_PORT);
+    server.sin_port = htons(get_inspector_port());
 
     /* Connect to Inspector server */
     if (connect(sock, (struct sockaddr *)&server, sizeof(server)) < 0) {
@@ -134,4 +105,86 @@ static int send_packet_to_inspector(meshtasticplugin_PacketRequest *request, mes
 
     close(sock);
     return 0;
+}
+
+int callback_count = 0;
+static int callback_message(int event, void *event_data, void *userdata)
+{
+	struct mosquitto_evt_message *msg = event_data;
+
+	callback_count++;
+    if (callback_count % 10 == 0 || callback_count < 9) {
+        fprintf(stderr, "callback called (%d)\n", callback_count);
+    }
+
+    meshtasticplugin_PacketRequest req = meshtasticplugin_PacketRequest_init_zero;
+    meshtasticplugin_PacketResponse res = meshtasticplugin_PacketResponse_init_zero;
+
+    req.payload.funcs.encode = &encode_callback_string;
+    req.payload.arg = msg->payload;
+
+    req.topic.funcs.encode = &encode_callback_string;
+    req.topic.arg = (void*) msg->topic;
+
+    req.username.funcs.encode = &encode_callback_string;
+    req.username.arg = (void*) mosquitto_client_username(msg->client);
+
+    req.client_id.funcs.encode = &encode_callback_string;
+    req.client_id.arg = (void*) mosquitto_client_id(msg->client);
+
+    req.ip_address.funcs.encode = &encode_callback_string;
+    req.ip_address.arg = (void*) mosquitto_client_address(msg->client);
+
+    req.timestamp = (int64_t)time(NULL);
+
+    if (send_packet_to_inspector(&req, &res) != 0) {
+        if (callback_count % 10 == 0 || callback_count < 9) {
+            fprintf(stderr, "Failed to contact inspector, allowing publish.\n");
+        }
+        return MOSQ_ERR_SUCCESS;
+    }
+
+    if (res.shouldBlock) {
+        fprintf(stderr, "BLOCK: Blocking publish: %d: %s\n", callback_count, (char *)res.blockReason.arg);
+        return MOSQ_ERR_PLUGIN_DEFER;
+    }
+
+    if (callback_count % 10 == 0 || callback_count < 9) {
+        fprintf(stderr, "ALLOWED: Packet sent successfully to inspector and allowed.\n");
+    }
+
+	return MOSQ_ERR_SUCCESS;
+}
+
+//This is taken from the mosquitto plugin example: https://github.com/eclipse-mosquitto/mosquitto/blob/master/plugins/payload-modification/mosquitto_payload_modification.c
+int mosquitto_plugin_version(int supported_version_count, const int *supported_versions)
+{
+	int i;
+    printf("mosquitto_plugin_version called\n");
+
+	for(i=0; i<supported_version_count; i++){
+		if(supported_versions[i] == 5){
+			return 5;
+		}
+	}
+	return -1;
+}
+int mosquitto_plugin_init(mosquitto_plugin_id_t *identifier, void **user_data, struct mosquitto_opt *opts, int opt_count)
+{
+	UNUSED(user_data);
+	UNUSED(opts);
+	UNUSED(opt_count);
+    fprintf(stderr, "mosquitto_plugin_init called\n");
+
+	mosq_pid = identifier;
+	return mosquitto_callback_register(mosq_pid, MOSQ_EVT_MESSAGE, callback_message, NULL, NULL);
+}
+int mosquitto_plugin_cleanup(void *user_data, struct mosquitto_opt *opts, int opt_count)
+{
+	UNUSED(user_data);
+	UNUSED(opts);
+	UNUSED(opt_count);
+    fprintf(stderr, "mosquitto_plugin_cleanup called\n");
+
+	return mosquitto_callback_unregister(mosq_pid, MOSQ_EVT_MESSAGE, callback_message, NULL);
 }
