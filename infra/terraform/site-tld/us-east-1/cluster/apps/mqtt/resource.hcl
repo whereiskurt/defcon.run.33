@@ -21,10 +21,11 @@ locals {
   use_cloudfront = false
 
   app_type = "mqtt"
-  repos    = ["mosquitto", "nginx"]
+  repos    = ["mosquitto", "nginx", "grpc"]
   repo_versions = {
     "nginx" : "v0.0.1",
-    "mosquitto" : "v0.0.1"
+    "mosquitto" : "v0.0.1",
+    "grpc" : "v0.0.1"
   }
 
   ##Using public subnets means we don't VPC endpoints or NAT Gateways which is the cheapest option with just a few services

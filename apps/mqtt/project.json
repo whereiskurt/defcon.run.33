@@ -11,6 +11,7 @@
         "commands": [
           "cd nginx && ./deploy.nginx.sh",
           "cd mosquitto && ./deploy.mosquitto.sh",
+          "cd grpc && ./deploy.grpc.sh",
           "./force-new-deployment.sh"
         ],
         "cwd": "apps/mqtt/",

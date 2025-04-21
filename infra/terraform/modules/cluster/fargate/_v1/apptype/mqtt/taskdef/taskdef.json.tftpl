@@ -6,6 +6,12 @@
     "memory": ${memory["mosquitto"]},
     "memoryReservation": ${memoryReservation["mosquitto"]},
     "essential": true,
+    "dependsOn": [
+      {
+        "containerName": "${name["grpc"]}",
+        "condition": "HEALTHY"
+      }
+    ],
     "command": [
       "/usr/sbin/mosquitto", 
       "-c", 
@@ -109,6 +115,52 @@
       "timeout": 5,
       "retries": 3,
       "startPeriod": 120
+    }
+  },
+  {
+    "name": "${name["grpc"]}",
+    "image": "${image["grpc"]}",
+    "cpu": ${cpu["grpc"]},
+    "memory": ${memory["grpc"]},
+    "memoryReservation": ${memoryReservation["grpc"]},
+    "essential": true,
+    "command": [
+      "/meshtk/meshtk", "protobuf", "inspector", "--verbose=debug"
+    ],
+    "environment": [
+      {
+        "name": "INSPECTOR_HOST",
+        "value": "127.0.0.1"
+      },
+      {
+        "name": "INSPECTOR_PORT",
+        "value": "50051"
+      }
+    ],
+    "portMappings": [
+      {
+        "containerPort": 50051,
+        "hostPort": 50051
+      }
+    ],
+    "logConfiguration": {
+      "logDriver": "awslogs",
+      "options": {
+        "awslogs-region": "${log_region["grpc"]}",
+        "awslogs-group": "/ecs/${name["grpc"]}-${safedomain}",
+        "awslogs-stream-prefix": "grpc",
+        "awslogs-create-group": "true"
+      }
+    },
+    "healthCheck": {
+      "command": [
+        "CMD-SHELL",
+        "nc -z localhost 50051 || exit 1"
+      ],
+      "interval": 60,
+      "timeout": 15,
+      "retries": 3,
+      "startPeriod": 15
     }
   }
 ]
