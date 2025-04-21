@@ -7,6 +7,10 @@ export AWS_ACCOUNT_ID=${AWS_ACCOUNT_ID:-$(aws sts get-caller-identity --query "A
 export IMAGE_TAG=${IMAGE_TAG:-"v0.0.1"}
 export REPO_NAME=${REPO_NAME:-"mosquitto.mqtt.defcon.run"}
 
+# docker buildx build \
+#   --platform linux/amd64 \
+#   -f site-tld/Dockerfile -t $REPO_NAME:$IMAGE_TAG site-tld/
+
 docker buildx build \
   --platform linux/amd64,linux/arm64 \
   -f site-tld/Dockerfile -t $REPO_NAME:$IMAGE_TAG site-tld/
