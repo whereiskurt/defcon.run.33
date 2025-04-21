@@ -122,9 +122,9 @@ static int callback_message(int event, void *event_data, void *userdata)
 	struct mosquitto_evt_message *msg = event_data;
 
 	callback_count++;
-    if (callback_count % 10 == 0 || callback_count < 9) {
-        fprintf(stderr, "callback called (%d)\n", callback_count);
-    }
+    // if (callback_count % 10 == 0 || callback_count < 9) {
+    //     fprintf(stderr, "callback called (%d)\n", callback_count);
+    // }
 
     meshtasticplugin_PacketRequest req = meshtasticplugin_PacketRequest_init_zero;
     meshtasticplugin_PacketResponse res = meshtasticplugin_PacketResponse_init_zero;
