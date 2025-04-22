@@ -16,4 +16,4 @@ COPY --from=builder /meshtk /meshtk
 ENV INSPECTOR_HOST="127.0.0.1"
 ENV INSPECTOR_PORT="50051"
 
-CMD ["/meshtk/meshtk", "grpc", "security", "--verbose=debug"]
+CMD ["/meshtk/meshtk", "protobuf", "inspector", "--verbose=debug"]

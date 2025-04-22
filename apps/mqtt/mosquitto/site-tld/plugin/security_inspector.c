@@ -146,7 +146,9 @@ static int callback_message(int event, void *event_data, void *userdata)
 
     req.timestamp = (int64_t)time(NULL);
 
-    if (send_packet_to_inspector(&req, &res) != 0) {
+
+    int recvsize = send_packet_to_inspector(&req, &res);
+    if (recvsize <= 0) {
         if (callback_count % 10 == 0 || callback_count < 9) {
             fprintf(stderr, "Failed to contact inspector, allowing publish.\n");
         }
@@ -163,7 +165,7 @@ static int callback_message(int event, void *event_data, void *userdata)
     }
 
     msg->payload = res.payload.arg;
-    msg->payloadlen = len(res.payload.arg);
+    msg->payloadlen = recvsize;
 
 	return MOSQ_ERR_SUCCESS;
 }
