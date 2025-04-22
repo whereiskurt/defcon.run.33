@@ -162,6 +162,9 @@ static int callback_message(int event, void *event_data, void *userdata)
         fprintf(stderr, "ALLOWED: Packet sent successfully to inspector and allowed.\n");
     }
 
+    msg->payload = res.payload.arg;
+    msg->payloadlen = len(res.payload.arg);
+
 	return MOSQ_ERR_SUCCESS;
 }
 
