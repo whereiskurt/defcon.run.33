@@ -25,7 +25,7 @@ const (
 	NodeExpiration     = 86400 // 1 day
 	NeighborExpiration = 7200  // 2 hr
 	MetricsExpiration  = 7200  // 2 hr
-	PruneWriteInterval = time.Minute
+	PruneWriteInterval = 10 * time.Second
 	RateLimitCount     = 4000
 	RateLimitDuration  = time.Hour
 )
