@@ -20,6 +20,23 @@
       "executor": "nx:run-commands",
       "timeout": 120000
     },
+    "use1.redeploy": {
+      "options": {
+        "env": {
+          "AWS_REGION": "us-east-1",
+          "CLUSTER": "ecs-use1-defcon-run",
+          "MQTT": "mqtt-defcon-run"
+        },
+        "commands": [
+          "./force-new-deployment.sh"
+        ],
+        "cwd": "apps/mqtt/",
+        "parallel": false
+      },
+      "executor": "nx:run-commands",
+      "timeout": 120000
+    },
+
     "cac1.deploy": {
       "options": {
         "env": {
