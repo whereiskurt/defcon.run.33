@@ -25,7 +25,7 @@ const (
 	NodeExpiration     = 86400 // 1 day
 	NeighborExpiration = 7200  // 2 hr
 	MetricsExpiration  = 7200  // 2 hr
-	PruneWriteInterval = 10 * time.Second
+	PruneWriteInterval = 60 * time.Second
 	RateLimitCount     = 4000
 	RateLimitDuration  = time.Hour
 )
@@ -37,8 +37,6 @@ var (
 )
 
 func handleMessage(from uint32, topic string, portNum generated.PortNum, payload []byte) {
-	log.Printf("[kph] %v (%v) %s", from, topic, portNum)
-
 	Receiving.Store(true)
 	switch portNum {
 	case generated.PortNum_TEXT_MESSAGE_APP:
