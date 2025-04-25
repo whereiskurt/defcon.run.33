@@ -114,7 +114,7 @@ static int send_to_inspector(meshtasticplugin_PacketRequest *request, meshtastic
     }
 
     close(sock);
-    return 0;
+    return recv_bytes;
 }
 
 static int callback_message(int event, void *event_data, void *userdata)
