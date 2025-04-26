@@ -158,7 +158,7 @@ static int callback_message(int event, void *event_data, void *userdata)
 
     if (res.shouldBlock)
     {
-        fprintf(stderr, "BLOCK:%d:%s:%s:%s\n", callback_count, req.username.arg, msg->topic, (char *)res.blockReason.arg);
+        // fprintf(stderr, "BLOCK:%d:%s:%s:%s\n", callback_count, req.username.arg, msg->topic, (char *)res.blockReason.arg);
         return MOSQ_ERR_PLUGIN_DEFER;
     }
 
