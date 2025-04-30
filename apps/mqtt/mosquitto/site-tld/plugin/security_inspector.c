@@ -67,12 +67,6 @@ bool decode_callback_string(pb_istream_t *stream, const pb_field_t *field, void 
     return true;
 }
 
-/**
- * Establish a connection to the inspector server
- * @param inspector_host hostname or IP address of the inspector server
- * @param inspector_port port number of the inspector server
- * @return socket descriptor or -1 on error
- */
 static int connect_to_inspector(const char* inspector_host, int inspector_port) {
     struct addrinfo hints, *res, *p;
     int sock = -1;
@@ -113,12 +107,6 @@ static int connect_to_inspector(const char* inspector_host, int inspector_port) 
     return sock;
 }
 
-/**
- * Encode a packet request and send it to the socket
- * @param sock socket descriptor
- * @param request packet request to send
- * @return number of bytes sent or -1 on error
- */
 static int encode_and_send_request(int sock, meshtasticplugin_PacketRequest *request) {
     uint8_t buffer[MAX_BUFFER];
     pb_ostream_t ostream;
@@ -139,12 +127,6 @@ static int encode_and_send_request(int sock, meshtasticplugin_PacketRequest *req
     return sent_bytes;
 }
 
-/**
- * Receive and decode a packet response
- * @param sock socket descriptor
- * @param response packet response to fill
- * @return number of bytes received or -1 on error
- */
 static int receive_and_decode_response(int sock, meshtasticplugin_PacketResponse *response) {
     uint8_t buffer[MAX_BUFFER];
     pb_istream_t istream;
