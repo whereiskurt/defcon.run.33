@@ -228,19 +228,18 @@ static int callback_message(int event, void *event_data, void *userdata)
     }
 
     if (res.shouldBlock) {
-        fprintf(stderr, "BLOCK: Blocking publish: %d: %s\n", callback_count, block_reason_buffer);
-        return MOSQ_ERR_PLUGIN_DEFER;
+        fprintf(stderr, "SUGGESTED BLOCK: %d: %s\n", callback_count, block_reason_buffer);
+        // return MOSQ_ERR_PLUGIN_DEFER;
+        // return MOSQ_ERR_SUCCESS;
     }
-
-    if (callback_count % 10 == 0 || callback_count < 9) {
-        fprintf(stderr, "ALLOWED: Packet sent successfully to inspector and allowed.\n");
-    }
-
-
+    
     //TODO: Use example to copy over the payload
     // msg->payload = res.payload.arg;
     // msg->payloadlen = recvsize;
-
+    
+    if (callback_count % 10 == 0 || callback_count < 9) {
+        fprintf(stderr, "ALLOWED: Packet sent successfully to inspector and allowed.\n");
+    }
 	return MOSQ_ERR_SUCCESS;
 }
 

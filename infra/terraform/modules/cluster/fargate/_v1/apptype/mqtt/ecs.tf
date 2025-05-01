@@ -179,6 +179,7 @@ resource "aws_lb_target_group" "mosquitto_target" {
   vpc_id      = var.vpc_id
   target_type = "ip"
   provider    = aws.application
+  //proxy_protocol_v2 = true
 }
 
 resource "aws_lb_target_group" "mqtt_nginx_target" {
