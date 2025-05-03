@@ -108,7 +108,7 @@ RUN set -x && \
 
 VOLUME ["/mosquitto/data", "/mosquitto/log"]
 
-EXPOSE 1883
+EXPOSE 1884
 ENTRYPOINT ["/docker-entrypoint.sh"]
 CMD ["/usr/sbin/mosquitto", "-c", "/mosquitto/config/mosquitto.conf"]
     

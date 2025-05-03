@@ -7,14 +7,11 @@ services:
       context: ./grpc/site-tld/
       dockerfile: Dockerfile
     ports:
-      - "50051:50051"
+      - "1883:1883"
   mqtt-local:
     container_name: mqtt-local
     build:
       context: ./mosquitto/site-tld/
       dockerfile: Dockerfile
-    environment:
-      - INSPECTOR_HOST=grpc-local
-      - INSPECTOR_PORT=50051
     ports:
-      - "1883:1883"
+      - "1884:1884"

@@ -123,7 +123,7 @@ resource "aws_ecs_service" "this" {
   }
   load_balancer {
     target_group_arn = aws_lb_target_group.mosquitto_target.arn
-    container_name   = replace("mosquitto-${var.env_zonename}", ".", "-")
+    container_name   = replace("grpc-${var.env_zonename}", ".", "-")
     container_port   = 1883
   }
   load_balancer {
@@ -173,13 +173,13 @@ resource "null_resource" "wait_for_acm_cert" {
 }
 
 resource "aws_lb_target_group" "mosquitto_target" {
-  name        = replace("mosquitto-${var.env_zonename}", ".", "-")
-  port        = 1883
-  protocol    = "TCP"
-  vpc_id      = var.vpc_id
-  target_type = "ip"
-  provider    = aws.application
-  //proxy_protocol_v2 = true
+  name              = replace("mosquitto-${var.env_zonename}", ".", "-")
+  port              = 1883
+  protocol          = "TCP"
+  vpc_id            = var.vpc_id
+  target_type       = "ip"
+  provider          = aws.application
+  proxy_protocol_v2 = true
 }
 
 resource "aws_lb_target_group" "mqtt_nginx_target" {

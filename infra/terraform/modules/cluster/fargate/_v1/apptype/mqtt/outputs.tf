@@ -32,7 +32,7 @@ resource "aws_ssm_parameter" "mqtt_password" {
 resource "aws_ssm_parameter" "mqtt_broker" {
   name     = "/${var.region_zonename}/meshmap/mqtt_broker"
   type     = "String"
-  value    = "tcp://localhost:1883"
+  value    = "tcp://localhost:1884"
   provider = aws.application
 }
 
