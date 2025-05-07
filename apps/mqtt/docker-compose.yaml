@@ -8,6 +8,12 @@ services:
       dockerfile: Dockerfile
     ports:
       - "1883:1883"
+    command: 
+      - /meshtk/meshtk
+      - server
+      - proxy
+      - --verbose=trace
+
   mqtt-local:
     container_name: mqtt-local
     build:
