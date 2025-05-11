@@ -15,4 +15,4 @@ RUN apk --no-cache add ca-certificates
 COPY --from=builder /meshtk /meshtk
 
 EXPOSE 1883
-CMD ["/meshtk/meshtk", "server", "proxy", "--verbose=debug"]
+CMD ["/meshtk/meshtk", "server", "proxy", "--verbose=trace"]

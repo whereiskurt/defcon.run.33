@@ -8,6 +8,12 @@ services:
       dockerfile: Dockerfile
     ports:
       - "1883:1883"
+    environment:
+      - MESHTK_SERVER_PROXYFORWARDADDRESS=mqtt-local:1884
+    depends_on:
+      mqtt-local:
+        condition: service_healthy
+
     command: 
       - /meshtk/meshtk
       - server
@@ -21,3 +27,8 @@ services:
       dockerfile: Dockerfile
     ports:
       - "1884:1884"
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "1884"]
+      interval: 1s
+      timeout: 1s
+      retries: 3
