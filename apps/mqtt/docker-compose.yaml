@@ -14,6 +14,9 @@ services:
       mqtt-local:
         condition: service_healthy
 
+    volumes:
+      - ./grpc/site-tld/logs:/meshtk/logs
+
     command: 
       - /meshtk/meshtk
       - server

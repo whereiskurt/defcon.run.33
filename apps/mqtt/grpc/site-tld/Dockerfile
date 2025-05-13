@@ -14,5 +14,7 @@ FROM alpine:latest
 RUN apk --no-cache add ca-certificates
 COPY --from=builder /meshtk /meshtk
 
+WORKDIR /meshtk
+
 EXPOSE 1883
 CMD ["/meshtk/meshtk", "server", "proxy", "--verbose=trace"]
