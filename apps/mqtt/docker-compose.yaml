@@ -10,6 +10,13 @@ services:
       - "1883:1883"
     environment:
       - MESHTK_SERVER_PROXYFORWARDADDRESS=mqtt-local:1884
+      - MESHTK_BLOCK_S3_REGION=us-east-1
+      - MESHTK_BLOCK_S3_NAME=meshtk-blocklist-20250514
+      - AWS_REGION=${AWS_REGION}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - AWS_SESSION_TOKEN=${AWS_SESSION_TOKEN}
+
     depends_on:
       mqtt-local:
         condition: service_healthy
