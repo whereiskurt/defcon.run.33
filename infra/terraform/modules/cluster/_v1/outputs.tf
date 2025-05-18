@@ -70,3 +70,16 @@ output "bastion_instances" {
 output "service_namespace" {
   value = aws_service_discovery_private_dns_namespace.namespace.id
 }
+
+output "ecs_common_bucket_name" {
+  description = "Name of the S3 bucket for ECS tasks"
+  value       = aws_s3_bucket.ecs_bucket.bucket
+}
+output "ecs_common_bucket_arn" {
+  description = "ARN of the S3 bucket for ECS tasks"
+  value       = aws_s3_bucket.ecs_bucket.arn
+}
+output "ecs_common_bucket_domain_name" {
+  description = "Domain name of the S3 bucket for ECS tasks"
+  value       = aws_s3_bucket.ecs_bucket.bucket_domain_name
+}
