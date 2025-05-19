@@ -10,9 +10,10 @@ services:
       - "1883:1883"
     environment:
       - MESHTK_SERVER_PROXYFORWARDADDRESS=mqtt-local:1884
-      - MESHTK_BLOCK_S3_REGION=us-east-1
-      - MESHTK_BLOCK_S3_NAME=meshtk-blocklist-20250514
-      - MESHTK_BLOCK_S3_PREFIX=meshtk/blocklist/
+      - MESHTK_SERVER_USES3BUCKET=true
+      - MESHTK_SERVER_S3BUCKETREGION=us-east-1
+      - MESHTK_SERVER_S3BUCKETNAME=meshtk-blocklist-20250514
+      - MESHTK_SERVER_S3BUCKETPREFIX=meshtk/blocklist/
       - AWS_REGION=${AWS_REGION}
       - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
       - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
