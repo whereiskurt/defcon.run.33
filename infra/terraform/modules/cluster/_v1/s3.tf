@@ -47,3 +47,10 @@ resource "aws_ssm_parameter" "ecs_common_bucket_name" {
   value    = aws_s3_bucket.ecs_bucket.bucket
   provider = aws.application
 }
+resource "aws_ssm_parameter" "ecs_common_bucket_region" {
+  type     = "String"
+  name     = "/${var.region_zonename}/ecs/s3/common_bucket_region"
+  description = "The region of the common bucket for ECS tasks"
+  value    = var.region
+  provider = aws.application
+}

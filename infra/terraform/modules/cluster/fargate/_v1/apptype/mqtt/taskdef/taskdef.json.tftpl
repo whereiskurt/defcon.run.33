@@ -129,6 +129,16 @@
     ],
     "environment": [ 
     ],
+    "secrets": [
+      {
+        "name": "MESHTK_SERVER_S3BUCKETNAME",
+        "valueFrom": "${p_app}/ecs/s3/common_bucket_name"
+      },
+      {
+        "name": "MESHTK_SERVER_S3BUCKETREGION",
+        "valueFrom": "${p_app}/ecs/s3/common_bucket_region"
+      }
+    ],
     "portMappings": [
       {
         "containerPort": 1883,
