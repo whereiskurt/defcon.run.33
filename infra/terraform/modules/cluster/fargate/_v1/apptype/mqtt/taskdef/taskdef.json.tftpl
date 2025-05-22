@@ -132,11 +132,11 @@
     "secrets": [
       {
         "name": "MESHTK_SERVER_S3BUCKETNAME",
-        "valueFrom": "${p_app}/ecs/s3/common_bucket_name"
+        "valueFrom": "${p_cluster}/ecs/s3/common_bucket_name"
       },
       {
         "name": "MESHTK_SERVER_S3BUCKETREGION",
-        "valueFrom": "${p_app}/ecs/s3/common_bucket_region"
+        "valueFrom": "${p_cluster}/ecs/s3/common_bucket_region"
       }
     ],
     "portMappings": [
