@@ -40,7 +40,7 @@ func handleMessage(from uint32, topic string, portNum generated.PortNum, payload
 	Receiving.Store(true)
 	switch portNum {
 	case generated.PortNum_TEXT_MESSAGE_APP:
-		log.Printf("[msg] %v (%v) %s: \"%s\"", from, topic, portNum, payload)
+		//log.Printf("[msg] %v (%v) %s: \"%s\"", from, topic, portNum, payload)
 	case generated.PortNum_POSITION_APP:
 		var position generated.Position
 		if err := proto.Unmarshal(payload, &position); err != nil {
@@ -51,7 +51,7 @@ func handleMessage(from uint32, topic string, portNum generated.PortNum, payload
 		longitude := position.GetLongitudeI()
 		altitude := position.GetAltitude()
 		precision := position.GetPrecisionBits()
-		log.Printf("[msg] %v (%v) %s: (%v, %v, %v) %v/32", from, topic, portNum, latitude, longitude, altitude, precision)
+		//log.Printf("[msg] %v (%v) %s: (%v, %v, %v) %v/32", from, topic, portNum, latitude, longitude, altitude, precision)
 		if latitude == 0 && longitude == 0 {
 			return
 		}
@@ -68,12 +68,12 @@ func handleMessage(from uint32, topic string, portNum generated.PortNum, payload
 			log.Printf("[warn] could not parse User payload from %v on %v: %v", from, topic, err)
 			return
 		}
-		id := user.GetId()
+		// id := user.GetId()
 		longName := user.GetLongName()
 		shortName := user.GetShortName()
 		hwModel := user.GetHwModel().String()
 		role := user.GetRole().String()
-		log.Printf("[msg] %v->%v (%v) %s: {\"%v\" \"%v\" %v %v}", from, id, topic, portNum, longName, shortName, hwModel, role)
+		//log.Printf("[msg] %v->%v (%v) %s: {\"%v\" \"%v\" %v %v}", from, id, topic, portNum, longName, shortName, hwModel, role)
 		if len(longName) == 0 {
 			return
 		}
@@ -95,10 +95,10 @@ func handleMessage(from uint32, topic string, portNum generated.PortNum, payload
 			chUtil := deviceMetrics.GetChannelUtilization()
 			airUtilTx := deviceMetrics.GetAirUtilTx()
 			uptime := deviceMetrics.GetUptimeSeconds()
-			log.Printf(
-				"[msg] %v (%v) %s: DeviceMetrics{power: %v%% (%vV); chUtil: %v%%; airUtilTx: %v%%; uptime: %vs}",
-				from, topic, portNum, batteryLevel, voltage, chUtil, airUtilTx, uptime,
-			)
+			// log.Printf(
+			// 	"[msg] %v (%v) %s: DeviceMetrics{power: %v%% (%vV); chUtil: %v%%; airUtilTx: %v%%; uptime: %vs}",
+			// 	from, topic, portNum, batteryLevel, voltage, chUtil, airUtilTx, uptime,
+			// )
 			NodesMutex.Lock()
 			if Nodes[from] == nil {
 				Nodes[from] = meshtastic.NewNode(topic)
@@ -116,11 +116,11 @@ func handleMessage(from uint32, topic string, portNum generated.PortNum, payload
 			radiation := envMetrics.GetRadiation()
 			rainfall1 := envMetrics.GetRainfall_1H()
 			rainfall24 := envMetrics.GetRainfall_24H()
-			log.Printf(
-				"[msg] %v (%v) %s: EnvironmentMetrics{temp: %v; hum: %v; pres: %v; lux: %v; wind: %v @ %v G %v; rad: %v; rain: %v %v}",
-				from, topic, portNum, temperature, relativeHumidity, barometricPressure, lux,
-				windDirection, windSpeed, windGust, radiation, rainfall1, rainfall24,
-			)
+			// log.Printf(
+			// 	"[msg] %v (%v) %s: EnvironmentMetrics{temp: %v; hum: %v; pres: %v; lux: %v; wind: %v @ %v G %v; rad: %v; rain: %v %v}",
+			// 	from, topic, portNum, temperature, relativeHumidity, barometricPressure, lux,
+			// 	windDirection, windSpeed, windGust, radiation, rainfall1, rainfall24,
+			// )
 			NodesMutex.Lock()
 			if Nodes[from] == nil {
 				Nodes[from] = meshtastic.NewNode(topic)
@@ -147,7 +147,7 @@ func handleMessage(from uint32, topic string, portNum generated.PortNum, payload
 		}
 		nodeNum := neighborInfo.GetNodeId()
 		neighbors := neighborInfo.GetNeighbors()
-		log.Printf("[msg] %v (%v) %s: %v <-> %v neighbors", from, topic, portNum, nodeNum, len(neighbors))
+		// log.Printf("[msg] %v (%v) %s: %v <-> %v neighbors", from, topic, portNum, nodeNum, len(neighbors))
 		if nodeNum != from {
 			return
 		}
@@ -185,12 +185,12 @@ func handleMessage(from uint32, topic string, portNum generated.PortNum, payload
 		longitude := mapReport.GetLongitudeI()
 		altitude := mapReport.GetAltitude()
 		precision := mapReport.GetPositionPrecision()
-		log.Printf(
-			"[msg] %v (%v) %s: {\"%v\" \"%v\" %v %v %v %v %v %v %v} (%v, %v, %v) %v/32",
-			from, topic, portNum,
-			longName, shortName, hwModel, role, fwVersion, region, modemPreset, hasDefaultCh, onlineLocalNodes,
-			latitude, longitude, altitude, precision,
-		)
+		// log.Printf(
+		// 	"[msg] %v (%v) %s: {\"%v\" \"%v\" %v %v %v %v %v %v %v} (%v, %v, %v) %v/32",
+		// 	from, topic, portNum,
+		// 	longName, shortName, hwModel, role, fwVersion, region, modemPreset, hasDefaultCh, onlineLocalNodes,
+		// 	latitude, longitude, altitude, precision,
+		// )
 		if len(longName) == 0 {
 			return
 		}
@@ -207,7 +207,7 @@ func handleMessage(from uint32, topic string, portNum generated.PortNum, payload
 		Nodes[from].UpdateSeenBy(topic)
 		NodesMutex.Unlock()
 	default:
-		log.Printf("[msg] %v (%v) %s", from, topic, portNum)
+		// log.Printf("[msg] %v (%v) %s", from, topic, portNum)
 	}
 }
 
