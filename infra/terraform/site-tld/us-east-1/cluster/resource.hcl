@@ -14,7 +14,6 @@ locals {
   # availability_zones      = ["us-east-1a", "us-east-1b", "us-east-1c"]
   # public_subnets_cidr     = ["10.0.0.0/21", "10.0.8.0/21", "10.0.16.0/21"]
   # private_subnets_cidr    = ["10.0.24.0/21", "10.0.32.0/21", "10.0.40.0/21"]
-  # nlb_public_subnets_cidr = ["10.0.48.0/21", "10.0.56.0/21", "10.0.64.0/21"]
 
   availability_zones          = ["us-east-1a", "us-east-1b"]
   public_subnets_cidr         = ["10.0.0.0/21", "10.0.8.0/21"]
@@ -27,9 +26,6 @@ locals {
   nlb_private_subnets_cidr = ["10.0.72.0/21", "10.0.80.0/21"]
 
   ## NOTE: One of these has to be true for ECS Deployments to work and CloudWatch logs to flow
-  ## It's way cheaper to not deploy a NAT Gateway, and just VPC endpoints like we did.
-  ## Using public subnets means we don't need these, however it's a security tradeoff.
-  ## Also using public subnets iccurs a small surcharge from AWS.
   use_nat_gateway   = tobool(get_env("TF_VAR_use_nat_gateway", "true"))
   use_vpc_endpoints = tobool(get_env("TF_VAR_use_vpc_endpoints", "false"))
 
