@@ -45,18 +45,12 @@ const client = DynamoDBDocument.from(new DynamoDB(config), {
   },
 })
 const adapter = DynamoDBAdapter(client, {
-  tableName: "app-defcon-run"
+  tableName: process.env.AUTH_DYNAMODB_DBNAME,
 })
 const providers: Provider[] = [
   Email({
     server: {
-      host: process.env.AUTH_SMTP_HOST || '',
-      port: Number(process.env.AUTH_SMTP_PORT) || 587,
-      auth: {
-        user: process.env.AUTH_SMTP_USER || '',
-        pass: process.env.AUTH_SMTP_PASSWORD || ''
-      },
-      secure: Boolean(process.env.AUTH_SMTP_SECURE === 'true')
+      url: process.env.AUTH_SMTP_URL || '',
     },
     from: process.env.AUTH_SMTP_FROM,
     async sendVerificationRequest({ identifier: email, url, provider: { server, from }, theme }) {

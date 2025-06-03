@@ -13,15 +13,15 @@ export default function SignInPage() {
   const [error, setError] = useState<string | null>(null)
   const [pending, setPending] = useState<boolean>(false)
   
-  // useEffect(() => {
-  //   const fetchCsrfToken = async () => {
-  //     const token = await getCsrfToken()
-  //     console.log("CSRF Token: ", token)
-  //     setCsrfToken(token)
-  //   }
-  //   fetchCsrfToken();
-  //   setPending(false)
-  // }, [])
+  useEffect(() => {
+    const fetchCsrfToken = async () => {
+      const token = await getCsrfToken()
+      console.log("CSRF Token: ", token)
+      setCsrfToken(token)
+    }
+    fetchCsrfToken();
+    setPending(false)
+  }, [])
   
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
