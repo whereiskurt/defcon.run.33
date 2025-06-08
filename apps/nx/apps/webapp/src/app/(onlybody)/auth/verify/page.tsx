@@ -1,56 +1,121 @@
-"use client"
-import {addToast, Button, Input, Link, ToastProvider } from "@heroui/react"
-import { useRouter, useSearchParams } from "next/navigation"
-import { useEffect, useState } from "react"
-import { FaDiscord, FaGithub } from "react-icons/fa"
-import { FaMobileScreenButton } from "react-icons/fa6"
-import { MdOutlineMarkEmailRead } from "react-icons/md"
-import React from "react"
+'use client';
+import {
+  addToast,
+  Button,
+  Input,
+  Link,
+  ToastProvider,
+} from '@heroui/react';
 
-export default function EmailLogin() {
-  const router = useRouter()
-  // const searchParams = useSearchParams();
+import { useSearchParams } from 'next/navigation';
+import { useEffect, useState, Suspense } from 'react';
+import { FaDiscord, FaGithub } from 'react-icons/fa';
+import { FaMobileScreenButton } from 'react-icons/fa6';
+import { MdOutlineMarkEmailRead } from 'react-icons/md';
+import React from 'react';
+import { signIn } from 'next-auth/react';
+
+import { Text } from '@components/ui/Text';
+import { Heading } from '@components/ui/typography';
+
+// Separate client component to handle search params
+function EmailVerificationForm() {
+  const searchParams = useSearchParams();
   const [email, setEmail] = useState<string>('');
-  const [code, setCode] = useState<string>("")
+  const [code, setCode] = useState<string>('');
 
   useEffect(() => {
-    // const emailQuery = searchParams.get('email')?.replace(" ", "%2B").replace("+","%2B");
-    // setEmail(emailQuery || '');
-
     addToast({
       title: 'Email Sent',
       description: 'You should receive an email with a magic link shortly.',
       color: 'success',
-      variant:"flat"
+      variant: 'flat',
     });
 
-  }, []);
+    const emailQuery = searchParams
+      .get('email')
+      ?.replace(' ', '%2B')
+      .replace('+', '%2B');
 
-  const handleValidation = (e:any) => {
+    setEmail(emailQuery || '');
+  }, [searchParams]);
+
+  const handleValidation = (e: any) => {
     e.preventDefault();
-    const url = `/api/auth/callback/nodemailer?token=${code}&email=${email}&callbackUrl=/welcome`;
-    window.location.href = url; // This will perform a full page reload
+    const url = `/api/auth/callback/nodemailer?token=${code}&email=${email}&callbackUrl=/`;
+    window.location.href = url;
+    return false;
   };
-  
+
+  return (
+    <>
+      {email && (
+        <Text variant="large">
+          Check <b>{email.replace('%2B', '+')}</b>
+        </Text>
+      )}
+      <form>
+        <Input
+          className="w-96"
+          isRequired={true}
+          variant="bordered"
+          size="lg"
+          value={code}
+          onChange={(e) => setCode(e.target.value)}
+          name="code"
+          type="code"
+          label="Enter Code"
+          placeholder="XXXXXX"
+        />
+        <Button
+          className="mt-4 mb-2"
+          type="submit"
+          variant="solid"
+          color="primary"
+          onClick={handleValidation}
+        >
+          <FaMobileScreenButton size={24} />
+          <Heading level={4}>Validate</Heading>
+        </Button>
+      </form>
+    </>
+  );
+}
+
+// Main page component
+export default function EmailLogin() {
   return (
     <div>
-      <ToastProvider placement="top-center" />
+      <ToastProvider placement="bottom-center" />
       <div className="min-h-screen flex flex-col items-center text-center px-4">
-        <MdOutlineMarkEmailRead className="text-green-500" size={48} /><h2 className="text-center text-3xl font-extrabold">
-         Email Queued
-        </h2>
-        <p className="pt-4 pl-4 w-96 text-center text-2xl">You will receive an email shortly.</p>
-        <p className="pt-4 pl-4 w-96 text-left">&apos;<code>{email.replace("%2B","+")}</code>&quot; will receive an email from &quot;<code>no-reply@auth.defcon.run</code>&quot;</p>
-        <form>
-        <Input isRequired={true} className="m-2 w-96 pt-4" variant="bordered" size="lg" value={code} onChange={(e) => setCode(e.target.value)} name="code" type="code" label="Code" placeholder="XXXXXX" />
-        <Button className="mt-2" type="submit" variant="solid" color="primary" onClick={handleValidation} ><FaMobileScreenButton size={24} />Validate</Button>
-        </form>
-        <p className="w-96 text-left pt-9 pl-4">Or! Use <Link size="lg" href="#">
-          &nbsp; <FaDiscord />Discord</Link> or
-          <Link size="lg" href="#">
-            &nbsp; <FaGithub />Github
-          </Link> to authenticate an email address.
-        </p>
+        <MdOutlineMarkEmailRead className="text-green-500" size={48} />
+        <Heading level={2}>Email Queued</Heading>
+        <Text variant="xxlarge">You will receive an email shortly.</Text>
+
+        <Suspense fallback={<Text variant='large'>Check account</Text>}>
+          <EmailVerificationForm />
+        </Suspense>
+
+        <Text variant="large" className='pt-2'>
+          No email? Try {' '}
+          <Link
+            size="lg"
+            href="#"
+            onPress={() => signIn('discord', { callbackUrl: '/' })}
+          >
+            &nbsp; <FaDiscord />
+            Discord
+          </Link>{' '}
+          or
+          <Link
+            size="lg"
+            href="#"
+            onPress={() => signIn('github', { callbackUrl: '/' })}
+          >
+            &nbsp; <FaGithub />
+            Github
+          </Link>
+        </Text>
       </div>
     </div>
   );

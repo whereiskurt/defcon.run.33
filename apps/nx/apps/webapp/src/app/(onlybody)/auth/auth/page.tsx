@@ -20,6 +20,8 @@ import { Heading } from '@/src/components/ui/typography';
 import { Key, Wand } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { useState } from 'react';
+import { getCsrfToken } from "next-auth/react"
+import { useEffect } from 'react';
 
 export default function UnlockForm() {
   const [email, setEmail] = useState('');
@@ -27,23 +29,54 @@ export default function UnlockForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isInviteCodeFocused, setIsInviteCodeFocused] = useState(false);
   const [isEmailFocused, setIsEmailFocused] = useState(false);
+  const [csrfToken, setCsrfToken] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
+  useEffect(() => {
+    const fetchCsrfToken = async () => {
+      const token = await getCsrfToken()
+      setCsrfToken(token)
+    }
+    fetchCsrfToken();
+    setIsSubmitting(false)
+  }, [])
 
-    // Simulate form submission
-    await new Promise((resolve) => setTimeout(resolve, 2500));
 
-    // Here you would typically send the data to your backend
-    console.log({ email, inviteCode });
-
-    // setIsSubmitting(false);
-
-    window.location.href = `/auth/verify?email=${email}`; // This will perform a full page reload
-
-    return false;
-  };
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    if (!csrfToken || csrfToken === '') {
+      setError("CSRF token handled or set properly.")
+      return
+    }
+    if (!email || email === '') {
+      setError("Provide an email to receive 🪄 magic link.")
+      return
+    }
+    if (!inviteCode || inviteCode === '') {
+      setError("Provide the invite code.")
+      return
+    }
+    try {
+      setIsSubmitting(true)
+      const res = await fetch("/api/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ inviteCode, email, csrfToken }),
+      })
+      if (!res.ok || res.status != 200) {
+        const errorData = await res.json()
+        throw new Error(errorData.error)
+      } else {
+        window.location.href = `/auth/verify?email=${email}`; // This will perform a full page reload
+      }
+    } catch (error: any) {
+      setError(error.message)
+      setIsSubmitting(false)
+    }
+    return false
+  }
 
   const theme = useTheme();
 
@@ -126,6 +159,7 @@ export default function UnlockForm() {
                     disabled={isSubmitting}
                   />
                 </div>
+              {error && <div><p className="error text-red-600 text-center text-xl" >{error}</p></div>}
               </div>
             </CardBody>
             <Divider className="mt-2" />

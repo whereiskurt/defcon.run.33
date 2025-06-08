@@ -27,6 +27,11 @@ declare module '@auth/core/jwt' {
 import '@auth/core/jwt'; // Import the module augmentation
 import Email from "@auth/core/providers/nodemailer"
 
+import Discord from "next-auth/providers/discord"
+import Github from "next-auth/providers/github"
+import Strava from "next-auth/providers/strava"
+
+
 const endpoint: string = process.env["USER_DYNAMODB_ENDPOINT"]!
 
 const config: DynamoDBClientConfig = {
@@ -51,6 +56,7 @@ const providers: Provider[] = [
   Email({
     server: {
       url: process.env.AUTH_SMTP_URL || '',
+      ses:true,
     },
     from: process.env.AUTH_SMTP_FROM,
     async sendVerificationRequest({ identifier: email, url, provider: { server, from }, theme }) {
@@ -71,7 +77,26 @@ const providers: Provider[] = [
       const alphabet = '0123456789';
       return `${randomString(3, alphabet)}${randomString(3, alphabet)}`;
     }
-  })
+  }),
+  Github({
+    clientId: process.env.AUTH_GITHUB_ID,
+    clientSecret: process.env.AUTH_GITHUB_SECRET,
+    allowDangerousEmailAccountLinking: true,
+    checks: ['none']
+  }),
+  Strava({
+    clientId: process.env.AUTH_STRAVA_CLIENT_ID,
+    clientSecret: process.env.AUTH_STRAVA_CLIENT_SECRET,
+    allowDangerousEmailAccountLinking: true,
+    authorization: { params: { scope: "activity:read" } }, //Allows public and follower content
+    checks: ['none']
+  }),
+  Discord({
+    clientId: process.env.AUTH_DISCORD_CLIENT_ID,
+    clientSecret: process.env.AUTH_DISCORD_CLIENT_SECRET,
+    allowDangerousEmailAccountLinking: true,
+    checks: ['none']
+  }),
 ]
 
 const randomString = (length: number, alphabet: string): string => Array.from({ length }, () => alphabet[Math.floor(Math.random() * alphabet.length)]).join('');
@@ -90,7 +115,7 @@ export const {handlers, signIn, signOut, auth } = NextAuth({
   providers,
   adapter,
   pages: {
-    signIn: "/auth/signin",
+    signIn: "/auth/auth",
     verifyRequest: "/auth/verify",
   },
   callbacks: {
@@ -106,7 +131,27 @@ export const {handlers, signIn, signOut, auth } = NextAuth({
       console.log(`SECURITY: Blocked email address ${email!} from login ${JSON.stringify(emails)}.`)
       return false;
     },
+    
     async jwt({ token, account, profile, trigger, session }) {
+       if (trigger === "update") {
+        token.theme = session.user.theme
+        token.stravaId = session.user.hasStrava
+      } else if (account && profile) {
+
+        if (account.provider === "discord") {
+          token.name = `${profile.global_name}`
+          token.picture = `${profile.image_url}`;
+        } else if (account.provider === "github") {
+          token.name = `${profile.login}`
+          token.picture = `${profile.avatar_url}`
+        } else if (account.provider === "strava") {
+          token.stravaId = `${profile.id}`
+          token.name = `${profile.username}`
+          token.picture = `${profile.profile_medium}`
+        }
+        
+      } else if (account && account.provider === "nodemailer") {
+      }
       return token;
     },
 
