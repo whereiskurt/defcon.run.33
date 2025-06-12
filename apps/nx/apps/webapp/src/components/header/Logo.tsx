@@ -17,8 +17,6 @@ export function Logo() {
   const src = !mounted ? BunnyBlack : theme === "dark" ? BunnyWhite : BunnyBlack;
 
   return (
-    <Link href="/">
-      <Image alt="Bunny" priority={true} width={200} src={src} />
-    </Link>
+    <Image alt="Bunny" priority={true} width={200} src={src} />
   );
 }

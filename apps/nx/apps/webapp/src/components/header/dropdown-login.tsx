@@ -51,7 +51,11 @@ const LoginDropDown = (params: any) => {
           ],
         }}
       >
-        <DropdownSection>
+        <DropdownSection
+          aria-label="Email Account"
+          title={'Email Account'}
+          showDivider={true}
+        >
           <DropdownItem
             key="c1"
             startContent={
@@ -65,7 +69,6 @@ const LoginDropDown = (params: any) => {
         <DropdownSection
           aria-label="Login Options"
           title={'OAuth Provider'}
-          showDivider={true}
         >
           <DropdownItem
             key="a1"

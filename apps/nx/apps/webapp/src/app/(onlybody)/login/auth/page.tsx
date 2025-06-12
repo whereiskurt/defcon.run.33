@@ -69,7 +69,7 @@ export default function UnlockForm() {
         const errorData = await res.json()
         throw new Error(errorData.error)
       } else {
-        window.location.href = `/auth/verify?email=${email}`; // This will perform a full page reload
+        window.location.href = `/login/verify?email=${email}`; // This will perform a full page reload
       }
     } catch (error: any) {
       setError(error.message)
