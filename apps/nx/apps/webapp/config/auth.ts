@@ -115,8 +115,8 @@ export const {handlers, signIn, signOut, auth } = NextAuth({
   providers,
   adapter,
   pages: {
-    signIn: "/auth/auth",
-    verifyRequest: "/auth/verify",
+    signIn: "/login/auth",
+    verifyRequest: "/login/verify",
   },
   callbacks: {
     signIn({ user, profile, account }) {
