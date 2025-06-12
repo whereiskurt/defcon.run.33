@@ -31,7 +31,7 @@ locals {
   }
 
   ##Using public subnets means we don't VPC endpoints or NAT Gateways which is the cheapest option with just a few services
-  use_public_subnets       = true
+  use_public_subnets       = false
   use_cfd_firehose_logging = false
   is_primary_deployment    = true
 }
