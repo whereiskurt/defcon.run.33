@@ -15,13 +15,10 @@ locals {
 
 
   ## DynamoDB Tables to create for the application 
-  dynamo_tables = [
-    "${local.env_zonename}.User",
-    "${local.env_zonename}.Participation",
-    "${local.env_zonename}.WebappWatchdog"
-  ]
+  dynamo_tables = []
 
   use_cloudfront = true
+  use_single_table = true
 
   app_type = "nextjs"
   repos    = ["nginx", "app"]

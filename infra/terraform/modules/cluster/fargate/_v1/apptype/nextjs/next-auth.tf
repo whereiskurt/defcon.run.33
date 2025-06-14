@@ -3,7 +3,7 @@ locals {
 }
 
 resource "aws_dynamodb_table" "this" {
-  name = replace("next-auth-${var.region_zonename}", ".", "-")
+  name = replace("nextauth-${var.region_zonename}", ".", "-")
 
   billing_mode = "PAY_PER_REQUEST" # Alternatively, ON_DEMAND, see https://aws.amazon.com/dynamodb/pricing/
   hash_key     = "pk"
@@ -44,7 +44,7 @@ resource "aws_dynamodb_table" "this" {
 }
 
 resource "aws_iam_user" "this" {
-  name     = "next-auth.${var.region_zonename}"
+  name     = replace("nextauth-${var.region_zonename}", ".", "-")
   provider = aws.application
 }
 
@@ -60,7 +60,7 @@ resource "aws_iam_user_policy_attachment" "this" {
 }
 
 resource "aws_iam_policy" "this" {
-  name     = "nextauth-${replace(var.region_zonename, ".", "-")}"
+  name     = replace("nextauth-${var.region_zonename}", ".", "-")
   provider = aws.application
 
   policy = jsonencode({

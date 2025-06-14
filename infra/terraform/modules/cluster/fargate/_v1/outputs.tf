@@ -42,3 +42,11 @@ resource "aws_ssm_parameter" "dynamo_secret_key" {
   value    = aws_iam_access_key.this.secret
   provider = aws.application
 }
+
+resource "aws_ssm_parameter" "dynamo_single_table" {
+  count    = var.use_single_table ? 1 : 0
+  name     = "/${var.region_zonename}/dynamodb/single_table"
+  type     = "String"
+  value    = aws_dynamodb_table.electro[0].name
+  provider = aws.application
+}

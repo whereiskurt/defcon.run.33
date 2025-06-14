@@ -136,6 +136,12 @@ variable "app_type" {
   type        = string
 }
 
+variable "use_single_table" {
+  description = "Does this app_type want a dynamo db single table from electro?"
+  type        = bool
+  default     = false
+}
+
 variable "service_namespace" {
   description = "Cluster namespace for the services to register with"
   type        = string

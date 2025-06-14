@@ -14,9 +14,7 @@ locals {
   region_zonename = "${local.region_label}.${local.env_zonename}"
 
   ## DynamoDB Tables to create for the application 
-  dynamo_tables = [
-    "${local.env_zonename}.StrapiWatchdog"
-  ]
+  dynamo_tables = [ ]
 
   use_cloudfront = true
 
