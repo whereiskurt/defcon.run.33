@@ -65,3 +65,19 @@ terraform {
 inputs = merge(
   local.account_vars.locals
 )
+
+## TODO: Finish validating this block
+errors {
+  retry "transient_network" {
+    retryable_errors = concat(
+      get_default_retryable_errors(), [
+        "(?s).*dial tcp .*: i/o timeout.*",
+        "(?s).*connection reset by peer.*",
+        "(?s).*context deadline exceeded.*"
+      ]
+    )
+
+    max_attempts       = 5
+    sleep_interval_sec = 10
+  }
+}
