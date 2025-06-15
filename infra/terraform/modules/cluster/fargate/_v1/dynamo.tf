@@ -47,6 +47,7 @@ resource "aws_dynamodb_table" "dynamo_tables" {
 
 resource "aws_dynamodb_table" "electro" {
   count = var.use_single_table ? 1 : 0
+  provider = aws.application
   
   name = "electro-${replace(var.region_zonename, ".", "-")}"
 
