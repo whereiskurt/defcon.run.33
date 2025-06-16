@@ -55,24 +55,6 @@
       "run",
       "start"
     ],
-    "environment": [
-      {
-          "name": "NEXTAUTH_URL",
-          "value": "https://use1.webapp.defcon.run"
-      },
-      {
-          "name": "STRAPI_URL",
-          "value": "https://use1.strapi.defcon.run"
-      }, 
-      {
-          "name": "USER_DYNAMODB_REGION",
-          "value": "us-east-1"
-      },
-      {
-          "name": "AUTH_DYNAMODB_REGION",
-          "value": "us-east-1"
-      }
-    ],
     "secrets": [
       {
         "name": "AUTH_SECRET",
@@ -104,19 +86,23 @@
       },
       {
         "name": "AUTH_DYNAMODB_ID",
-        "valueFrom": "${p_app}/dynamodb/access_key"
+        "valueFrom": "${p_app}/next-auth/access_key"
       },
       {
         "name": "AUTH_DYNAMODB_SECRET",
-        "valueFrom": "${p_app}/dynamodb/secret_key"
+        "valueFrom": "${p_app}/next-auth/secret_key"
+      },
+      {
+        "name": "AUTH_DYNAMODB_DBNAME",
+        "valueFrom": "${p_app}/next-auth/dbname"
       },
       {
         "name": "AUTH_SMTP_FROM",
-        "valueFrom": "${p_email}/ses/smtp_url"
+        "valueFrom": "${p_email}/ses/from_address"
       },
       {
         "name": "AUTH_SMTP_URL",
-        "valueFrom": "${p_email}/ses/smtp_url"
+        "valueFrom": "${p_email}/ses/smtp_url_v4"
       },
       {
         "name": "USER_DYNAMODB_ID",
@@ -127,16 +113,38 @@
         "valueFrom": "${p_app}/dynamodb/secret_key"
       },
       {
+        "name": "USER_DYNAMODB_SINGLE_TABLE",
+        "valueFrom": "${p_app}/dynamodb/single_table"
+      }
+    ],
+    "environment": [
+      {
+        "name": "AUTH_DYNAMODB_REGION",
+        "value": "us-east-1"
+      },
+      {
+        "name": "USER_DYNAMODB_REGION",
+        "value": "us-east-1"
+      },
+      {
         "name": "AUTH_ALLOWED_EMAILS",
-        "valueFrom": "${p_account}/auth/emails_allowed"
+        "value": "all"
       },
       {
         "name": "AUTH_INVITE_CODES",
-        "valueFrom": "${p_account}/auth/invite_codes"
+        "value": "hacktheplanet,23tenalpehtkcah"
+      },
+      {
+        "name": "NEXTAUTH_URL",
+        "value": "https://use1.webapp.defcon.run"
+      },
+      {
+        "name": "STRAPI_URL",
+        "value": "https://use1.strapi.defcon.run"
       },
       {
         "name": "AUTH_STRAPI_TOKEN",
-        "valueFrom": "${p_account}/auth/strapi_token"
+        "value": "612fc93cb7f6543e7eefe7cf4d96c98d13ebb9a17401ff6ca7086b7305451bb4e481e8ff5bad9cb2666afbc57c74c36db6a8c7ccec7d620f21a55a851586aa3516f1dae98def3ee7c5853ed8ad1edd41167dd8650ec25920f7c2d71eca2343a71d53d0e0a182b32573897bd03b6841f925dfef1aa654a518b9d91a673ceb213c"
       }
     ],
     "portMappings": [

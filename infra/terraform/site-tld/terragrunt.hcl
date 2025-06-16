@@ -73,7 +73,8 @@ errors {
       get_default_retryable_errors(), [
         "(?s).*dial tcp .*: i/o timeout.*",
         "(?s).*connection reset by peer.*",
-        "(?s).*context deadline exceeded.*"
+        "(?s).*context deadline exceeded.*",
+        "(?s).*access denied for logdestination.*",
       ]
     )
 

@@ -1,7 +1,11 @@
 {
   "compilerOptions": {
     "target": "es5",
-    "lib": ["dom", "dom.iterable", "esnext"],
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
     "allowJs": true,
     "skipLibCheck": true,
     "strict": true,
@@ -20,13 +24,31 @@
       }
     ],
     "paths": {
-      "@components/*": ["./src/components/*"],
-      "@fonts": ["./config/fonts"],
-      "@header": ["./src/components/header/header"],
-      "@auth": ["./config/auth"],
-      "@/*": ["./*"],
+      "@components/*": [
+        "./src/components/*"
+      ],
+      "@fonts": [
+        "./config/fonts"
+      ],
+      "@header": [
+        "./src/components/header/header"
+      ],
+      "@auth": [
+        "./config/auth"
+      ],
+      "@/*": [
+        "./*"
+      ]
     }
   },
-  "include": ["next-env.d.ts",  "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
-  "exclude": ["node_modules"],
+  "include": [
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts",
+    "next-env.d.ts",
+    "../../dist/webapp/.next/types/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
 }
