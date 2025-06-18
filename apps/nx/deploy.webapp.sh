@@ -7,7 +7,7 @@ export AWS_ACCOUNT_ID=${AWS_ACCOUNT_ID:-$(aws sts get-caller-identity --query "A
 export IMAGE_TAG=${IMAGE_TAG:-"v0.0.1"}
 export REPO_NAME="app.webapp.defcon.run"
 export WEBAPP_ORIGIN="use1.webapp.defcon.run"
-export WEBAPP_PREFIX=${WEBAPP_PREFIX:-"wwww"}
+export WEBAPP_PREFIX=${WEBAPP_PREFIX:-"www"}
 nx run webapp:build
 
 export WEBAPP_ORIGIN_BUCKET=$(aws ssm get-parameter --name "/${WEBAPP_ORIGIN}/cf/bucket_name" --region "${AWS_REGION}" --query "Parameter.Value" --output text)
