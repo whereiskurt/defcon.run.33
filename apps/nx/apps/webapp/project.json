@@ -16,6 +16,14 @@
       "configurations": {
         "production": {}
       }
+    },
+    "use1.deploy-assets": {
+      "options": {
+        "command": "aws s3 sync dist/webapp/.next/static s3://${WEBAPP_ORIGIN_BUCKET}/${WEBAPP_PREFIX}/_next/static --cache-control 'public,max-age=31536000,immutable' --delete --exclude '*.map'"
+      },
+      "executor": "nx:run-commands",
+      "timeout": 120000
+      
     }
   }
 }

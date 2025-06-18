@@ -6,8 +6,12 @@ export AWS_REGION=${AWS_REGION:-"us-east-1"}
 export AWS_ACCOUNT_ID=${AWS_ACCOUNT_ID:-$(aws sts get-caller-identity --query "Account" --output text)}
 export IMAGE_TAG=${IMAGE_TAG:-"v0.0.1"}
 export REPO_NAME="app.webapp.defcon.run"
-
+export WEBAPP_ORIGIN="use1.webapp.defcon.run"
+export WEBAPP_PREFIX=${WEBAPP_PREFIX:-"wwww"}
 nx run webapp:build
+
+export WEBAPP_ORIGIN_BUCKET=$(aws ssm get-parameter --name "/${WEBAPP_ORIGIN}/cf/bucket_name" --region "${AWS_REGION}" --query "Parameter.Value" --output text)
+nx run webapp:use1.deploy-assets
 
 docker buildx build --platform=linux/amd64 -t $REPO_NAME:$IMAGE_TAG -f Dockerfile.webapp dist/webapp
 

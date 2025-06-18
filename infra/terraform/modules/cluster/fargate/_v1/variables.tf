@@ -66,7 +66,7 @@ variable "cf_bucket_match_public" {
 }
 
 variable "cf_bucket_match_bare" {
-  default = ["/cms/*"]
+  default = ["/cms/*", "/www/*"]
 }
 
 variable "use_cfd_firehose_logging" {
