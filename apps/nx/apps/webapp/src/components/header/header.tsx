@@ -15,13 +15,8 @@ import { GrMapLocation } from 'react-icons/gr';
 import { MenuIcon } from './icon/menu';
 import { Logo } from './logo-icon';
 
-import { FaHandHolding, FaQuestion } from 'react-icons/fa';
-import { DashboardIcon } from './icon/dashboard';
-import {
-  FaMoneyBills,
-  FaMoneyCheck,
-  FaMoneyCheckDollar,
-} from 'react-icons/fa6';
+import { FaQuestion } from 'react-icons/fa';
+import { FaMoneyCheckDollar } from 'react-icons/fa6';
 
 const UserDropDown = dynamic(() => import('./dropdown-user'), {
   loading: () => {
@@ -53,7 +48,6 @@ const MenuDropDown = dynamic(() => import('./dropdown-menu'), {
   },
 });
 
-import { SessionProvider } from 'next-auth/react';
 import { ThemeSwitch } from '../theme-switch';
 
 export function Header(params: any) {

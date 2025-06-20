@@ -29,6 +29,9 @@ import { ThemeIcon } from './icon/theme';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 
+import DCJackIcon from "@/public/dcjack.svg";
+
+
 const iconClasses =
   'text-xl text-default-500 pointer-events-none flex-shrink-0';
 
@@ -102,7 +105,7 @@ const UserDropDown = (params: any) => {
           <Avatar
             src={
               session.user.image ??
-              'https://assets.cms.defcon.run/dcjack_4ad07c2493.svg'
+              DCJackIcon.src
             }
             ignoreFallback={true}
             size="lg"
@@ -121,7 +124,7 @@ const UserDropDown = (params: any) => {
                 size: 'lg',
                 src:
                   session.user.image ??
-                  'https://assets.cms.defcon.run/dcjack_4ad07c2493.svg',
+                  DCJackIcon.src
               }}
               className="pt-2"
             />

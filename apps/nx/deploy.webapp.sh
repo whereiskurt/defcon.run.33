@@ -11,7 +11,7 @@ export WEBAPP_PREFIX=${WEBAPP_PREFIX:-"www"}
 nx run webapp:build
 
 export WEBAPP_ORIGIN_BUCKET=$(aws ssm get-parameter --name "/${WEBAPP_ORIGIN}/cf/bucket_name" --region "${AWS_REGION}" --query "Parameter.Value" --output text)
-nx run webapp:use1.deploy-assets
+nx run webapp:assets.deploy
 
 docker buildx build --platform=linux/amd64 -t $REPO_NAME:$IMAGE_TAG -f Dockerfile.webapp dist/webapp
 
