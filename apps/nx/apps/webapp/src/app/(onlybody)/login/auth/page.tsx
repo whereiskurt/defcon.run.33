@@ -85,7 +85,7 @@ export default function UnlockForm() {
       <BlurPulseBackground imagePath={`/bunny-theme-${theme.theme}.svg`} />
       <div className="z-10 w-full max-w-md" >
         <form onSubmit={handleSubmit} className="w-full">
-          <Card className="shadow-lg bg-black">
+          <Card className={`shadow-lg ${theme.theme === 'dark' ? 'bg-gray-900/50' : 'bg-white/50'}`}>
             <CardHeader>
               <div className="flex flex-col">
                 <Heading level={1}>
@@ -95,7 +95,7 @@ export default function UnlockForm() {
                     'Welcome!'
                   )}
                 </Heading>
-                <Text variant="small">
+                <Text variant="small" className={theme.theme === 'dark' ? 'text-gray-300' : 'black'}>
                   We don&apos;t store passwords but require an email address.
                 </Text>
               </div>
@@ -106,7 +106,7 @@ export default function UnlockForm() {
                 <Heading level={4}>
                   <label
                     htmlFor="email"
-                    className={`block text-lg font-medium`}
+                    className={`block text-lg font-medium ${theme.theme === 'dark' ? 'text-white' : 'text-black'}`}
                   >
                     {isEmailFocused ? (
                       <RainbowText text='Email Address' />
@@ -134,7 +134,7 @@ export default function UnlockForm() {
               <div className="space-y-3 w-full">
                 <label
                   htmlFor="inviteCode"
-                  className={`block text-lg font-medium pt-2 ${fontMuseo.className}`}
+                  className={`block text-lg font-medium pt-2 ${fontMuseo.className} ${theme.theme === 'dark' ? 'text-white' : 'text-black'}`}
                 >
                   {isInviteCodeFocused ? (
                     <GlitchLabel>Invite Codes</GlitchLabel>
@@ -143,7 +143,7 @@ export default function UnlockForm() {
                   )}
                 </label>
                 <div className="relative w-full">
-                  <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-400">
+                  <div className={`absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none ${theme.theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
                     <Key className="h-5 w-5" />
                   </div>
                   <Input

@@ -73,14 +73,14 @@ const LoginDropDown = (params: any) => {
           <DropdownItem
             key="a1"
             startContent={<FaDiscord size={24} className={iconClasses} />}
-            onPress={() => signIn('discord', { callbackUrl: '/welcome' })}
+            onPress={() => signIn('discord', { callbackUrl: '/' })}
           >
             Discord
           </DropdownItem>
           <DropdownItem
             key="b1"
             startContent={<FaGithub size={24} className={iconClasses} />}
-            onPress={() => signIn('github', { callbackUrl: '/welcome' })}
+            onPress={() => signIn('github', { callbackUrl: '/' })}
           >
             Github
           </DropdownItem>

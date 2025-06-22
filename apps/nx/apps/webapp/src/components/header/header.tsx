@@ -10,7 +10,6 @@ import {
   NavbarItem,
 } from '@heroui/react';
 import dynamic from 'next/dynamic';
-import { FiLogIn } from 'react-icons/fi';
 import { GrMapLocation } from 'react-icons/gr';
 import { MenuIcon } from './icon/menu';
 import { Logo } from './logo-icon';
@@ -19,33 +18,13 @@ import { FaQuestion } from 'react-icons/fa';
 import { FaMoneyCheckDollar } from 'react-icons/fa6';
 
 const UserDropDown = dynamic(() => import('./dropdown-user'), {
-  loading: () => {
-    return (
-      <Button variant="ghost">
-        <Avatar size="sm" /> Profile
-      </Button>
-    );
-  },
+  ssr: false,
 });
 const LoginDropDown = dynamic(() => import('./dropdown-login'), {
   ssr: false,
-  loading: () => {
-    return (
-      <Button variant="ghost">
-        Login <FiLogIn size={24} />{' '}
-      </Button>
-    );
-  },
 });
 const MenuDropDown = dynamic(() => import('./dropdown-menu'), {
   ssr: false,
-  loading: () => {
-    return (
-      <div>
-        <MenuIcon />
-      </div>
-    );
-  },
 });
 
 import { ThemeSwitch } from '../theme-switch';

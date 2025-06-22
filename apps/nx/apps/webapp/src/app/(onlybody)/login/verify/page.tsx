@@ -3,6 +3,7 @@ import {
   addToast,
   Button,
   Input,
+  InputOtp,
   Link,
   ToastProvider,
 } from '@heroui/react';
@@ -55,18 +56,8 @@ function EmailVerificationForm() {
         </Text>
       )}
       <form>
-        <Input
-          className="w-96"
-          isRequired={true}
-          variant="bordered"
-          size="lg"
-          value={code}
-          onChange={(e) => setCode(e.target.value)}
-          name="code"
-          type="code"
-          label="Enter Code"
-          placeholder="XXXXXX"
-        />
+          <InputOtp name='code' type='code' placeholder='XXXXXX' description="Enter Code" length={6} title='Poop' onChange={(e) => setCode((e.target as HTMLInputElement).value)} />
+
         <Button
           className="mt-4 mb-2"
           type="submit"

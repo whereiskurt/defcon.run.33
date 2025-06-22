@@ -169,7 +169,7 @@ export const {handlers, signIn, signOut, auth } = NextAuth({
 
 export function signupHTML(params: { url: any; host: any; theme: any; email: string, token: string }) {
   const { host, theme, token, email } = params
-  const url = `${process.env.NEXTAUTH_URL}/api/auth/callback/nodemailer?token=${token}&email=${email}&callbackUrl=/welcome`
+  const url = `${process.env.NEXTAUTH_URL}/api/auth/callback/nodemailer?token=${token}&email=${email}&callbackUrl=/`
   const escapedHost = host.replace(/\./g, "&#8203;.")
 
   const brandColor = "#686EA0"

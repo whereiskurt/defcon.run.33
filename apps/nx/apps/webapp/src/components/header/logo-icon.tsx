@@ -1,22 +1,58 @@
 import React, { useEffect, useState } from "react";
+import Image from 'next/image';
 import BunnyWhite from "@/public/Buny-White-Trans.svg";
 import BunnyBlack from "@/public/Bunny-Black-Trans.svg";
 
-import Link from 'next/link';
-import Image from 'next/image';
 import { useTheme } from "next-themes";
 
+const defaultTheme = 'light'; // Default theme if none is set
 export function Logo() {
-  const { theme } = useTheme();
-  const [mounted, setMounted] = useState(false);
+  const { theme, resolvedTheme } = useTheme();
+  const [currentTheme, setCurrentTheme] = useState<string>(defaultTheme); // Default to light for initial render
 
   useEffect(() => {
-    setMounted(true);
-  }, []);
+    const detectTheme = () => {
+      if (document.documentElement.classList.contains('dark')) {
+        setCurrentTheme('dark');
+      } else if (document.documentElement.classList.contains('light')) {
+        setCurrentTheme('light');
+      } else if (document.documentElement.classList.contains('modern')) {
+        setCurrentTheme('modern');
+      } else {
+        setCurrentTheme(resolvedTheme || theme || defaultTheme);
+      }
+    };
 
-  const src = !mounted ? BunnyBlack : theme === "dark" ? BunnyWhite : BunnyBlack;
+    detectTheme();
+
+    const observer = new MutationObserver(detectTheme);
+    observer.observe(document.documentElement, { 
+      attributes: true, 
+      attributeFilter: ['class'] 
+    });
+
+    return () => observer.disconnect();
+  }, [resolvedTheme, theme]);
+
+  const getBunnyForTheme = () => {
+    switch (currentTheme) {
+      case 'dark':
+        return BunnyWhite;
+      case 'light':
+        return BunnyBlack;
+      case 'modern':
+        return BunnyWhite;
+      default:
+        return BunnyWhite;
+    }
+  };
 
   return (
-    <Image alt="Bunny" priority={true} width={200} src={src} />
+    <Image 
+      alt="Bunny" 
+      priority={true} 
+      width={200} 
+      src={getBunnyForTheme()} 
+    />
   );
 }
