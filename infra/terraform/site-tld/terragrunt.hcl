@@ -74,7 +74,7 @@ errors {
         "(?s).*dial tcp .*: i/o timeout.*",
         "(?s).*connection reset by peer.*",
         "(?s).*context deadline exceeded.*",
-        "(?s).*access denied for logdestination.*",
+        "(?s).*[aA]ccess [dD]enied for [lL]og[dD]estination.*",
       ]
     )
 

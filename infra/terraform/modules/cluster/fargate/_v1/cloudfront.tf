@@ -278,3 +278,18 @@ resource "aws_s3_bucket_ownership_controls" "cloudfront_logs_ownership" {
   }
   provider = aws.application
 }
+
+# NOTE: This is need to allow CloudFront to access the S3 bucket for static assets
+resource "aws_s3_bucket_cors_configuration" "cf_bucket_cors" {
+  count    = var.use_cloudfront ? 1 : 0
+  bucket   = aws_s3_bucket.cf_bucket[0].id
+  provider = aws.application
+
+  cors_rule {
+    allowed_headers = ["*"]
+    allowed_methods = ["GET", "HEAD", "POST", "PUT", "DELETE"]
+    allowed_origins = ["https://${var.region_zonename}", "https://${var.env_zonename}"]
+    expose_headers  = ["Access-Control-Allow-Origin"]
+    max_age_seconds = 3000
+  }
+}

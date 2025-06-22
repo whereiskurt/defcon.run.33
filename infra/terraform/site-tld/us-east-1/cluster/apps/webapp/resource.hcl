@@ -1,5 +1,5 @@
 locals {
-  label = "webapp"
+  label = "run"
 
   ## Read the account and region configuration
   account_vars     = read_terragrunt_config(find_in_parent_folders("account.hcl"))

@@ -7,7 +7,7 @@ locals {
   region_label = "use1"
 
   ## These zones support global resource redirection regions
-  subdomain_zonenames = ["webapp", "strapi", "email", "etherpad", "mqtt"]
+  subdomain_zonenames = ["run", "strapi", "email", "etherpad", "mqtt"]
 
   ## When use_global_waf is true, applications CFD will use this globally configured WAF webacl.
   use_global_waf = false

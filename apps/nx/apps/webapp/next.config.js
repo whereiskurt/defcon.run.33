@@ -1,5 +1,5 @@
 //@ts-check
-const WEBAPP_ORIGIN = process.env.WEBAPP_ORIGIN || 'use1.webapp.defcon.run';
+const WEBAPP_ORIGIN = process.env.WEBAPP_ORIGIN || 'use1.run.defcon.run';
 const WEBAPP_PREFIX = process.env.WEBAPP_PREFIX || 'www';
 
 const { composePlugins, withNx } = require('@nx/next');

@@ -6,7 +6,7 @@ export AWS_REGION=${AWS_REGION:-"us-east-1"}
 export AWS_ACCOUNT_ID=${AWS_ACCOUNT_ID:-$(aws sts get-caller-identity --query "Account" --output text)}
 export IMAGE_TAG=${IMAGE_TAG:-"v0.0.1"}
 
-export REPO_NAME="nginx.webapp.defcon.run"
+export REPO_NAME="nginx.run.defcon.run"
 
 aws ecr get-login-password --region "$AWS_REGION" \
  | docker login --username AWS --password-stdin "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"

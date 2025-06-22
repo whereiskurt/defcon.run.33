@@ -29,11 +29,10 @@
         "env": {
           "AWS_REGION": "us-east-1",
           "CLUSTER": "ecs-use1-defcon-run",
-          "WEBAPP": "webapp-defcon-run",
-          "WEBAPP_ORIGIN": "use1.webapp.defcon.run"
+          "WEBAPP": "run-defcon-run",
+          "WEBAPP_ORIGIN": "use1.run.defcon.run"
         },
-        "command": "source ./deploy.nginx.webapp.sh && source ./deploy.webapp.sh && ./force-new-deployment.sh",
-        "cwd": "apps/nx/"
+        "command": "source ./deploy.nginx.webapp.sh && source ./deploy.webapp.sh && ./force-new-deployment.sh"
       },
       "executor": "nx:run-commands",
       "timeout": 120000

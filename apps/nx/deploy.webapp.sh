@@ -5,8 +5,8 @@ export AWS_PROFILE=${AWS_PROFILE:-application}
 export AWS_REGION=${AWS_REGION:-"us-east-1"}
 export AWS_ACCOUNT_ID=${AWS_ACCOUNT_ID:-$(aws sts get-caller-identity --query "Account" --output text)}
 export IMAGE_TAG=${IMAGE_TAG:-"v0.0.1"}
-export REPO_NAME="app.webapp.defcon.run"
-export WEBAPP_ORIGIN="use1.webapp.defcon.run"
+export REPO_NAME="app.run.defcon.run"
+export WEBAPP_ORIGIN="use1.run.defcon.run"
 export WEBAPP_PREFIX=${WEBAPP_PREFIX:-"www"}
 nx run webapp:build
 
