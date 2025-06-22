@@ -63,7 +63,7 @@ resource "aws_acm_certificate" "region" {
   provider                  = aws.global-application
   validation_method         = "DNS"
   domain_name               = var.region_zonename
-  subject_alternative_names = ["*.${var.region_zonename}"]
+  subject_alternative_names = ["*.${var.region_zonename}", "${var.env_zonename}", "*.${var.env_zonename}"]
 }
 
 resource "aws_route53_record" "cert_verify" {
@@ -175,7 +175,7 @@ resource "aws_cloudfront_distribution" "cf_public" {
     }
   }
 
-  aliases = [var.region_zonename]
+  aliases = [var.region_zonename, var.env_zonename]
 
   viewer_certificate {
     acm_certificate_arn      = aws_acm_certificate.region[0].arn

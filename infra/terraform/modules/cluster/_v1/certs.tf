@@ -20,8 +20,8 @@ resource "aws_route53_record" "forward_ns_to_zones" {
 resource "aws_acm_certificate" "env_cert" {
   provider                  = aws.application
   validation_method         = "DNS"
-  domain_name               = "${var.region_zonename}"
-  subject_alternative_names = ["*.${var.region_zonename}"]
+  domain_name               = "${var.env_zonename}"
+  subject_alternative_names = ["*.${var.env_zonename}", "${var.region_zonename}", "*.${var.region_zonename}"]
 }
 
 resource "aws_route53_record" "cert_validation" {
