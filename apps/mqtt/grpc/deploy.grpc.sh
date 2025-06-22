@@ -7,8 +7,8 @@ export AWS_ACCOUNT_ID=${AWS_ACCOUNT_ID:-$(aws sts get-caller-identity --query "A
 export IMAGE_TAG=${IMAGE_TAG:-"v0.0.1"}
 export REPO_NAME=${REPO_NAME:-"grpc.mqtt.defcon.run"}
 
-rm -fr ./site-tld/meshtk
-git clone https://github.com/whereiskurt/meshtk ./site-tld/meshtk
+# rm -fr ./site-tld/meshtk
+# git clone https://github.com/whereiskurt/meshtk ./site-tld/meshtk
 
 # docker buildx build \
 #   --platform linux/arm64 \
