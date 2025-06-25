@@ -1,9 +1,5 @@
 dependency "zone" {
   config_path = "../../"
-  mock_outputs = {
-    zone_map = {},
-    cert_map = {}
-  }
 }
 
 include "root" {
