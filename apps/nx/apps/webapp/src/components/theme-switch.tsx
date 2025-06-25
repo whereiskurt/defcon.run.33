@@ -76,10 +76,12 @@ export const ThemeSwitch: FC<ThemeSwitchProps> = ({
     getInputProps,
     getWrapperProps,
   } = useSwitch({
-    isSelected: theme === "dark", // Default to Moon (dark theme)
-    "aria-label": `Switch to ${theme === "light" ? "dark" : "light"} mode`,
+    isSelected: theme === "light" || isSSR,
+    "aria-label": `Switch to ${theme === "light" || isSSR ? "dark" : "light"} mode`,
     onChange,
   });
+
+  if (isSSR) return null;
 
   return (
     <Component
@@ -113,10 +115,10 @@ export const ThemeSwitch: FC<ThemeSwitchProps> = ({
           ),
         })}
       >
-        {isSelected ? (
-          <MoonFilledIcon size={22} />
-        ) : (
+        {!isSelected || isSSR ? (
           <SunFilledIcon size={22} />
+        ) : (
+          <MoonFilledIcon size={22} />
         )}
       </div>
     </Component>
