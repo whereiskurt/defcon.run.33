@@ -36,7 +36,7 @@ resource "aws_route53_record" "app_region_record" {
 
 // TODO: Consider moving this into the apptype ! :) 
 resource "aws_route53_record" "nextjs_primary_record" {
-  count   = var.is_primary_deployment && var.app_type == "nextjs" ? 1 : 0
+  count   = var.is_primary_deployment && (var.app_type == "nextjs" || var.app_type == "strapi" || var.app_type == "etherpad"  ) ? 1 : 0
   zone_id = var.zone_map[var.env_zonename].zone_id
   name    = var.env_zonename
   type    = "A"

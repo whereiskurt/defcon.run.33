@@ -13,7 +13,7 @@
       "executor": "nx:run-commands",
       "timeout": 120000,
       "options": {
-        "command": "terragrunt run-all apply --terragrunt-log-level debug --terragrunt-debug || true",
+        "command": "terragrunt run-all apply --terragrunt-non-interactive --terragrunt-log-level debug --terragrunt-debug || true",
         "cwd": "infra/terraform/site-tld"
       }
     },
