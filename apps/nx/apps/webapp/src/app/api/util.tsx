@@ -1,9 +1,9 @@
 import { cookies } from 'next/headers';
 import crypto from 'crypto';
 
+//This function may not be necessary but does work as describe. Next.js handles CSRF tokens automatically, apparently.
 export const verifyCsrfToken = async (csrf: string): Promise<boolean> => {
   try {
-    //This function may not be necessary but does work as describe. Next.js handles CSRF tokens automatically, apparently.
     const cookie = (await cookies()).get('csrf');
     if (!cookie || !cookie.value || cookie.value.length < 1) {
         throw new Error('1. Invalid CSRF token - not found');
