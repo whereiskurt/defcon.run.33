@@ -31,7 +31,9 @@ resource "aws_ssm_parameter" "smtp_url" {
 resource "aws_ssm_parameter" "smtp_url_with_v4" {
   name     = "/${var.region_zonename}/ses/smtp_url_v4"
   type     = "SecureString"
-  value    = "smtp://${aws_iam_access_key.ses_user_key.id}:${aws_iam_access_key.ses_user_key.ses_smtp_password_v4}@email-smtp.${var.region}.amazonaws.com:587"
+  ##The replace is necessary because an IAM access key ID cannot contain slashes
+  ##Slashes aren't URL friendly. Other chars like + are handled fine by most URL parsers but the '/' is not.
+  value    = "smtp://${aws_iam_access_key.ses_user_key.id}:${replace(aws_iam_access_key.ses_user_key.ses_smtp_password_v4, "/", "%2F")}@email-smtp.${var.region}.amazonaws.com:587"
   provider = aws.application
 }
 

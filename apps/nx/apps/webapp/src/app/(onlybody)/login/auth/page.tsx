@@ -23,29 +23,32 @@ import { useState } from 'react';
 import { getCsrfToken } from "next-auth/react"
 import { useEffect } from 'react';
 
-export default function UnlockForm() {
+// Separate component for client-side only rendering
+function ClientOnlyForm() {
   const [email, setEmail] = useState('');
   const [inviteCode, setInviteCode] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isInviteCodeFocused, setIsInviteCodeFocused] = useState(false);
   const [isEmailFocused, setIsEmailFocused] = useState(false);
-  const [csrfToken, setCsrfToken] = useState<string | null>(null)
-  const [error, setError] = useState<string | null>(null)
+  const [csrfToken, setCsrfToken] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
+  const { resolvedTheme } = useTheme();
 
   useEffect(() => {
+    setMounted(true);
     const fetchCsrfToken = async () => {
-      const token = await getCsrfToken()
-      setCsrfToken(token)
-    }
+      const token = await getCsrfToken();
+      setCsrfToken(token);
+    };
     fetchCsrfToken();
-    setIsSubmitting(false)
-  }, [])
-
+    setIsSubmitting(false);
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     if (!csrfToken || csrfToken === '') {
-      setError("CSRF token handled or set properly.")
+      setError("CSRF token not handled or set properly.")
       return
     }
     if (!email || email === '') {
@@ -78,14 +81,15 @@ export default function UnlockForm() {
     return false
   }
 
-  const theme = useTheme();
+  // Use a safe default in case we're rendering on the server
+  const isDarkTheme = mounted && resolvedTheme === 'dark';
 
   return (
     <div className="flex min-h-screen items-center justify-center p-4 md:p-8">
-      <BlurPulseBackground imagePath={`/bunny-theme-${theme.theme}.svg`} />
+      <BlurPulseBackground imagePath={`/bunny-theme-${isDarkTheme ? 'dark' : 'light'}.svg`} />
       <div className="z-10 w-full max-w-md" >
         <form onSubmit={handleSubmit} className="w-full">
-          <Card className={`shadow-lg ${theme.theme === 'dark' ? 'bg-gray-900/50' : 'bg-white/50'}`}>
+          <Card className={`shadow-lg ${isDarkTheme ? 'bg-gray-900/50' : 'bg-white/50'}`}>
             <CardHeader>
               <div className="flex flex-col">
                 <Heading level={1}>
@@ -95,7 +99,7 @@ export default function UnlockForm() {
                     'Welcome!'
                   )}
                 </Heading>
-                <Text variant="small" className={theme.theme === 'dark' ? 'text-gray-300' : 'black'}>
+                <Text variant="small" className={isDarkTheme ? 'text-gray-300' : 'text-black'}>
                   We don&apos;t store passwords but require an email address.
                 </Text>
               </div>
@@ -106,7 +110,7 @@ export default function UnlockForm() {
                 <Heading level={4}>
                   <label
                     htmlFor="email"
-                    className={`block text-lg font-medium ${theme.theme === 'dark' ? 'text-white' : 'text-black'}`}
+                    className={`block text-lg font-medium ${isDarkTheme ? 'text-white' : 'text-black'}`}
                   >
                     {isEmailFocused ? (
                       <RainbowText text='Email Address' />
@@ -134,7 +138,7 @@ export default function UnlockForm() {
               <div className="space-y-3 w-full">
                 <label
                   htmlFor="inviteCode"
-                  className={`block text-lg font-medium pt-2 ${fontMuseo.className} ${theme.theme === 'dark' ? 'text-white' : 'text-black'}`}
+                  className={`block text-lg font-medium pt-2 ${fontMuseo.className} ${isDarkTheme ? 'text-white' : 'text-black'}`}
                 >
                   {isInviteCodeFocused ? (
                     <GlitchLabel>Invite Codes</GlitchLabel>
@@ -143,7 +147,7 @@ export default function UnlockForm() {
                   )}
                 </label>
                 <div className="relative w-full">
-                  <div className={`absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none ${theme.theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
+                  <div className={`absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none ${isDarkTheme ? 'text-gray-400' : 'text-gray-500'}`}>
                     <Key className="h-5 w-5" />
                   </div>
                   <Input
@@ -187,4 +191,25 @@ export default function UnlockForm() {
       </div>
     </div>
   );
+}
+
+export default function UnlockForm() {
+  const [mounted, setMounted] = useState(false);
+  
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+  
+  // Only render the form client-side to avoid hydration mismatch
+  if (!mounted) {
+    return <div className="flex min-h-screen items-center justify-center p-4 md:p-8">
+      <div className="z-10 w-full max-w-md">
+        <div className="bg-white/50 dark:bg-gray-900/50 shadow-lg rounded-lg p-6">
+          <p className="text-center">Loading...</p>
+        </div>
+      </div>
+    </div>;
+  }
+  
+  return <ClientOnlyForm />;
 }

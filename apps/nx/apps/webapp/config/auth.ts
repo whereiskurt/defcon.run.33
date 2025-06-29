@@ -111,7 +111,7 @@ export const {handlers, signIn, signOut, auth } = NextAuth({
   theme: {
     colorScheme: "dark"
   },
-  secret: 'process.env.AUTH_SECRET?.split(",")',
+  secret: process.env.AUTH_SECRET?.split(","),
   providers,
   adapter,
   pages: {
@@ -164,6 +164,38 @@ export const {handlers, signIn, signOut, auth } = NextAuth({
       return session
     },
 
+  },
+   cookies: {
+    sessionToken: {
+      name: "sess",
+      options: {
+        domain: ".defcon.run",
+        path: "/",
+        httpOnly: true,
+        sameSite: "lax",            
+        secure: true,               
+      },
+    },
+    csrfToken: {
+      name: "csrf",
+      options: {
+        domain: ".defcon.run",
+        path: "/",
+        httpOnly: false,
+        sameSite: "lax",
+        secure: true,
+      },
+    },
+    callbackUrl: {
+      name: "callback",
+      options: {
+        domain: ".defcon.run",
+        path: "/",
+        httpOnly: false,
+        sameSite: "lax",
+        secure: true,
+      }
+    }
   },
 })
 
