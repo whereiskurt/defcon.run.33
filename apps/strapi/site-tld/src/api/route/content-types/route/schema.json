@@ -1,0 +1,163 @@
+{
+  "kind": "collectionType",
+  "collectionName": "routes",
+  "info": {
+    "singularName": "route",
+    "pluralName": "routes",
+    "displayName": "Route",
+    "description": ""
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {
+    "i18n": {
+      "localized": true
+    }
+  },
+  "attributes": {
+    "startLocation": {
+      "type": "component",
+      "repeatable": false,
+      "pluginOptions": {
+        "i18n": {
+          "localized": false
+        }
+      },
+      "component": "participation.location"
+    },
+    "endLocation": {
+      "type": "component",
+      "repeatable": false,
+      "pluginOptions": {
+        "i18n": {
+          "localized": false
+        }
+      },
+      "component": "participation.location"
+    },
+    "name": {
+      "pluginOptions": {
+        "i18n": {
+          "localized": false
+        }
+      },
+      "type": "string",
+      "required": true
+    },
+    "gpx": {
+      "pluginOptions": {
+        "i18n": {
+          "localized": false
+        }
+      },
+      "type": "text",
+      "required": true
+    },
+    "color": {
+      "pluginOptions": {
+        "i18n": {
+          "localized": false
+        }
+      },
+      "type": "string",
+      "default": "black",
+      "required": true
+    },
+    "opacity": {
+      "pluginOptions": {
+        "i18n": {
+          "localized": false
+        }
+      },
+      "type": "decimal",
+      "default": 0.8,
+      "required": true,
+      "max": 1,
+      "min": 0.1
+    },
+    "weight": {
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      },
+      "type": "integer",
+      "required": true,
+      "default": 5,
+      "max": 20,
+      "min": 1
+    },
+    "description": {
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      },
+      "type": "text",
+      "required": true
+    },
+    "layers": {
+      "type": "relation",
+      "relation": "manyToMany",
+      "target": "api::map-layer.map-layer",
+      "mappedBy": "routes"
+    },
+    "makeNameLayer": {
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      },
+      "type": "boolean",
+      "default": true,
+      "required": true
+    },
+    "sortKey": {
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      },
+      "type": "string",
+      "required": true,
+      "default": "a"
+    },
+    "mode": {
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      },
+      "type": "enumeration",
+      "enum": [
+        "run",
+        "walk",
+        "ruck",
+        "way-points"
+      ]
+    },
+    "distance": {
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      },
+      "type": "decimal"
+    },
+    "distanceUnit": {
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      },
+      "type": "enumeration",
+      "enum": [
+        "kilometers",
+        "miles",
+        "steps",
+        "track laps"
+      ]
+    }
+  }
+}

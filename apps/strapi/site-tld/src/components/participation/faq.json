@@ -1,0 +1,29 @@
+{
+  "collectionName": "components_participation_faqs",
+  "info": {
+    "displayName": "FAQ",
+    "description": ""
+  },
+  "options": {},
+  "attributes": {
+    "last_change": {
+      "type": "date",
+      "required": true
+    },
+    "sequence": {
+      "type": "integer"
+    },
+    "title": {
+      "type": "string",
+      "required": true
+    },
+    "question": {
+      "type": "blocks",
+      "required": true
+    },
+    "answer": {
+      "type": "blocks",
+      "required": true
+    }
+  }
+}

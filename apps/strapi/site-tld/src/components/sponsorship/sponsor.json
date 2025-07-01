@@ -1,0 +1,31 @@
+{
+  "collectionName": "components_sponsorship_sponsors",
+  "info": {
+    "displayName": "Sponsor",
+    "icon": "handHeart",
+    "description": ""
+  },
+  "options": {},
+  "attributes": {
+    "name": {
+      "type": "string"
+    },
+    "logo": {
+      "type": "media",
+      "multiple": false,
+      "required": true,
+      "allowedTypes": [
+        "images"
+      ]
+    },
+    "url": {
+      "type": "string",
+      "regex": "https://.+?",
+      "required": true
+    },
+    "body": {
+      "type": "blocks",
+      "required": true
+    }
+  }
+}

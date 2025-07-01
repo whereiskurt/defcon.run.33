@@ -1,0 +1,24 @@
+{
+  "kind": "singleType",
+  "collectionName": "dashboards",
+  "info": {
+    "singularName": "dashboard",
+    "pluralName": "dashboards",
+    "displayName": "Dashboard"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "intro": {
+      "type": "blocks"
+    },
+    "headline": {
+      "type": "blocks"
+    },
+    "headline_chip": {
+      "type": "string"
+    }
+  }
+}

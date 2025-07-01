@@ -1,0 +1,31 @@
+{
+  "kind": "singleType",
+  "collectionName": "faqs",
+  "info": {
+    "singularName": "faq",
+    "pluralName": "faqs",
+    "displayName": "FAQ",
+    "description": ""
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "FAQ": {
+      "type": "component",
+      "repeatable": true,
+      "component": "participation.faq"
+    },
+    "page_body": {
+      "type": "blocks",
+      "required": true
+    },
+    "page_title": {
+      "type": "string"
+    },
+    "page_summary": {
+      "type": "text"
+    }
+  }
+}

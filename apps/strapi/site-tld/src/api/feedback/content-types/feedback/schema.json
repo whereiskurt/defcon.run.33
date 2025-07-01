@@ -1,0 +1,19 @@
+{
+  "kind": "singleType",
+  "collectionName": "feedbacks",
+  "info": {
+    "singularName": "feedback",
+    "pluralName": "feedbacks",
+    "displayName": "Feedback"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "body": {
+      "type": "blocks",
+      "required": true
+    }
+  }
+}

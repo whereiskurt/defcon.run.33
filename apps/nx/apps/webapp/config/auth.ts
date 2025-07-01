@@ -101,7 +101,9 @@ const providers: Provider[] = [
 
 const randomString = (length: number, alphabet: string): string => Array.from({ length }, () => alphabet[Math.floor(Math.random() * alphabet.length)]).join('');
 
-export const {handlers, signIn, signOut, auth } = NextAuth({
+const cookieDomain = process.env.NODE_ENV === "production" ? ".defcon.run" : "localhost";
+
+export const { handlers, signIn, signOut, auth } = NextAuth({
   // debug: true,
   trustHost: true,
   session: {
@@ -169,7 +171,7 @@ export const {handlers, signIn, signOut, auth } = NextAuth({
     sessionToken: {
       name: "sess",
       options: {
-        domain: ".defcon.run",
+        domain: cookieDomain,
         path: "/",
         httpOnly: true,
         sameSite: "lax",            
@@ -179,7 +181,7 @@ export const {handlers, signIn, signOut, auth } = NextAuth({
     csrfToken: {
       name: "csrf",
       options: {
-        domain: ".defcon.run",
+        domain: cookieDomain,
         path: "/",
         httpOnly: false,
         sameSite: "lax",
@@ -189,7 +191,7 @@ export const {handlers, signIn, signOut, auth } = NextAuth({
     callbackUrl: {
       name: "callback",
       options: {
-        domain: ".defcon.run",
+        domain: cookieDomain,
         path: "/",
         httpOnly: false,
         sameSite: "lax",

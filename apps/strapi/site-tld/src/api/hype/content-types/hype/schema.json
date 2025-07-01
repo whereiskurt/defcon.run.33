@@ -1,0 +1,19 @@
+{
+  "kind": "singleType",
+  "collectionName": "hypes",
+  "info": {
+    "singularName": "hype",
+    "pluralName": "hypes",
+    "displayName": "Hype",
+    "description": ""
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "body": {
+      "type": "blocks"
+    }
+  }
+}

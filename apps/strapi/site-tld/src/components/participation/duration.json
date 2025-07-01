@@ -1,0 +1,21 @@
+{
+  "collectionName": "components_participation_durations",
+  "info": {
+    "displayName": "Duration"
+  },
+  "options": {},
+  "attributes": {
+    "days": {
+      "type": "integer"
+    },
+    "hours": {
+      "type": "integer"
+    },
+    "minutes": {
+      "type": "integer",
+      "max": 59,
+      "min": 0,
+      "default": 0
+    }
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "collectionName": "components_participation_locations",
+  "info": {
+    "displayName": "Location",
+    "icon": "pin",
+    "description": ""
+  },
+  "options": {},
+  "attributes": {
+    "latitude": {
+      "type": "float",
+      "required": true,
+      "max": 90,
+      "min": -90
+    },
+    "longitude": {
+      "type": "float",
+      "required": true,
+      "max": 360,
+      "min": -180
+    },
+    "images": {
+      "type": "media",
+      "multiple": true,
+      "required": false,
+      "allowedTypes": [
+        "images",
+        "videos"
+      ]
+    },
+    "svgPin": {
+      "type": "text"
+    }
+  }
+}
