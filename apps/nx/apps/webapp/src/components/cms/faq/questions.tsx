@@ -21,12 +21,12 @@ export default function FAQ({ questions, className = '' }: FAQProps) {
 
   const tsxItems = [...questions]
     .sort((a, b) => (a.sequence || 0) - (b.sequence || 0))
-    .map((item: any) => (
+    .map((item: any, index: number) => (
       <AccordionItem
         title={
           <>
             <Heading level={5}>
-              {item.sequence}. {item.title}
+              {index + 1}. {item.title}
             </Heading>
           </>
         }
