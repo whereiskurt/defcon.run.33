@@ -105,6 +105,9 @@ export function Header(params: any) {
       </NavbarContent>
 
       <NavbarContent justify="end">
+        <NavbarItem>
+          <ThemeSwitch />
+        </NavbarItem>
         {hasSession ? (
           <>
             <NavbarItem>
@@ -118,9 +121,6 @@ export function Header(params: any) {
             </NavbarItem>
           </>
         )}
-        <NavbarItem>
-          <ThemeSwitch />
-        </NavbarItem>
       </NavbarContent>
     </Navbar>
   );

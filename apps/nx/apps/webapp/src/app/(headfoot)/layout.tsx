@@ -55,11 +55,11 @@ export default async function RootLayout({
                 <Link
                   isExternal
                   className="flex items-center gap-1 text-current"
-                  href="https://heroui.com?utm_source=next-app-template"
-                  title="heroui.com homepage"
+                  href="https://www.pentestpartners.com/"
+                  title="Pen Test Partners"
                 >
-                  <span className="text-default-600">Powered by</span>
-                  <p className="text-primary">HeroUI</p>
+                  <span className="text-default-600">Supported by</span>
+                  <p className="text-primary">PenTest Partners</p>
                 </Link>
               </footer>
             </div>
