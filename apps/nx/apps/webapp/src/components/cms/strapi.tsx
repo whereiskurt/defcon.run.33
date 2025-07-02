@@ -7,7 +7,7 @@ import {
 } from '@strapi/blocks-react-renderer';
 import Link from 'next/link';
 
-export default function RichBody({
+export default function StrapiRichText({
   content,
 }: {
   readonly content: BlocksContent;

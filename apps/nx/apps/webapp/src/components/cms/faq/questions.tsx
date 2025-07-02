@@ -2,7 +2,7 @@
 
 import { Accordion, AccordionItem, Divider } from '@heroui/react';
 import { Heading } from '@components/ui/typography';
-import RichBody from '../richBody';
+import StrapiRichText from '../strapi';
 
 interface FAQProps {
   questions: any;
@@ -34,10 +34,10 @@ export default function FAQ({ questions, className = '' }: FAQProps) {
         textValue={`Accordion ${item.id}`}
       >
         <Heading level={5}>Question</Heading>
-        <RichBody content={item.question} />
+        <StrapiRichText content={item.question} />
         <Divider className="my-1" />
         <Heading level={5}>Answer</Heading>
-        <RichBody content={item.answer} />
+        <StrapiRichText content={item.answer} />
       </AccordionItem>
     ));
 

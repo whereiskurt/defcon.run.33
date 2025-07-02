@@ -5,7 +5,7 @@ import { strapi } from '@components/cms/data';
 import { Heading, Lead } from '@components/ui/typography';
 
 // Dynamic imports for components
-const RichText = dynamic(() => import('@components/cms/body'), { ssr: true });
+const RichText = dynamic(() => import('@components/cms/rich'), { ssr: true });
 const FAQQuestions = dynamic(() => import('@components/cms/faq/questions'), { ssr: true });
 
 export default async function Welcome() {
