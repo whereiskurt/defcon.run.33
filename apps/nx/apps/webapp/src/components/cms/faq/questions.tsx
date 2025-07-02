@@ -1,7 +1,7 @@
 'use client';
 
 import { Accordion, AccordionItem, Divider } from '@heroui/react';
-import { Heading } from '@components/text-effects/typography';
+import { Heading } from '@components/text-effects/Common';
 import StrapiRichText from '../strapi';
 
 interface FAQProps {

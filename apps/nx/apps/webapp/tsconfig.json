@@ -27,6 +27,9 @@
       "@components/*": [
         "./src/components/*"
       ],
+      "@text/*": [
+        "./src/components/text-effects/*"
+      ],
       "@fonts": [
         "./config/fonts"
       ],

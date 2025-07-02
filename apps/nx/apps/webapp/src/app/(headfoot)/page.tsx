@@ -4,8 +4,8 @@ import { Code } from "@heroui/code";
 import { button as buttonStyles } from "@heroui/theme";
 
 import { siteConfig } from "@/config/site";
-import { Heading } from "@components/ui/typography";
-import { Text } from "@components/ui/typography";
+import { Heading } from "@components/text-effects/Common";
+import { Text } from "@components/text-effects/Common";
 
 export default function Home() {
   return (

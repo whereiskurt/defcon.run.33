@@ -14,8 +14,8 @@ import type React from 'react';
 import { fontMuseo } from '@/config/fonts';
 import BlurPulseBackground from '@/src/components/BlurPulseBackground';
 import { GlitchLabel, RainbowText } from '@/src/components/text-effects';
-import { Text } from '@/src/components/text-effects/typography';
-import { Heading } from '@/src/components/text-effects/typography';
+import { Text } from '@components/text-effects/Common';
+import { Heading } from '@components/text-effects/Common';
 
 import { Key, Wand } from 'lucide-react';
 import { useTheme } from 'next-themes';

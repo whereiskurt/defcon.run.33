@@ -10,5 +10,6 @@ export {
   Muted,
   Heading,
   BlockQuote,
-} from './typography';
-export type { TypographyProps, TextProps } from './typography';
+} from './Common';
+
+export type { TypographyProps, TextProps } from './Common';
