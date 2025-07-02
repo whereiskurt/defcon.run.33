@@ -11,14 +11,7 @@ const Questions = dynamic(() => import('@components/cms/faq/questions'), { ssr: 
 export default async function Welcome() {
 
   const raw = await strapi('/faq?populate=*');
-
-  const { 
-    page_body, 
-    page_summary, 
-    page_title, 
-    page_bottom, 
-    FAQ: questions 
-  } = raw.data;
+  const { page_body, page_summary, page_title, page_bottom, FAQ: questions } = raw.data;
 
   const className = '';
   return (

@@ -26,6 +26,10 @@
     },
     "page_summary": {
       "type": "text"
+    },
+    "page_bottom": {
+      "type": "blocks",
+      "required": false
     }
   }
 }
