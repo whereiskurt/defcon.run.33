@@ -5,7 +5,7 @@ import { button as buttonStyles } from "@heroui/theme";
 
 import { siteConfig } from "@/config/site";
 import { Heading } from "@components/ui/typography";
-import { Text } from "@components/ui/Text";
+import { Text } from "@components/ui/typography";
 
 export default function Home() {
   return (

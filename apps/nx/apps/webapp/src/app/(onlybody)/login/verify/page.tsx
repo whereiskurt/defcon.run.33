@@ -16,8 +16,8 @@ import { MdOutlineMarkEmailRead } from 'react-icons/md';
 import React from 'react';
 import { signIn } from 'next-auth/react';
 
-import { Text } from '@components/ui/Text';
-import { Heading } from '@components/ui/typography';
+import { Text } from '@components/text-effects/typography';
+import { Heading } from '@components/text-effects/typography';
 
 // Separate client component to handle search params
 function EmailVerificationForm() {
