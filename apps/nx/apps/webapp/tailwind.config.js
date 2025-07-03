@@ -26,7 +26,7 @@ module.exports = {
         button: {
           
           dashboard: {
-            bg: '#bbbbbb',       // red-500
+            bg: '#4477AA',       // red-500
             hover: '#AA3377',    // red-600
             text: '#FFFFFF',     // white
           },
