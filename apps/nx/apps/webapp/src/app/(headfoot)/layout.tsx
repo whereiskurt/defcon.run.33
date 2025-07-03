@@ -10,6 +10,7 @@ import { fontSans } from '@fonts';
 import { Header } from '@header';
 import { auth } from '@auth';
 import { SessionProvider } from 'next-auth/react';
+import { redirect } from 'next/navigation';
 
 export const metadata: Metadata = {
   title: {
@@ -34,7 +35,14 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
+
   const session = await auth();
+  if (process.env.NODE_ENV === 'development') {
+  } else {
+    if (!session) redirect('/login/auth');
+  }
+  
+
   return (
     <html suppressHydrationWarning lang="en">
       <head />

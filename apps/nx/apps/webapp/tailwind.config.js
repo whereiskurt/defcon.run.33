@@ -22,6 +22,16 @@ module.exports = {
         atkinson: FontAtkinson,
         lato: FontLato,
       },
+      colors: {
+        button: {
+          
+          dashboard: {
+            bg: '#bbbbbb',       // red-500
+            hover: '#AA3377',    // red-600
+            text: '#FFFFFF',     // white
+          },
+        },
+      },
       keyframes: {
         'glitch-1': {
           '0%, 100%': { transform: 'translate(0)' },
@@ -62,5 +72,8 @@ module.exports = {
     'animate-glitch-1',
     'animate-glitch-2',
     'animate-blurPulse',
+    'bg-button-dashboard-bg',
+    'hover:bg-button-dashboard-hover',
+    'text-button-dashboard-text',
   ],
 };

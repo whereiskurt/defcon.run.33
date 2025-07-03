@@ -25,7 +25,7 @@
       "type": "string"
     },
     "page_summary": {
-      "type": "text"
+      "type": "string"
     },
     "page_bottom": {
       "type": "blocks",

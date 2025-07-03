@@ -20,6 +20,8 @@ export interface TextProps extends React.HTMLAttributes<HTMLParagraphElement> {
     | 'default'
     | 'heading'
     | 'subheading'
+    | 'xsheading'
+    | 'smheading'
     | 'small'
     | 'large'
     | 'xlarge'
@@ -43,11 +45,14 @@ export const Text = ({
     large: `${fontAtkinson.className} text-lg font-medium`,
     xlarge: `${fontAtkinson.className} text-xl font-medium`,
     xxlarge: `${fontAtkinson.className} text-2xl font-medium`,
-
+    small: `${fontAtkinson.className} text-small`,
+    tiny: `${fontAtkinson.className} text-xs `,
+    
     heading: `${fontMuseo.className}`, // No Atkinson by default for headings
     subheading: `${fontMuseo.className} text-lg font-medium`,
-
-    small: `${fontAtkinson.className} text-small`,
+    xsheading: `${fontMuseo.className} text-xs`,
+    smheading: `${fontMuseo.className} text-sm`,
+    
   };
 
   return (
