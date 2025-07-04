@@ -210,7 +210,9 @@ function drawRoute(data: any, layer: L.LayerGroup<any>) {
       if (xhr.status === 200) {
         data.gpx = xhr.responseText;
       } else {
-        throw new Error( `Failed to fetch GPX from ${fullUrl}. Status: ${xhr.status}` );
+        throw new Error(
+          `Failed to fetch GPX from ${fullUrl}. Status: ${xhr.status}`
+        );
       }
     } catch (error) {
       console.error(`Error fetching GPX from ${fullUrl}:`, error);
@@ -223,10 +225,12 @@ function drawRoute(data: any, layer: L.LayerGroup<any>) {
   const opacity = data.opacity;
   const weight = data.weight;
 
-  const startLocation = data.startLocation ? data.startLocation : { latitude: polylineCoordinates[0][0], longitude: polylineCoordinates[0][1]};
-  
-  const description = data.description;
-
+  const startLocation = data.startLocation
+    ? data.startLocation
+    : {
+        latitude: polylineCoordinates[0][0],
+        longitude: polylineCoordinates[0][1],
+      };
 
   if (polylineCoordinates.length === 0) {
     drawWayPointRoute(data, layer);
@@ -265,10 +269,14 @@ function drawRoute(data: any, layer: L.LayerGroup<any>) {
     ]);
     startMarker.setIcon(startPin);
 
+    const description = data.description;
+
+    const linktemplate = `<a href="${data.gpxurl}">GPX</a>&nbsp; | &nbsp;<a target="_blank" rel="noreferrer" href="${data.stravaurl}">Strava</a>`;
+
     const startupPopup = L.popup({})
       .setLatLng([startLocation.latitude, startLocation.longitude])
       .setContent(
-        `<div class='text-lg'>${name}</div><div>${description}</div><div>`
+        `<div class='text-lg'>${name}</div><div>${linktemplate}<p>${description}</p></div>`
       );
 
     startMarker.bindPopup(startupPopup);
