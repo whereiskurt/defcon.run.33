@@ -13,6 +13,7 @@ import { MapContainer, TileLayer, useMap } from 'react-leaflet';
 interface MapProps {
   center: LatLngExpression | LatLngTuple;
   raw: string;
+  live_nodes: string;
   zoom?: number;
 }
 

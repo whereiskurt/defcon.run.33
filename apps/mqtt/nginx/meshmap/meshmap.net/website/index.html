@@ -123,26 +123,20 @@
   const nodesBySearchString = {}
     
   // Generate marker color based on shortName
-  const getMarkerColorFromShortName = (shortName) => {
-    const gradientColors = [
-      '#000000', // Black
-      '#8B0000', // Dark Red
-      '#800080', // Purple
-      '#00008B', // Dark Blue
-      '#0000FF'  // Blue
-    ];
-    if (shortName.startsWith('R')) {
-      return gradientColors[0]; // Black
-    } else if (shortName.startsWith('J')) {
-      return gradientColors[1]; // Dark Red
-    } else if (shortName.startsWith('L')) {
-      return gradientColors[1]; // Dark Red
-    } else if (shortName.startsWith('K')) {
-      return gradientColors[3]; // Dark Red
-    } else if (shortName.startsWith('N')) {
-      return gradientColors[2]; // Purple
+  const getMarkerColorFromNodeName = (shortName, longName) => {
+
+    if (!shortName || !longName) {
+      return '#ff0000'; // Default to red if shortName or longName is invalid
     }
-    return '#ff0000' // Default to red if shortName is invalid
+
+    if (longName.includes('dc33.east')) {
+      return "purple"
+    } else if (longName.includes('dc33.bigstar')) {
+      return "darkblue"
+    } else if (longName.includes('dc33.')) {
+      return "orange"
+    }
+    
   }
   
   // Array of colors for random marker selection (kept for backward compatibility)
@@ -347,7 +341,7 @@
     if (markersByNode[nodeNum] === undefined) {
       
       // Generate color based on shortName
-      const markerColor = shortName ? getMarkerColorFromShortName(shortName) : '#ff0000'
+      const markerColor = shortName ? getMarkerColorFromNodeName(shortName, longName) : '#ff0000'
       
       const iconSettings = {
         mapIconUrl: '<svg version="1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 149 178"><path fill="{mapIconColor}" stroke="#FFF" stroke-width="6" stroke-miterlimit="10" d="M126 23l-6-6A69 69 0 0 0 74 1a69 69 0 0 0-51 22A70 70 0 0 0 1 74c0 21 7 38 22 52l43 47c6 6 11 6 16 0l48-51c12-13 18-29 18-48 0-20-8-37-22-51z"/><circle fill="{mapIconColorInnerCircle}" cx="74" cy="75" r="61"/><circle fill="#FFF" cx="74" cy="75" r="{pinInnerCircleRadius}"/></svg>',
