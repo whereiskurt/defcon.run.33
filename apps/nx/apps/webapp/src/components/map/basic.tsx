@@ -6,6 +6,7 @@ import 'leaflet-defaulticon-compatibility';
 import 'leaflet-defaulticon-compatibility/dist/leaflet-defaulticon-compatibility.css';
 import 'leaflet-gpx';
 import 'leaflet/dist/leaflet.css';
+import { useTheme } from 'next-themes';
 import Link from 'next/link';
 import { useEffect, useRef } from 'react';
 import { MapContainer, TileLayer, useMap } from 'react-leaflet';
@@ -15,6 +16,7 @@ interface MapProps {
   raw: string;
   live_nodes: string;
   zoom?: number;
+  theme: string;
 }
 
 const defaults = {
@@ -32,6 +34,8 @@ interface RawOverlayMap {
 interface OverlayMap {
   [key: string]: L.LayerGroup;
 }
+
+
 
 function parseGPX(gpxString: string): [number, number][] {
   const parser = new DOMParser();
@@ -52,38 +56,76 @@ function parseGPX(gpxString: string): [number, number][] {
   return coordinates;
 }
 
-const Map = ({ center: posix, raw, zoom = defaults.zoom }: MapProps) => {
+const Map = ({ center: posix, raw, zoom = defaults.zoom, live_nodes, theme }: MapProps) => {
   return (
     <MapContainer
       center={posix}
       zoom={zoom}
       style={{ zIndex: '0', height: '75vh', width: '100%' }}
     >
+
+      {theme === "dark" ? (
+        <TileLayer
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          attribution='&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
+        />
+      ) : (
+        <TileLayer
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" 
+          attribution='&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
+        />
+      )}
+{/* 
       <TileLayer
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         attribution='&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
-      />
+      /> */}
 
       {/* <TileLayer
         url="https://tiles.stadiamaps.com/tiles/stamen_toner/{z}/{x}/{y}{r}.png"
         attribution='&copy; <a href="https://stadiamaps.com/" target="_blank">Stadia Maps</a> &copy; <a href="https://stamen.com/" target="_blank">Stamen Design</a> &copy; <a href="https://openmaptiles.org/" target="_blank">OpenMapTiles</a> &copy; <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a>'
       /> */}
 
-      <AddGPXLayer raw={raw} />
+      <AddGPXLayer raw={raw} live_nodes={live_nodes} />
     </MapContainer>
   );
 };
 
-const AddGPXLayer = ({ raw }: { raw: string }) => {
+  // Generate marker color based on shortName
+  const getMarkerColorFromNodeName = (shortName: string, longName: string | string[]) => {
+
+    if (!shortName || !longName) {
+      return '#ff0000'; // Default to red if shortName or longName is invalid
+    }
+
+    if (longName.includes('dc33.east')) {
+      return "purple"
+    } else if (longName.includes('dc33.bigstar')) {
+      return "darkblue"
+    } else if (longName.includes('dc33.')) {
+      return "orange"
+    }
+    
+  }
+
+const AddGPXLayer = ({ raw, live_nodes }: { raw: string, live_nodes: string }) => {
   const hasMounted = useRef(false);
   const map = useMap();
   const routes = JSON.parse(raw);
 
   useEffect(() => {
+
     if (hasMounted.current) return;
 
     if (map) {
       var rawOverlay: RawOverlayMap = {};
+
+      const liveLayer = new L.LayerGroup();
+      rawOverlay['Live MQTT Nodes'] = {
+        layer: liveLayer,
+        sortKey: '',
+        visible: true,
+      };
 
       routes.forEach((route: any) => {
         const layers = route.layers;
@@ -124,8 +166,61 @@ const AddGPXLayer = ({ raw }: { raw: string }) => {
           return acc;
         }, {} as OverlayMap);
 
-      L.control.layers({}, overlayMaps).addTo(map);
+        
+      // const liveLayer = new L.LayerGroup();
+      // overlayMaps['Live MQTT Nodes'] = liveLayer;
+      
+      // Parse and add live nodes to the map
+      if (live_nodes && live_nodes.length > 0) {
+        try {
+          const nodesMap = JSON.parse(live_nodes);
+          Object.entries(nodesMap).forEach(([id, nodeData]: [string, any]) => {
+            // Convert from integer format to decimal degrees
+            const lat = nodeData.latitude / 10000000;
+            const lng = nodeData.longitude / 10000000;
 
+            const color = getMarkerColorFromNodeName(nodeData.shortName, nodeData.longName);
+
+            const botMarkerSettings = {
+              mapIconUrl:
+                '<svg version="1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 149 178"><path fill="{mapIconColor}" stroke="#FFF" stroke-width="6" stroke-miterlimit="10" d="M126 23l-6-6A69 69 0 0 0 74 1a69 69 0 0 0-51 22A70 70 0 0 0 1 74c0 21 7 38 22 52l43 47c6 6 11 6 16 0l48-51c12-13 18-29 18-48 0-20-8-37-22-51z"/><circle fill="{mapIconColorInnerCircle}" cx="74" cy="75" r="61"/><circle fill="#FFF" cx="74" cy="75" r="{pinInnerCircleRadius}"/></svg>',
+              mapIconColor: color,
+              mapIconColorInnerCircle: color,
+              pinInnerCircleRadius: 32,
+            };
+
+            const locationPin = L.divIcon({
+              className: 'leaflet-data-marker',
+              html: L.Util.template(
+                botMarkerSettings.mapIconUrl,
+                botMarkerSettings
+              ),
+              iconAnchor: [12, 32],
+              iconSize: [25, 30],
+              popupAnchor: [0, -28],
+            });
+
+            // Create marker with popup
+            const marker = L.marker([lat, lng]);
+            marker.setIcon(locationPin);
+
+            marker.bindPopup(`<div>${nodeData.shortName}</div><div>${nodeData.longName}</div><div>Model: ${nodeData.hwModel}</div>`);
+            liveLayer.addLayer(marker);
+          });
+        } catch (error) {
+          console.error('Error parsing live_nodes JSON:', error);
+        }
+      }
+      
+      L.control.layers({}, overlayMaps).addTo(map);
+      
+      map.addLayer(liveLayer)
+      
+      // Create live layer and make it visible by default
+      // const liveOverlayMap: OverlayMap = {};
+      // liveOverlayMap['live'] = liveLayer;
+      // L.control.layers({}, liveOverlayMap).addTo(map);
+      
       hasMounted.current = true;
     }
   }, [map]);

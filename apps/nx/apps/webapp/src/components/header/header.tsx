@@ -15,7 +15,7 @@ import { MenuIcon } from './icon/menu';
 import { Logo } from './logo-icon';
 
 import { FaQuestion } from 'react-icons/fa';
-import { FaMoneyCheckDollar } from 'react-icons/fa6';
+import { FaMoneyCheckDollar, FaRadio } from 'react-icons/fa6';
 
 const UserDropDown = dynamic(() => import('./dropdown-user'), {
   ssr: false,
@@ -45,7 +45,6 @@ export function Header(params: any) {
         </NavbarItem>
       </NavbarContent>
       <NavbarContent className="sm:flex hidden" justify="center">
-        {hasSession ? (
           <>
             <NavbarItem>
               <Link color="foreground" href="/dashboard">
@@ -53,15 +52,6 @@ export function Header(params: any) {
               </Link>
             </NavbarItem>
           </>
-        ) : (
-          <>
-            <NavbarItem>
-              <Link color="foreground" href="/login/auth">
-                <Logo />
-              </Link>
-            </NavbarItem>
-          </>
-        )}
         {/* <NavbarItem>
             <Link color="foreground" href="/dashboard">
               <Badge content="NEW" color="primary" size="lg">
@@ -84,24 +74,46 @@ export function Header(params: any) {
             </NavbarItem>
           </>
         ) : (
-          <></>
+          <>
+          <NavbarItem>
+              <Link color="foreground" href="/routes">
+                <Button variant="ghost">
+                  <GrMapLocation size={24} />
+                  Routes
+                </Button>
+              </Link>
+            </NavbarItem>
+          
+          </>
         )}
         <NavbarItem>
-          <Link color="foreground" href="/faq">
+          <Link color="foreground" href="/meshtastic">
+            <Button variant="ghost">
+              <FaRadio size={24} />
+              Meshtastic
+            </Button>
+          </Link>
+        </NavbarItem>
+
+
+        <NavbarItem>
+          <Link color="foreground" href="/contributors">
+            <Button variant="ghost">
+              <FaMoneyCheckDollar size={24} />
+              Contributors
+            </Button>
+          </Link>
+        </NavbarItem>
+
+        <NavbarItem>
+          <Link className='p-0 m-0' color="foreground" href="/faq">
             <Button variant="ghost">
               <FaQuestion size={24} />
               FAQ
             </Button>
           </Link>
         </NavbarItem>
-        <NavbarItem>
-          <Link color="foreground" href="/sponsors">
-            <Button variant="ghost">
-              <FaMoneyCheckDollar size={24} />
-              Sponsors
-            </Button>
-          </Link>
-        </NavbarItem>
+
       </NavbarContent>
 
       <NavbarContent justify="end">

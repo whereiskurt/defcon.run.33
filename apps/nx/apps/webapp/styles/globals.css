@@ -1,3 +1,7 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+  darkmap {
+    filter: invert(1) hue-rotate(180deg) brightness(1.25);
+  }

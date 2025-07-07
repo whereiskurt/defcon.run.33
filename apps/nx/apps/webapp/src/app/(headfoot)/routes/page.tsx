@@ -6,8 +6,6 @@ export default async function Page() {
   const routes = await strapi("/routes?populate=*")
   const mqtt_nodes = await livenodes("https://mqtt.defcon.run/map/nodes.json");
 
-// https://mqtt.defcon.run/map/nodes.json
-
   return (
     <div className={"mx-auto w-[98%] p-2"}>
       <ClientMap raw={JSON.stringify(routes.data)} mqtt_nodes={JSON.stringify(mqtt_nodes)} center={[36.1320813, -115.1667648]} />

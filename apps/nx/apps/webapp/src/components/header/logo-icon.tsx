@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import Image from 'next/image';
-import BunnyWhite from "@/public/Buny-White-Trans.svg";
-import BunnyBlack from "@/public/Bunny-Black-Trans.svg";
+import BunnyWhite from "@/public/header/Buny-White-Trans.svg";
+import BunnyBlack from "@/public/header/Bunny-Black-Trans.svg";
 
 import { useTheme } from "next-themes";
 
