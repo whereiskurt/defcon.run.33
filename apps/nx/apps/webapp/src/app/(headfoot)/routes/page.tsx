@@ -1,3 +1,5 @@
+'use server';
+
 import { strapi } from '@components/cms/data';
 import ClientMap from '@components/map/ClientMap';
 

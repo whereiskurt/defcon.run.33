@@ -323,10 +323,12 @@ function drawRoute(data: any, layer: L.LayerGroup<any>) {
 
   const startLocation = data.startLocation
     ? data.startLocation
-    : {
+    : polylineCoordinates.length > 0
+    ? {
         latitude: polylineCoordinates[0][0],
         longitude: polylineCoordinates[0][1],
-      };
+      }
+    : undefined;
 
   if (polylineCoordinates.length === 0) {
     drawWayPointRoute(data, layer);
