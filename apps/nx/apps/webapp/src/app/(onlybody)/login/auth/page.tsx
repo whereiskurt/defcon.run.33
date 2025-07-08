@@ -128,7 +128,7 @@ function ClientOnlyForm() {
                     id="email"
                     type="email"
                     placeholder="you@example.com"
-                    className="text-lg w-full"
+                    className={`text-lg w-full ${isDarkTheme ? 'text-white' : 'text-black'}`}
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     onFocus={() => setIsEmailFocused(true)}
