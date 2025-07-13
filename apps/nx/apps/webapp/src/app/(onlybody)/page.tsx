@@ -44,7 +44,7 @@ export default function Home() {
         Run. Defcon. Run.
       </Text>
       <div className="flex justify-center items-center">
-        <Link href="/login/auth">
+        <Link href="/dashboard">
           <Image alt="Bunny" priority={true} src={BunnyBlack} />
         </Link>
       </div>
