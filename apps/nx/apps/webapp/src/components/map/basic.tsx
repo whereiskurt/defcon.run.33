@@ -105,7 +105,7 @@ const Map = ({ center: posix, raw, zoom = defaults.zoom, live_nodes, theme }: Ma
     } else if (longName.includes('dc33.')) {
       return "orange"
     }
-    
+    return '#ff0000';
   }
 
 const AddGPXLayer = ({ raw, live_nodes }: { raw: string, live_nodes: string }) => {
