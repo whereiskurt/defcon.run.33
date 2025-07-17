@@ -7,8 +7,17 @@ export AWS_ACCOUNT_ID=${AWS_ACCOUNT_ID:-$(aws sts get-caller-identity --query "A
 export IMAGE_TAG=${IMAGE_TAG:-"v0.0.1"}
 export REPO_NAME=${REPO_NAME:-"grpc.mqtt.defcon.run"}
 
+## Pull local development and copy over working config backed up in $HOME
+rm -fr ./site-tld/meshtk
+cp -r ~/working/meshtk/ ./site-tld/meshtk
+cp ~/meshtk.dc33.yaml ./site-tld/meshtk/pkg/config/meshtk.yaml
+
+
+## Pull from remote repo. ;-)
 # rm -fr ./site-tld/meshtk
 # git clone https://github.com/whereiskurt/meshtk ./site-tld/meshtk
+# cp ~/meshtk.dc33.yaml ./site-tld/meshtk/pkg/config/meshtk.yaml
+
 
 # docker buildx build \
 #   --platform linux/arm64 \

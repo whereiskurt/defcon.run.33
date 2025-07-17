@@ -1,0 +1,75 @@
+{
+  "collectionName": "components_participation_dashboard_cards",
+  "info": {
+    "displayName": "DashboardCard",
+    "icon": "grid",
+    "description": ""
+  },
+  "options": {},
+  "attributes": {
+    "card_class": {
+      "type": "string",
+      "default": "w-full h-[300px] col-span-12 sm:col-span-4"
+    },
+    "card_title_class": {
+      "type": "string",
+      "default": "text-white/60 bg-black/60"
+    },
+    "card_title_label": {
+      "type": "string"
+    },
+    "card_subtitle_class": {
+      "type": "string",
+      "default": "text-white/90 bg-black/30"
+    },
+    "card_subtitle_label": {
+      "type": "string"
+    },
+    "card_local_image_src": {
+      "type": "string"
+    },
+    "card_local_image_alt": {
+      "type": "string"
+    },
+    "footer_class": {
+      "type": "string",
+      "default": "absolute bg-black/20 bottom-0 z-10 border-t-1 border-default-600 dark:border-default-100"
+    },
+    "footer_title_class": {
+      "type": "string",
+      "default": "pl-1 pr-1 text-white/90 bg-black/30"
+    },
+    "footer_subtitle_class": {
+      "type": "string",
+      "default": "pl-1 pr-1 text-white/90 bg-black/30"
+    },
+    "button_with_link": {
+      "type": "boolean",
+      "default": true
+    },
+    "button_class": {
+      "type": "string",
+      "default": "bg-button-dashboard-bg hover:bg-button-dashboard-hover text-button-dashboard-text"
+    },
+    "button_link_class": {
+      "type": "string",
+      "default": "bg-button-dashboard-bg hover:bg-button-dashboard-hover text-button-dashboard-text"
+    },
+    "button_link_href": {
+      "type": "string"
+    },
+    "button_link_external": {
+      "type": "boolean",
+      "default": true
+    },
+    "button_label": {
+      "type": "string"
+    },
+    "footer_title_label": {
+      "type": "string"
+    },
+    "footer_subtitle_label": {
+      "type": "string"
+    }
+  }
+}

@@ -7,6 +7,7 @@ import {
   CardFooter,
   CardHeader,
   Divider,
+  Link,
   Input,
 } from '@heroui/react';
 
@@ -22,6 +23,9 @@ import { useTheme } from 'next-themes';
 import { useState } from 'react';
 import { getCsrfToken } from "next-auth/react"
 import { useEffect } from 'react';
+
+import { FaDiscord, FaGithub } from 'react-icons/fa';
+import { signIn } from 'next-auth/react';
 
 // Separate component for client-side only rendering
 function ClientOnlyForm() {
@@ -86,7 +90,7 @@ function ClientOnlyForm() {
 
   return (
     <div className="flex min-h-screen items-center justify-center p-4 md:p-8">
-      <BlurPulseBackground imagePath={`/bunny-theme-${isDarkTheme ? 'dark' : 'light'}.svg`} />
+      <BlurPulseBackground imagePath={`/login/bunny-face-${isDarkTheme ? 'dark' : 'light'}.svg`} />
       <div className="z-10 w-full max-w-md" >
         <form onSubmit={handleSubmit} className="w-full">
           <Card className={`shadow-lg ${isDarkTheme ? 'bg-gray-900/50' : 'bg-white/50'}`}>
@@ -124,7 +128,7 @@ function ClientOnlyForm() {
                     id="email"
                     type="email"
                     placeholder="you@example.com"
-                    className="text-lg w-full"
+                    className={`text-lg w-full ${isDarkTheme ? 'text-white' : 'text-black'}`}
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     onFocus={() => setIsEmailFocused(true)}
@@ -185,7 +189,32 @@ function ClientOnlyForm() {
                   </>
                 )}
               </Button>
+
             </CardFooter>
+                <div className="w-full flex justify-center">
+                 <Text variant="large" className="pt-2 text-center">
+                  No email? Try{' '}
+                  <Link
+                    size="lg"
+                    href="#"
+                    onPress={() => signIn('discord', { callbackUrl: '/' })}
+                    >
+                    &nbsp; <FaDiscord />
+                    Discord
+                  </Link>{' '}
+                  or
+                  <Link
+                    size="lg"
+                    href="#"
+                    onPress={() => signIn('github', { callbackUrl: '/' })}
+                    >
+                    &nbsp; <FaGithub />
+                    Github
+                  </Link>
+                  </Text>
+                </div>  
+
+              
           </Card>
         </form>
       </div>

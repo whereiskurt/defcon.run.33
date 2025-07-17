@@ -29,7 +29,7 @@ import { ThemeIcon } from './icon/theme';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 
-import DCJackIcon from "@/public/dcjack.svg";
+import DCJackIcon from "@/public/header/dcjack.svg";
 
 
 const iconClasses =

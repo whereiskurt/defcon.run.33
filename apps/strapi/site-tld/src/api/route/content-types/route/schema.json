@@ -52,7 +52,7 @@
         }
       },
       "type": "text",
-      "required": true
+      "required": false
     },
     "color": {
       "pluginOptions": {
@@ -158,6 +158,12 @@
         "steps",
         "track laps"
       ]
+    },
+    "gpxurl": {
+      "type": "string"
+    },
+    "stravaurl": {
+      "type": "string"
     }
   }
 }

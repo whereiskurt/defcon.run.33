@@ -23,14 +23,6 @@ module.exports = {
         lato: FontLato,
       },
       colors: {
-        button: {
-          
-          dashboard: {
-            bg: '#bbbbbb',       // red-500
-            hover: '#AA3377',    // red-600
-            text: '#FFFFFF',     // white
-          },
-        },
       },
       keyframes: {
         'glitch-1': {

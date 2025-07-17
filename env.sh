@@ -17,7 +17,7 @@ unset AWS_SESSION_TOKEN
 unset AWS_CREDENTIAL_EXPIRATION                                          
 
 ### Comment this out if you're not using SSO
-aws sso logout
+##aws sso logout
 aws sso login --sso-session=Developer
 
 ## Terragrunt uses AWS to setup s3/dynamo and uses the default profile,

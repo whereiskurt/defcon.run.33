@@ -4,20 +4,34 @@
   "info": {
     "singularName": "dashboard",
     "pluralName": "dashboards",
-    "displayName": "Dashboard"
+    "displayName": "Dashboard",
+    "description": ""
   },
   "options": {
     "draftAndPublish": true
   },
   "pluginOptions": {},
   "attributes": {
-    "intro": {
+    "page_title": {
+      "type": "string",
+      "required": true
+    },
+    "page_summary": {
+      "type": "string",
+      "required": false
+    },
+    "page_body": {
       "type": "blocks"
     },
-    "headline": {
+    "page_bottom": {
       "type": "blocks"
     },
-    "headline_chip": {
+    "Cards": {
+      "type": "component",
+      "repeatable": true,
+      "component": "participation.dashboard-card"
+    },
+    "dashboard_class": {
       "type": "string"
     }
   }
