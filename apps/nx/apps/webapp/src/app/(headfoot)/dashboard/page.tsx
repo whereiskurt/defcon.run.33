@@ -41,8 +41,6 @@ export default async function Index() {
       footer_title_class = 'pl-1 pr-1 text-white/90 bg-black/30',
       footer_subtitle_class = 'pl-1 pr-1 text-white/90 bg-black/30',
       button_with_link = true,
-      button_class = 'bg-button-dashboard-bg hover:bg-button-dashboard-hover text-button-dashboard-text',
-      button_link_class = 'bg-button-dashboard-bg hover:bg-button-dashboard-hover text-button-dashboard-text',
       button_link_href = 'https://www.openstreetmap.org/directions?route=36.135189%2C-115.158541%3B#map=19/36.134813/-115.158776',
       button_link_external = true,
       card_title_label = 'MEETUP SPOT',
@@ -80,10 +78,10 @@ export default async function Index() {
             </div>
           </div>
           {button_with_link && (
-            <Button className={button_class} radius="sm" size="sm">
+            <Button color='primary' radius="sm" size="sm">
               <Link
                 isExternal={button_link_external}
-                className={button_link_class}
+                className='text-white'
                 href={button_link_href}
               >
                 {button_label}
@@ -105,7 +103,7 @@ export default async function Index() {
       <div className={dashboard_class}>
         {cardComponents}
 
-        <Card className="col-span-12 sm:col-span-4 h-[300px]">
+        {/* <Card className="col-span-12 sm:col-span-4 h-[300px]">
           <CardHeader className="absolute z-10 top-1 flex-col !items-start">
             <p className="text-tiny text-white/60 bg-black/40 uppercase font-bold">
               Thurdays 4PM
@@ -167,7 +165,7 @@ export default async function Index() {
               </Link>
             </Button>
           </CardFooter>
-        </Card>
+        </Card> */}
       </div>
     </>
   );
