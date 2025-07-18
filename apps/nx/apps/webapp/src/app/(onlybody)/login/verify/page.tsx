@@ -111,7 +111,7 @@ export default function EmailLogin() {
           <Link
             size="lg"
             href="#"
-            onPress={() => signIn('discord', { callbackUrl: '/' })}
+            onPress={() => signIn('discord', { callbackUrl: '/dashboard' })}
           >
             &nbsp; <FaDiscord />
             Discord
@@ -120,7 +120,7 @@ export default function EmailLogin() {
           <Link
             size="lg"
             href="#"
-            onPress={() => signIn('github', { callbackUrl: '/' })}
+            onPress={() => signIn('github', { callbackUrl: '/dashboard' })}
           >
             &nbsp; <FaGithub />
             Github

@@ -197,7 +197,7 @@ function ClientOnlyForm() {
                   <Link
                     size="lg"
                     href="#"
-                    onPress={() => signIn('discord', { callbackUrl: '/' })}
+                    onPress={() => signIn('discord', { callbackUrl: '/dashboard' })}
                     >
                     &nbsp; <FaDiscord />
                     Discord
@@ -206,7 +206,7 @@ function ClientOnlyForm() {
                   <Link
                     size="lg"
                     href="#"
-                    onPress={() => signIn('github', { callbackUrl: '/' })}
+                    onPress={() => signIn('github', { callbackUrl: '/dashboard' })}
                     >
                     &nbsp; <FaGithub />
                     Github

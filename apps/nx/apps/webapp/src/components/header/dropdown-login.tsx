@@ -61,7 +61,7 @@ const LoginDropDown = (params: any) => {
             startContent={
               <MdOutlineMailLock size={24} className={iconClasses} />
             }
-            onPress={() => signIn('email')}
+            onPress={() => signIn('email', { callbackUrl: '/dashboard' })}
           >
             Email Account
           </DropdownItem>
@@ -73,14 +73,14 @@ const LoginDropDown = (params: any) => {
           <DropdownItem
             key="a1"
             startContent={<FaDiscord size={24} className={iconClasses} />}
-            onPress={() => signIn('discord', { callbackUrl: '/' })}
+            onPress={() => signIn('discord', { callbackUrl: '/dashboard' })}
           >
             Discord
           </DropdownItem>
           <DropdownItem
             key="b1"
             startContent={<FaGithub size={24} className={iconClasses} />}
-            onPress={() => signIn('github', { callbackUrl: '/' })}
+            onPress={() => signIn('github', { callbackUrl: '/dashboard' })}
           >
             Github
           </DropdownItem>

@@ -19,7 +19,14 @@ import {
 import { signIn, signOut, useSession } from 'next-auth/react';
 
 import { useRouter } from 'next/navigation';
-import { FaCamera, FaPlus, FaStrava } from 'react-icons/fa';
+import {
+  FaCamera,
+  FaIdCard,
+  FaPlus,
+  FaStrava,
+  FaUser,
+  FaUserAlt,
+} from 'react-icons/fa';
 import { DashboardIcon } from './icon/dashboard';
 import { FeedbackIcon } from './icon/feedback';
 import { LogoutIcon } from './icon/logout';
@@ -29,8 +36,7 @@ import { ThemeIcon } from './icon/theme';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 
-import DCJackIcon from "@/public/header/dcjack.svg";
-
+import DCJackIcon from '@/public/header/dcjack.svg';
 
 const iconClasses =
   'text-xl text-default-500 pointer-events-none flex-shrink-0';
@@ -103,10 +109,7 @@ const UserDropDown = (params: any) => {
       >
         <DropdownTrigger>
           <Avatar
-            src={
-              session.user.image ??
-              DCJackIcon.src
-            }
+            src={session.user.image ?? DCJackIcon.src}
             ignoreFallback={true}
             size="lg"
           />
@@ -114,7 +117,7 @@ const UserDropDown = (params: any) => {
 
         <DropdownMenu
           aria-label="Custom item styles"
-          disabledKeys={['profile']}
+          disabledKeys={['profile_example']}
           topContent={
             <User
               name={session.user.name}
@@ -122,29 +125,54 @@ const UserDropDown = (params: any) => {
               avatarProps={{
                 ignoreFallback: true,
                 size: 'lg',
-                src:
-                  session.user.image ??
-                  DCJackIcon.src
+                src: session.user.image ?? DCJackIcon.src,
               }}
               className="pt-2"
             />
           }
         >
-          <DropdownSection aria-label="Profile & Actions" showDivider>
-            <DropdownItem key="profile" textValue="Profile">
-              {/* NOTE: This generates an error fix May30 release from NextUI: https://github.com/nextui-org/nextui/pull/3111 */}
+          <DropdownSection aria-label="User Profile" showDivider>
+            <></>
+          </DropdownSection>
+          <DropdownSection aria-label="User Profile" showDivider>
+            <DropdownItem
+              startContent={<FaUserAlt />}
+              key="profile"
+              className="gap-2 opacity-100"
+              textValue="Profile" 
+            >
+              <Link replace={true} href="/profile">
+                User Profile
+              </Link>
             </DropdownItem>
 
             <DropdownItem
               startContent={<DashboardIcon className={iconClasses} />}
               key="dashboard"
-              className="gap-2 opacity-100"
+              className="gap-2 opacity-100 mt-2"
               textValue="Dashboard"
             >
               <Link replace={true} href="/dashboard">
                 Dashboard
               </Link>
             </DropdownItem>
+          </DropdownSection>
+          <DropdownSection aria-label="Profile & Actions" showDivider>
+
+            {!session.user.hasStrava ? (
+              <DropdownItem
+                startContent={
+                  <FaStrava color="red" size={24} className={iconClasses} />
+                }
+                onClick={() => signIn('strava', { callbackUrl: '/dashboard' })}
+                textValue="Link to Strava"
+                key="strava"
+              >
+                Link to Strava
+              </DropdownItem>
+            ) : (
+             <></>
+            )}
 
             <DropdownItem
               startContent={
@@ -168,31 +196,14 @@ const UserDropDown = (params: any) => {
                   session.user.hasStrava ? 'strava' : 'manual'
                 }`}
               >
-                Add New Activity ...
+                Add New Activity
               </Link>
             </DropdownItem>
 
-            {!session.user.hasStrava ? (
-              <DropdownItem
-                startContent={
-                  <FaStrava color="red" size={24} className={iconClasses} />
-                }
-                onClick={() => signIn('strava')}
-                textValue="Link to Strava"
-                key="strava"
-              >
-                Link to Strava
-              </DropdownItem>
-            ) : (
-              <DropdownItem
-                key="a"
-                className="h-0 invisible"
-                textValue="Already Strava'd"
-              />
-            )}
+
           </DropdownSection>
 
-          <DropdownSection aria-label="Preferences" showDivider>
+          <DropdownSection aria-label="Profile & Actions" showDivider>
             <DropdownItem
               startContent={<QRIcon className={iconClasses} />}
               key="showqr"
@@ -200,18 +211,10 @@ const UserDropDown = (params: any) => {
               textValue="showqr"
               onClick={() => showQR()}
             >
-              Display QR
+              Show My QR
             </DropdownItem>
-
-            {/* <DropdownItem
-              startContent={<FaCamera className={iconClasses} />}
-              key="scanqr" className="gap-2 opacity-100"
-              textValue="scanqr">
-              Scan QR
-            </DropdownItem> */}
           </DropdownSection>
-
-          <DropdownSection aria-label="Preferences2" showDivider>
+          {/* <DropdownSection aria-label="Preferences2" showDivider>
             <DropdownItem
               isReadOnly
               key="theme"
@@ -241,18 +244,9 @@ const UserDropDown = (params: any) => {
             >
               Settings
             </DropdownItem>
-          </DropdownSection>
+          </DropdownSection> */}
 
           <DropdownSection aria-label="Help & Feedback">
-            <DropdownItem
-              href="/feedback"
-              startContent={<FeedbackIcon className={iconClasses} />}
-              key="help_and_feedback"
-              textValue="Help and Feedback"
-            >
-              Help & Feedback
-            </DropdownItem>
-
             <DropdownItem
               startContent={<LogoutIcon className={iconClasses} />}
               key="logout"
