@@ -1,0 +1,28 @@
+/* Custom styles for routes page */
+.routesContainer {
+  background-color: transparent;
+  border-radius: 0px;
+  box-shadow: 0 2px 2px rgba(0, 0, 0, 0.15);
+  min-height: 600px;
+}
+
+.mapWrapper {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+/* Dark mode map styles - only applied when dark theme is active */
+:global(.dark) .mapWrapper :global(.leaflet-tile) {
+  filter: brightness(0.6) invert(1) contrast(3) hue-rotate(200deg) saturate(0.3) brightness(0.7) !important;
+}
+
+:global(.dark) .mapWrapper :global(.leaflet-container) {
+  background-color: #303030 !important;
+}
+
+/* Ensure map controls are still visible in dark mode */
+:global(.dark) .mapWrapper :global(.leaflet-control-container) {
+  filter: brightness(0.8) !important;
+}
+
