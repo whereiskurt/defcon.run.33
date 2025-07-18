@@ -21,8 +21,60 @@
   background-color: #303030 !important;
 }
 
-/* Ensure map controls are still visible in dark mode */
+/* Remove filters from control container in dark mode to ensure controls work properly */
 :global(.dark) .mapWrapper :global(.leaflet-control-container) {
-  filter: brightness(0.8) !important;
+  filter: none !important;
+}
+
+/* Make all controls more visible in dark mode */
+:global(.dark) .mapWrapper :global(.leaflet-control) {
+  background-color: #444 !important;
+  border-color: #666 !important;
+  color: #fff !important;
+  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.4) !important;
+}
+
+/* Specific improvements for layer control */
+:global(.dark) .mapWrapper :global(.leaflet-control-layers) {
+  background-color: #444 !important;
+  border-color: #666 !important;
+  color: #fff !important;
+  opacity: 1 !important;
+  z-index: 1000 !important;
+  pointer-events: auto !important;
+}
+
+/* Make the layer control toggle button more visible */
+:global(.dark) .mapWrapper :global(.leaflet-control-layers-toggle) {
+  background-color: #444 !important;
+  filter: invert(0.8) brightness(1.2) !important;
+}
+
+/* Style the expanded layer control panel */
+:global(.dark) .mapWrapper :global(.leaflet-control-layers-expanded) {
+  padding: 8px !important;
+  min-width: 150px !important;
+}
+
+/* Ensure text and form elements inside the layer control are visible */
+:global(.dark) .mapWrapper :global(.leaflet-control-layers) label,
+:global(.dark) .mapWrapper :global(.leaflet-control-layers) input,
+:global(.dark) .mapWrapper :global(.leaflet-control-layers) span {
+  color: #fff !important;
+  opacity: 1 !important;
+}
+
+/* Prevent hover expansion - only show on click */
+.mapWrapper :global(.leaflet-control-layers:not(.leaflet-control-layers-expanded)) {
+  pointer-events: auto !important;
+}
+
+.mapWrapper :global(.leaflet-control-layers:not(.leaflet-control-layers-expanded):hover) {
+  pointer-events: auto !important;
+}
+
+/* Override any hover behavior to ensure menu only opens on click */
+.mapWrapper :global(.leaflet-control-layers:hover:not(.leaflet-control-layers-expanded)) :global(.leaflet-control-layers-list) {
+  display: none !important;
 }
 
