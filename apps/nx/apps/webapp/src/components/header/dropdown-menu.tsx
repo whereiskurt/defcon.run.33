@@ -8,8 +8,10 @@ import {
   DropdownTrigger,
   Link,
 } from '@heroui/react';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 
-import { FaMoneyCheckDollar, FaQuestion } from 'react-icons/fa6';
+import { FaMoneyCheckDollar, FaQuestion, FaRadio } from 'react-icons/fa6';
 import { GrMapLocation } from 'react-icons/gr';
 import { DashboardIcon } from './icon/dashboard';
 import { MenuIcon } from './icon/menu';
@@ -18,10 +20,22 @@ const iconClasses =
   'text-xl text-default-500 pointer-events-none flex-shrink-0';
 
 const MenuDropDown = (params: any) => {
-  const session = params.session;
-  const hasSession = session !== null;
+  const [isOpen, setIsOpen] = useState(false);
+  const router = useRouter();
+  
+  const handleNavigation = (href: string) => {
+    setIsOpen(false);
+    router.push(href);
+  };
+  
   return (
-    <Dropdown showArrow radius="sm" backdrop="blur">
+    <Dropdown 
+      showArrow 
+      radius="sm" 
+      backdrop="blur"
+      isOpen={isOpen}
+      onOpenChange={(open) => setIsOpen(open)}
+    >
       <DropdownTrigger>
         <div>
           <MenuIcon />
@@ -48,64 +62,58 @@ const MenuDropDown = (params: any) => {
       >
         <DropdownSection aria-label="Menu Items">
           <DropdownItem
-            className="pb-4"
+            className="pb-2"
             textValue="dashboard"
-            startContent={
-              <Link className="text-2xl" color="foreground" href="/dashboard">
-                <DashboardIcon className={iconClasses} />
-              </Link>
-            }
+            startContent={<DashboardIcon className={iconClasses} />}
             key="dashboard"
+            showDivider 
+            onClick={() => handleNavigation('/dashboard')}
           >
-            <Link className="text-2xl" color="foreground" href="/dashboard">
-              Dashboard
-            </Link>
+            <span className="text-2xl">Dashboard</span>
           </DropdownItem>
 
           <DropdownItem
-            className="pb-4"
+            className="pb-2"
             textValue="routes"
-            startContent={
-              <Link className="text-2xl" color="foreground" href="/routes">
-                <GrMapLocation size={24} className={iconClasses} />
-              </Link>
-            }
+            startContent={<GrMapLocation size={24} className={iconClasses} />}
             key="routes"
+            onClick={() => handleNavigation('/routes')}
           >
-            <Link className="text-2xl" color="foreground" href="/routes">
-              Routes
-            </Link>
+            <span className="text-2xl">Routes</span>
           </DropdownItem>
 
           <DropdownItem
-            className="pb-4"
-            textValue="sponsors"
-            startContent={
-              <Link className="text-2xl" color="foreground" href="/sponsors">
-                <FaMoneyCheckDollar size={24} className={iconClasses} />
-              </Link>
-            }
-            key="sponsors"
+            className="pb-2"
+            textValue="meshtastic"
+            startContent={<FaRadio size={24} className={iconClasses} />}
+            key="meshtastic"
+            onClick={() => handleNavigation('/meshtastic')}
           >
-            <Link className="text-2xl" color="foreground" href="/sponsors">
-              Sponsors
-            </Link>
+            <span className="text-2xl">Meshtastic</span>
           </DropdownItem>
 
           <DropdownItem
-            className="pb-4"
+            className="pb-2"
+            textValue="contributors"
+            startContent={<FaMoneyCheckDollar size={24} className={iconClasses} />}
+            key="contributors"
+            showDivider
+            onClick={() => handleNavigation('/contributors')}
+          >
+            <span className="text-2xl">Contributors</span>
+          </DropdownItem>
+
+          <DropdownItem
+            className="pb-2"
             textValue="faq"
-            startContent={
-              <Link className="text-2xl" color="foreground" href="/faq">
-                <FaQuestion size={24} className={iconClasses} />
-              </Link>
-            }
+            startContent={<FaQuestion size={24} className={iconClasses} />}
             key="faq"
+            onClick={() => handleNavigation('/faq')}
           >
-            <Link className="text-2xl" color="foreground" href="/faq">
-              FAQ
-            </Link>
+            <span className="text-2xl">FAQ</span>
           </DropdownItem>
+
+
         </DropdownSection>
       </DropdownMenu>
     </Dropdown>

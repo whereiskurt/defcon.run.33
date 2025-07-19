@@ -17,6 +17,13 @@ export default function StrapiRichText({
     <BlocksRenderer
       content={content}
       blocks={{
+        code: ({ children }) => {
+          return (
+            <pre className='bg-gray-900 p-1 font-mono text-sm text-gray-100'>
+              <code className="">{children}</code>
+            </pre>
+          );
+        },
         image: ({ image }) => {
           return (
             <Image

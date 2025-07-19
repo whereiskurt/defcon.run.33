@@ -14,9 +14,15 @@ if (process.env.NODE_ENV === 'production') {
       config.output.publicPath = `https://${WEBAPP_ORIGIN}/${WEBAPP_PREFIX}/_next/`;
       return config;
     },
+    images: {
+      remotePatterns: [new URL(`https://*.defcon.run/**`)],
+    },
   });
 } else {
   module.exports = composePlugins(...plugins)({
     nx: { svgr: false },
+    images: {
+      remotePatterns: [new URL(`https://*.defcon.run/**`)],
+    },
   });
 }

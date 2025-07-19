@@ -41,7 +41,9 @@ export function Header(params: any) {
       </NavbarContent>
       <NavbarContent className="sm:hidden" justify="center">
         <NavbarItem className="">
-          <Logo />
+          <Link color="foreground" href="/dashboard">
+            <Logo />
+          </Link>
         </NavbarItem>
       </NavbarContent>
       <NavbarContent className="sm:flex hidden" justify="center">
