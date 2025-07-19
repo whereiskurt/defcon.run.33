@@ -164,6 +164,14 @@
     },
     "stravaurl": {
       "type": "string"
+    },
+    "showStartLocation": {
+      "type": "boolean",
+      "default": true
+    },
+    "showEndLocation": {
+      "type": "boolean",
+      "default": true
     }
   }
 }

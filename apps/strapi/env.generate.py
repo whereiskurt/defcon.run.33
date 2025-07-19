@@ -76,7 +76,11 @@ ssm_to_env("/use1.email.defcon.run/", "site-tld/.env.smtp.generate")
 env_scrub([("use1.email.defcon.run_", "")], "site-tld/.env.smtp.generate" )
 env_name_trans([lambda s: s.upper()], "site-tld/.env.smtp.generate")
 
-cat_sort_uniq(["site-tld/.env.generate", "site-tld/.env.smtp.generate"], "site-tld/.env.local" )
+ssm_to_env("/use1.strapi.defcon.run/", "site-tld/.env.strapi.generate")
+env_scrub([("use1.strapi.defcon.run_", "")], "site-tld/.env.strapi.generate")
+env_name_trans([lambda s: s.upper()], "site-tld/.env.strapi.generate")
+
+cat_sort_uniq(["site-tld/.env.generate", "site-tld/.env.smtp.generate", "site-tld/.env.strapi.generate"], "site-tld/.env.local" )
 cat_sort_uniq(["site-tld/env.template", "site-tld/.env.local"], "site-tld/.env.local", sort=False, uniq=False)
 
-delete_files(["site-tld/.env.generate", "site-tld/.env.smtp.generate"])
+delete_files(["site-tld/.env.generate", "site-tld/.env.smtp.generate", "site-tld/.env.strapi.generate"])

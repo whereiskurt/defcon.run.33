@@ -1,0 +1,27 @@
+{
+  "kind": "singleType",
+  "collectionName": "meshtastics",
+  "info": {
+    "singularName": "meshtastic",
+    "pluralName": "meshtastics",
+    "displayName": "Meshtastic",
+    "description": ""
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "attributes": {
+    "page_title": {
+      "type": "string"
+    },
+    "page_summary": {
+      "type": "string"
+    },
+    "page_body": {
+      "type": "blocks"
+    },
+    "page_bottom": {
+      "type": "blocks"
+    }
+  }
+}
