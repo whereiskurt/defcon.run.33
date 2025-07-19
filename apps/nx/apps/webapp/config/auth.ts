@@ -30,6 +30,7 @@ import Email from "@auth/core/providers/nodemailer"
 import Discord from "next-auth/providers/discord"
 import Github from "next-auth/providers/github"
 import Strava from "next-auth/providers/strava"
+import { lookupOrNewUser, UpdateDiscord, UpdateGithub, UpdateNodeMailer, UpdateStrava } from "@/src/db/oauth"
 
 
 const endpoint: string = process.env["USER_DYNAMODB_ENDPOINT"]!
@@ -144,16 +145,23 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         if (account.provider === "discord") {
           token.name = `${profile.global_name}`
           token.picture = `${profile.image_url}`;
+          UpdateDiscord(token.email!, {discord_profile: profile});
+
         } else if (account.provider === "github") {
           token.name = `${profile.login}`
           token.picture = `${profile.avatar_url}`
+          UpdateGithub(token.email!, { github_profile: profile });
+
         } else if (account.provider === "strava") {
           token.stravaId = `${profile.id}`
           token.name = `${profile.username}`
           token.picture = `${profile.profile_medium}`
+
+          UpdateStrava(token.email!, { strava_profile: profile }, { strava_account: account });
         }
         
       } else if (account && account.provider === "nodemailer") {
+         UpdateNodeMailer(token.email!);
       }
       return token;
     },
@@ -164,11 +172,12 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       session.user.name = token.name as string
       session.user.id = token.userId as string
       session.user.email = token.email as string
+      
       return session
     },
 
   },
-   cookies: {
+  cookies: {
     sessionToken: {
       name: "sess",
       options: {
