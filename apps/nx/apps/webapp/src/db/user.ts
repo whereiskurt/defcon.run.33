@@ -75,7 +75,6 @@ const User = new Entity(
         type: 'string',
       },
 
-
       mqtt_username: {
         type: 'string',
       },
@@ -250,7 +249,7 @@ const User = new Entity(
         },
       },
 
-       byMqttUsername: {
+      byMqttUsername: {
         index: 'gsi2pk-gsi2sk-index',
         pk: {
           field: 'gsi2pk',
@@ -295,7 +294,9 @@ export async function UpdateStrava(email: string, strava_profile: any, strava_ac
   ).set(
     strava_account
   )
-  .go();
+  .go({
+    response: 'all_new'
+  });
 
   invalidateCache(email, 'users');
   
@@ -322,7 +323,9 @@ export async function UpdateGithub(email: string, github_profile: any) {
   .set(
     github_profile
   )
-  .go();
+  .go({
+    response: 'all_new'
+  });
   invalidateCache(email, 'users');
 
   return result.data;
@@ -348,7 +351,9 @@ export async function UpdateDiscord(email: string, discord_profile: any) {
   .set(
     discord_profile
   )
-  .go();
+  .go({
+    response: 'all_new'
+  });
   invalidateCache(email, 'users');
 
   return result.data;
@@ -370,7 +375,8 @@ export async function getUser(email: string) {
 async function getUserOrNew(email: string) {
   const result = await getUser(email);
   if (result) {
-    console.log(`User found: ${JSON.stringify(result)}`);
+    // console.log(`User found: ${JSON.stringify(result)}`);
+    console.log(`User found for ${email}`);
     return result;
   }
 

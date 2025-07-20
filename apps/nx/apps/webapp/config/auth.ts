@@ -174,23 +174,30 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         if (account.provider === 'discord') {
           token.name = `${profile.global_name}`;
           token.picture = `${profile.image_url}`;
-          UpdateDiscord(token.email!, { discord_profile: profile });
+          const user = await UpdateDiscord(token.email!, { discord_profile: profile });
+          token.stravaId = user.strava_profile?.id;
+
         } else if (account.provider === 'github') {
           token.name = `${profile.login}`;
           token.picture = `${profile.avatar_url}`;
-          UpdateGithub(token.email!, { github_profile: profile });
+          
+          const user = await UpdateGithub(token.email!, { github_profile: profile });
+          token.stravaId = user.strava_profile?.id;
         } else if (account.provider === 'strava') {
           token.stravaId = `${profile.id}`;
           token.name = `${profile.username}`;
           token.picture = `${profile.profile_medium}`;
-          UpdateStrava(
+          
+          const user = await UpdateStrava(
             token.email!,
             { strava_profile: profile },
             { strava_account: account }
           );
         }
+
       } else if (account && account.provider === 'nodemailer') {
-        UpdateNodeMailer(token.email!);
+        const user = await UpdateNodeMailer(token.email!);
+        token.stravaId = user.strava_profile?.id;
       }
       return token;
     },

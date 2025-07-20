@@ -23,9 +23,14 @@ export async function GET(req: NextRequest) {
 
   // Strip out sensitive fields
   const {
+    id,
     rsaprivSHA,
     seed,
-    hash,
+    github_profile,
+    discord_profile,
+    strava_profile,
+    strava_account,
+
     // Add other sensitive fields here if needed
     ...safeUserData
   } = user;
