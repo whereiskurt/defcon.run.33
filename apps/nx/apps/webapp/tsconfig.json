@@ -24,6 +24,9 @@
       }
     ],
     "paths": {
+      "@db/*": [
+        "./src/db/*"
+      ],
       "@components/*": [
         "./src/components/*"
       ],

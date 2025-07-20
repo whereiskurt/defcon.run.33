@@ -252,13 +252,15 @@ export { User };
 
 
 export async function UpdateNodeMailer(email: string) {
-  const user = await lookupOrNewUser(email);
+  const user = await getUserOrNew(email);
   return user;
 }
 
 export async function UpdateStrava(email: string, strava_profile: any, strava_account: any) {
-  const user = await lookupOrNewUser(email);
-
+  const user = await getUserOrNew(email);
+  if (!user) {
+    throw new Error('Update Strava User not found');
+  }
   const picture = user?.picture ?? strava_profile.profile_medium
   const name = user?.name ?? strava_profile.username
 
@@ -281,7 +283,10 @@ export async function UpdateStrava(email: string, strava_profile: any, strava_ac
 }
 
 export async function UpdateGithub(email: string, github_profile: any) {
-  const user = await lookupOrNewUser(email);
+  const user = await getUserOrNew(email);
+  if (!user) {
+    throw new Error('Update Github User not found');
+  }
 
   const picture = user?.picture ?? github_profile.avatar_url;
   const name = user?.name ?? github_profile.name;
@@ -303,7 +308,10 @@ export async function UpdateGithub(email: string, github_profile: any) {
 }
 
 export async function UpdateDiscord(email: string, discord_profile: any) {
-  const user = await lookupOrNewUser(email);
+  const user = await getUserOrNew(email);
+  if (!user) {
+    throw new Error('Update DiscordL User not found');
+  }
 
   const picture = user?.picture ?? discord_profile.image_url;
   const name = user?.name ?? discord_profile.global_name;
@@ -324,7 +332,7 @@ export async function UpdateDiscord(email: string, discord_profile: any) {
   return result.data;
 }
 
-export async function lookupOrNewUser(email: string) {
+export async function getUser(email: string) {
   const result = await User.query
     .primary({
       email: email,
@@ -333,6 +341,14 @@ export async function lookupOrNewUser(email: string) {
 
   if (result.data.length > 0) {
     return result.data[0];
+  }
+  return null;
+}
+
+async function getUserOrNew(email: string) {
+  const result = getUser(email);
+  if (result) {
+    return result;
   }
 
   const id = crypto.randomUUID();
@@ -362,7 +378,6 @@ export async function lookupOrNewUser(email: string) {
   const newUser = {
     id,
     email,
-    name: 'rabbit33',
     seed,
     hash,
     eqr,

@@ -52,27 +52,35 @@ const UserDropDown = (params: any) => {
     onOpen: openQR,
     onClose: closeQR,
   } = useDisclosure();
-  const [userDetail, setUserDetail] = useState<string>('');
+  const [userDetail, setUserDetail] = useState<any>(null);
   const router = useRouter();
-
-  useEffect(() => {
-    (async () => {
+  
+  // Fetch user details once when component mounts
+  const fetchUserDetails = async () => {
+    try {
       const res = await fetch('/api/user', {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
         },
       });
-      if (!res.ok || res.status != 200) {
+      if (!res.ok || res.status !== 200) {
         throw new Error('Failed to get User details.');
-      } else {
-        const record = await res.json();
-        // alert(JSON.stringify(record.user.eqr));
-        // console.log(`Got user detail: ${JSON.stringify(record.user.eqr)}`);
-        setUserDetail(record.user);
-      }
-    })();
-  }, []);
+      } 
+      const record = await res.json();
+      // alert(JSON.stringify(record.user.eqr));
+      console.log(`Got user detail: ${JSON.stringify(record.user)}`);
+      setUserDetail(record.user);
+    } catch (error) {
+      console.error('Error fetching user details:', error);
+    }
+  };
+  
+  useEffect(() => {
+    if (!userDetail) {
+      fetchUserDetails();
+    }
+  }, []); // Empty dependency array means this runs once after initial render
 
   const showLogoutModal = () => {
     openLogout();
@@ -85,14 +93,6 @@ const UserDropDown = (params: any) => {
   const { data: session, update, status } = useSession();
 
   if (!session || !session.user) return <></>;
-
-  async function handleChangeTheme(
-    event: React.ChangeEvent<HTMLSelectElement>
-  ) {
-    const newTheme = event.target.value;
-    await update({ user: { theme: newTheme } });
-    router.refresh();
-  }
 
   return (
     <>
