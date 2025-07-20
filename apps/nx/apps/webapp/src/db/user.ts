@@ -6,6 +6,7 @@ import crypto from 'crypto';
 import { createHash, generateKeyPairSync } from 'crypto';
 import * as qr from 'qrcode';
 import { v4 as uuidv4 } from 'uuid';
+import { invalidateCache } from './cache';
 
 const accessKeyId: string = process.env['USER_DYNAMODB_ID']!;
 const secretAccessKey: string = process.env['USER_DYNAMODB_SECRET']!;
@@ -73,14 +74,18 @@ const User = new Entity(
       profile_scope: {
         type: 'string',
       },
-     mqtt: {
-        type: 'map',
-        properties: {
-          username: { type: 'string' },
-          password: { type: 'string' },
-          user_type: { type: ['rabbit', 'admin'] as const },
-        }
+
+
+      mqtt_username: {
+        type: 'string',
       },
+      mqtt_password: {
+        type: 'string',
+      },
+      mqtt_usertype: {
+        type: ['rabbit', 'admin'] as const 
+      },
+      
       github_profile: {
         type: 'map',
         properties: {
@@ -232,6 +237,7 @@ const User = new Entity(
           composite: ['id'],
         },
       },
+      
       byRsaPubSHA: {
         index: 'gsi1pk-gsi1sk-index',
         pk: {
@@ -241,6 +247,18 @@ const User = new Entity(
         sk: {
           field: 'gsi1sk',
           composite: ['email'],
+        },
+      },
+
+       byMqttUsername: {
+        index: 'gsi2pk-gsi2sk-index',
+        pk: {
+          field: 'gsi2pk',
+          composite: ['mqtt_username'],
+        },
+        sk: {
+          field: 'gsi2sk',
+          composite: ['id'],
         },
       },
     },
@@ -278,6 +296,8 @@ export async function UpdateStrava(email: string, strava_profile: any, strava_ac
     strava_account
   )
   .go();
+
+  invalidateCache(email, 'users');
   
   return result.data;
 }
@@ -303,6 +323,7 @@ export async function UpdateGithub(email: string, github_profile: any) {
     github_profile
   )
   .go();
+  invalidateCache(email, 'users');
 
   return result.data;
 }
@@ -328,6 +349,7 @@ export async function UpdateDiscord(email: string, discord_profile: any) {
     discord_profile
   )
   .go();
+  invalidateCache(email, 'users');
 
   return result.data;
 }
@@ -346,8 +368,9 @@ export async function getUser(email: string) {
 }
 
 async function getUserOrNew(email: string) {
-  const result = getUser(email);
+  const result = await getUser(email);
   if (result) {
+    console.log(`User found: ${JSON.stringify(result)}`);
     return result;
   }
 
@@ -375,6 +398,9 @@ async function getUserOrNew(email: string) {
 
   const profile_theme = 'dark';
 
+  const mqttuser = createHash('sha256').update(seed).digest('hex').slice(0, 12).toLowerCase();
+  const mqttpass = createHash('sha256').update(rsaprivSHA).digest('hex').slice(0, 12).toLowerCase();
+
   const newUser = {
     id,
     email,
@@ -384,6 +410,9 @@ async function getUserOrNew(email: string) {
     rsapubSHA,
     rsaprivSHA,
     profile_theme,
+    mqtt_username: mqttuser,
+    mqtt_password: mqttpass,
+    mqtt_usertype: 'rabbit' as 'rabbit',
     profile_scope: 'public',
   };
 

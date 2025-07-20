@@ -1,12 +1,37 @@
 import { auth } from '@auth';
 import { getUser } from '@db/user';
 import { NextRequest, NextResponse } from 'next/server';
+import { getCachedItem, setCachedItem } from '@db/cache';
 
 export async function GET(req: NextRequest) {
-    const session = await auth()
-    if (!session || !session.user.email) {
-        return NextResponse.json({ message: "401 Unauthorized" }, { status: 401, })
+  const session = await auth();
+  if (!session || !session.user.email) {
+    return NextResponse.json({ message: '401 Unauthorized' }, { status: 401 });
+  }
+
+  let user = getCachedItem(session.user.email, 'users');
+  if (!user) {
+    user = await getUser(session.user.email);
+    if (user) {
+      setCachedItem(session.user.email, user, 'users');
     }
-    const user = await getUser(session.user.email)
-    return NextResponse.json({ message: "User Fetched.", user }, { status: 200, })
+  }
+
+  if (!user) {
+    return NextResponse.json({ message: 'User not found' }, { status: 404 });
+  }
+
+  // Strip out sensitive fields
+  const {
+    rsaprivSHA,
+    seed,
+    hash,
+    // Add other sensitive fields here if needed
+    ...safeUserData
+  } = user;
+
+  return NextResponse.json(
+    { message: 'User Fetched.', user: safeUserData },
+    { status: 200 }
+  );
 }

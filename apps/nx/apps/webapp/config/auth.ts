@@ -183,7 +183,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           token.stravaId = `${profile.id}`;
           token.name = `${profile.username}`;
           token.picture = `${profile.profile_medium}`;
-
           UpdateStrava(
             token.email!,
             { strava_profile: profile },

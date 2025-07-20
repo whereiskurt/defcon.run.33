@@ -19,20 +19,10 @@ import {
 import { signIn, signOut, useSession } from 'next-auth/react';
 
 import { useRouter } from 'next/navigation';
-import {
-  FaCamera,
-  FaIdCard,
-  FaPlus,
-  FaStrava,
-  FaUser,
-  FaUserAlt,
-} from 'react-icons/fa';
+import { FaPlus, FaStrava, FaUserAlt } from 'react-icons/fa';
 import { DashboardIcon } from './icon/dashboard';
-import { FeedbackIcon } from './icon/feedback';
 import { LogoutIcon } from './icon/logout';
 import { QRIcon } from './icon/qr';
-import { SettingIcon } from './icon/setting';
-import { ThemeIcon } from './icon/theme';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 
@@ -54,7 +44,7 @@ const UserDropDown = (params: any) => {
   } = useDisclosure();
   const [userDetail, setUserDetail] = useState<any>(null);
   const router = useRouter();
-  
+
   // Fetch user details once when component mounts
   const fetchUserDetails = async () => {
     try {
@@ -66,7 +56,7 @@ const UserDropDown = (params: any) => {
       });
       if (!res.ok || res.status !== 200) {
         throw new Error('Failed to get User details.');
-      } 
+      }
       const record = await res.json();
       // alert(JSON.stringify(record.user.eqr));
       console.log(`Got user detail: ${JSON.stringify(record.user)}`);
@@ -75,7 +65,7 @@ const UserDropDown = (params: any) => {
       console.error('Error fetching user details:', error);
     }
   };
-  
+
   useEffect(() => {
     if (!userDetail) {
       fetchUserDetails();
@@ -139,7 +129,7 @@ const UserDropDown = (params: any) => {
               startContent={<FaUserAlt />}
               key="profile"
               className="gap-2 opacity-100"
-              textValue="Profile" 
+              textValue="Profile"
             >
               <Link replace={true} href="/profile">
                 User Profile
@@ -158,7 +148,6 @@ const UserDropDown = (params: any) => {
             </DropdownItem>
           </DropdownSection>
           <DropdownSection aria-label="Profile & Actions" showDivider>
-
             {!session.user.hasStrava ? (
               <DropdownItem
                 startContent={
@@ -171,7 +160,7 @@ const UserDropDown = (params: any) => {
                 Link to Strava
               </DropdownItem>
             ) : (
-             <></>
+              <></>
             )}
 
             <DropdownItem
@@ -199,8 +188,6 @@ const UserDropDown = (params: any) => {
                 Add New Activity
               </Link>
             </DropdownItem>
-
-
           </DropdownSection>
 
           <DropdownSection aria-label="Profile & Actions" showDivider>
