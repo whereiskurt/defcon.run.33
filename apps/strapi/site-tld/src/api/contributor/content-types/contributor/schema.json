@@ -1,0 +1,26 @@
+{
+  "kind": "singleType",
+  "collectionName": "contributors",
+  "info": {
+    "singularName": "contributor",
+    "pluralName": "contributors",
+    "displayName": "Contributor"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "attributes": {
+    "page_title": {
+      "type": "string"
+    },
+    "page_summary": {
+      "type": "string"
+    },
+    "page_body": {
+      "type": "blocks"
+    },
+    "page_bottom": {
+      "type": "blocks"
+    }
+  }
+}
