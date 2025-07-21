@@ -85,7 +85,7 @@ const User = new Entity(
         type: ['rabbit', 'admin'] as const,
       },
 
-      reatedAt: {
+      createdAt: {
         type: 'number',
         default: () => Date.now(),
         readOnly: true,
