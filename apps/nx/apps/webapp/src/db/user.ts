@@ -82,9 +82,22 @@ const User = new Entity(
         type: 'string',
       },
       mqtt_usertype: {
-        type: ['rabbit', 'admin'] as const 
+        type: ['rabbit', 'admin'] as const,
       },
-      
+
+      reatedAt: {
+        type: 'number',
+        default: () => Date.now(),
+        readOnly: true,
+      },
+
+      updatedAt: {
+        type: 'number',
+        watch: '*',
+        set: () => Date.now(),
+        readOnly: true,
+      },
+
       github_profile: {
         type: 'map',
         properties: {
@@ -164,26 +177,26 @@ const User = new Entity(
       strava_profile: {
         type: 'map',
         properties: {
-          badge_type_id: { type: 'number' },
-          bio: { type: 'string' },
-          city: { type: 'string' },
-          country: { type: 'string' },
-          created_at: { type: 'string' },
-          firstname: { type: 'string' },
+          badge_type_id: { type: 'any' },
+          bio: { type: 'any' },
+          city: { type: 'any' },
+          country: { type: 'any' },
+          created_at: { type: 'any' },
+          firstname: { type: 'any' },
           follower: { type: 'any' },
           friend: { type: 'any' },
-          id: { type: 'number' },
-          lastname: { type: 'string' },
-          premium: { type: 'boolean' },
-          profile: { type: 'string' },
-          profile_medium: { type: 'string' },
-          resource_state: { type: 'number' },
-          sex: { type: 'string' },
-          state: { type: 'string' },
-          summit: { type: 'boolean' },
-          updated_at: { type: 'string' },
-          username: { type: 'string' },
-          weight: { type: 'number' },
+          id: { type: 'any' },
+          lastname: { type: 'any' },
+          premium: { type: 'any' },
+          profile: { type: 'any' },
+          profile_medium: { type: 'any' },
+          resource_state: { type: 'any' },
+          sex: { type: 'any' },
+          state: { type: 'any' },
+          summit: { type: 'any' },
+          updated_at: { type: 'any' },
+          username: { type: 'any' },
+          weight: { type: 'any' },
         },
       },
       strava_account: {
@@ -193,26 +206,26 @@ const User = new Entity(
           athlete: {
             type: 'map',
             properties: {
-              badge_type_id: { type: 'number' },
-              bio: { type: 'string' },
-              city: { type: 'string' },
-              country: { type: 'string' },
-              created_at: { type: 'string' },
-              firstname: { type: 'string' },
+              badge_type_id: { type: 'any' },
+              bio: { type: 'any' },
+              city: { type: 'any' },
+              country: { type: 'any' },
+              created_at: { type: 'any' },
+              firstname: { type: 'any' },
               follower: { type: 'any' },
               friend: { type: 'any' },
-              id: { type: 'number' },
-              lastname: { type: 'string' },
-              premium: { type: 'boolean' },
-              profile: { type: 'string' },
-              profile_medium: { type: 'string' },
-              resource_state: { type: 'number' },
-              sex: { type: 'string' },
-              state: { type: 'string' },
-              summit: { type: 'boolean' },
-              updated_at: { type: 'string' },
-              username: { type: 'string' },
-              weight: { type: 'number' },
+              id: { type: 'any' },
+              lastname: { type: 'any' },
+              premium: { type: 'any' },
+              profile: { type: 'any' },
+              profile_medium: { type: 'any' },
+              resource_state: { type: 'any' },
+              sex: { type: 'any' },
+              state: { type: 'any' },
+              summit: { type: 'any' },
+              updated_at: { type: 'any' },
+              username: { type: 'any' },
+              weight: { type: 'any' },
             },
           },
           expires_at: { type: 'number' },
@@ -236,7 +249,7 @@ const User = new Entity(
           composite: ['id'],
         },
       },
-      
+
       byRsaPubSHA: {
         index: 'gsi1pk-gsi1sk-index',
         pk: {
@@ -267,39 +280,39 @@ const User = new Entity(
 
 export { User };
 
-
 export async function UpdateNodeMailer(email: string) {
   const user = await getUserOrNew(email);
   return user;
 }
 
-export async function UpdateStrava(email: string, strava_profile: any, strava_account: any) {
+export async function UpdateStrava(
+  email: string,
+  strava_profile: any,
+  strava_account: any
+) {
   const user = await getUserOrNew(email);
   if (!user) {
     throw new Error('Update Strava User not found');
   }
-  const picture = user?.picture ?? strava_profile.profile_medium
-  const name = user?.name ?? strava_profile.username
+  const picture = user?.picture ?? strava_profile.profile_medium;
+  const name = user?.name ?? strava_profile.username;
 
   const result = await User.update({
     email: email,
-    id: user.id
+    id: user.id,
   })
-  .set({
-    name,
-    picture
-  })
-  .set(
-    strava_profile
-  ).set(
-    strava_account
-  )
-  .go({
-    response: 'all_new'
-  });
+    .set({
+      name,
+      picture,
+    })
+    .set(strava_profile)
+    .set(strava_account)
+    .go({
+      response: 'all_new',
+    });
 
   invalidateCache(email, 'users');
-  
+
   return result.data;
 }
 
@@ -314,18 +327,16 @@ export async function UpdateGithub(email: string, github_profile: any) {
 
   const result = await User.update({
     email: email,
-    id: user.id
+    id: user.id,
   })
-  .set({
-    name,
-    picture
-  })
-  .set(
-    github_profile
-  )
-  .go({
-    response: 'all_new'
-  });
+    .set({
+      name,
+      picture,
+    })
+    .set(github_profile)
+    .go({
+      response: 'all_new',
+    });
   invalidateCache(email, 'users');
 
   return result.data;
@@ -342,18 +353,16 @@ export async function UpdateDiscord(email: string, discord_profile: any) {
 
   const result = await User.update({
     email: email,
-    id: user.id
+    id: user.id,
   })
-  .set({
-    name,
-    picture
-  })
-  .set(
-    discord_profile
-  )
-  .go({
-    response: 'all_new'
-  });
+    .set({
+      name,
+      picture,
+    })
+    .set(discord_profile)
+    .go({
+      response: 'all_new',
+    });
   invalidateCache(email, 'users');
 
   return result.data;
@@ -404,8 +413,16 @@ async function getUserOrNew(email: string) {
 
   const profile_theme = 'dark';
 
-  const mqttuser = createHash('sha256').update(seed).digest('hex').slice(0, 12).toLowerCase();
-  const mqttpass = createHash('sha256').update(rsaprivSHA).digest('hex').slice(0, 12).toLowerCase();
+  const mqttuser = createHash('sha256')
+    .update(seed)
+    .digest('hex')
+    .slice(0, 12)
+    .toLowerCase();
+  const mqttpass = createHash('sha256')
+    .update(rsaprivSHA)
+    .digest('hex')
+    .slice(0, 12)
+    .toLowerCase();
 
   const newUser = {
     id,
