@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"errors"
 	"flag"
+	"fmt"
 	"io/fs"
 	"log"
 	"os"
@@ -73,6 +74,8 @@ func handleMessage(from uint32, topic string, portNum generated.PortNum, payload
 		shortName := user.GetShortName()
 		hwModel := user.GetHwModel().String()
 		role := user.GetRole().String()
+		pubKey := user.GetPublicKey()
+
 		//log.Printf("[msg] %v->%v (%v) %s: {\"%v\" \"%v\" %v %v}", from, id, topic, portNum, longName, shortName, hwModel, role)
 		if len(longName) == 0 {
 			return
@@ -81,7 +84,7 @@ func handleMessage(from uint32, topic string, portNum generated.PortNum, payload
 		if Nodes[from] == nil {
 			Nodes[from] = meshtastic.NewNode(topic)
 		}
-		Nodes[from].UpdateUser(longName, shortName, hwModel, role)
+		Nodes[from].UpdateUser(longName, shortName, hwModel, role, fmt.Sprintf("0x%x", pubKey))
 		NodesMutex.Unlock()
 	case generated.PortNum_TELEMETRY_APP:
 		var telemetry generated.Telemetry
@@ -201,7 +204,7 @@ func handleMessage(from uint32, topic string, portNum generated.PortNum, payload
 		if Nodes[from] == nil {
 			Nodes[from] = meshtastic.NewNode(topic)
 		}
-		Nodes[from].UpdateUser(longName, shortName, hwModel, role)
+		Nodes[from].UpdateUser(longName, shortName, hwModel, role, "")
 		Nodes[from].UpdateMapReport(fwVersion, region, modemPreset, hasDefaultCh, onlineLocalNodes)
 		Nodes[from].UpdatePosition(latitude, longitude, altitude, precision)
 		Nodes[from].UpdateSeenBy(topic)

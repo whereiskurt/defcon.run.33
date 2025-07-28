@@ -17,22 +17,6 @@
         "cwd": "infra/terraform/site-tld"
       }
     },
-    "apply": {
-      "executor": "nx:run-commands",
-      "timeout": 120000,
-      "options": {
-        "command": "terragrunt apply --terragrunt-log-level debug --terragrunt-debug || true",
-        "cwd": "infra/terraform/site-tld"
-      }
-    },
-    "destroy": {
-      "executor": "nx:run-commands",
-      "timeout": 120000,
-      "options": {
-        "command": "terragrunt destroy --terragrunt-log-level debug --terragrunt-debug || true",
-        "cwd": "infra/terraform/site-tld"
-      }
-    },
     "plan": {
       "executor": "nx:run-commands",
       "timeout": 120000,

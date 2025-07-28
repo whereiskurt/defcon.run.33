@@ -31,6 +31,7 @@ type Node struct {
 	ShortName string `json:"shortName"`
 	HwModel   string `json:"hwModel"`
 	Role      string `json:"role"`
+	PublicKey string `json:"publicKey"`
 	// MapReport
 	FwVersion        string `json:"fwVersion,omitempty"`
 	Region           string `json:"region,omitempty"`
@@ -221,11 +222,14 @@ func (node *Node) UpdateSeenBy(topic string) {
 	node.SeenBy[topic] = time.Now().Unix()
 }
 
-func (node *Node) UpdateUser(longName, shortName, hwModel, role string) {
+func (node *Node) UpdateUser(longName, shortName, hwModel, role, pubKey string) {
 	node.LongName = longName
 	node.ShortName = shortName
 	node.HwModel = hwModel
 	node.Role = role
+	if pubKey != "" {
+		node.PublicKey = pubKey
+	}
 }
 
 type NodeDB map[uint32]*Node
