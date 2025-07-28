@@ -61,13 +61,12 @@ export default async function RootLayout({
               </main>
               <footer className="w-full flex items-center justify-center py-3">
                 <Link
-                  isExternal
                   className="flex items-center gap-1 text-current"
-                  href="https://www.pentestpartners.com/"
-                  title="Pen Test Partners"
+                  href="/contributors"
+                  title="No Bystanders"
                 >
                   <span className="text-default-600">Supported by</span>
-                  <p className="text-primary">PenTest Partners</p>
+                  <p className="text-primary">No Bystanders</p>
                 </Link>
               </footer>
             </div>
