@@ -164,5 +164,44 @@
       "retries": 3,
       "startPeriod": 15
     }
+  },
+  {
+    "name": "${name["ghosts"]}",
+    "image": "${image["ghosts"]}",
+    "cpu": ${cpu["ghosts"]},
+    "memory": ${memory["ghosts"]},
+    "memoryReservation": ${memoryReservation["ghosts"]},
+    "essential": true,
+    "command": [
+      "/meshtk/meshtk", "fleet", "simulate", "--verbose=trace"
+    ],
+    "environment": [ 
+    ],
+    "secrets": [
+      {
+        "name": "MESHTK_OPENAI_KEY",
+        "valueFrom": "arn:aws:ssm:us-east-1:427284555693:parameter/defcon.run/openai/botsecret"
+      }
+    ],
+    "portMappings": [ ],
+    "logConfiguration": {
+      "logDriver": "awslogs",
+      "options": {
+        "awslogs-region": "${log_region["ghosts"]}",
+        "awslogs-group": "/ecs/${name["ghosts"]}-${safedomain}",
+        "awslogs-stream-prefix": "ghosts",
+        "awslogs-create-group": "true"
+      }
+    },
+    "healthCheck": {
+      "command": [
+        "CMD-SHELL",
+        "exit 0"
+      ],
+      "interval": 60,
+      "timeout": 15,
+      "retries": 3,
+      "startPeriod": 15
+    }
   }
 ]

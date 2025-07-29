@@ -24,7 +24,7 @@ COPY nginx.conf /etc/nginx/nginx.conf
 RUN mkdir -p /etc/nginx/html/map
 
 COPY meshmap/meshmap.net/website/ /etc/nginx/html/map/
-#COPY meshmap/nodes.json /etc/nginx/html/map/nodes.json
+COPY meshmap/default.nodes.json /etc/nginx/html/map/nodes.json
 
 EXPOSE 443
 
