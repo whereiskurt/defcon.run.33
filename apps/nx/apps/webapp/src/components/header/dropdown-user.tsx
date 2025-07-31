@@ -59,7 +59,7 @@ const UserDropDown = (params: any) => {
       }
       const record = await res.json();
       // alert(JSON.stringify(record.user.eqr));
-      console.log(`Got user detail: ${JSON.stringify(record.user)}`);
+      // console.log(`Got user detail: ${JSON.stringify(record.user)}`);
       setUserDetail(record.user);
     } catch (error) {
       console.error('Error fetching user details:', error);

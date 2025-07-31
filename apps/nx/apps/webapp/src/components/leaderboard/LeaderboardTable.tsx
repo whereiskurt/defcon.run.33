@@ -1,0 +1,378 @@
+'use client';
+
+import { useEffect, useState, useRef } from 'react';
+import { useSearchParams } from 'next/navigation';
+import {
+  Card,
+  CardHeader,
+  CardBody,
+  Divider,
+  Spinner,
+  Accordion,
+  AccordionItem,
+  Chip,
+  Input,
+  Button,
+  Pagination,
+} from '@heroui/react';
+import { Trophy, Medal, Award, Search } from 'lucide-react';
+
+type LeaderboardUser = {
+  id: string;
+  displayname: string;
+  email: string;
+  totalAccomplishmentType: {
+    activity: number;
+    social: number;
+    meshctf: number;
+  };
+  accomplishmentCount: number;
+  globalRank: number;
+};
+
+type Accomplishment = {
+  type: 'activity' | 'social' | 'meshctf';
+  name: string;
+  description?: string;
+  completedAt: number;
+  year: number;
+  metadata?: any;
+};
+
+type PaginationInfo = {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+  hasNext: boolean;
+  hasPrev: boolean;
+};
+
+export default function LeaderboardTable() {
+  const PAGE_SIZE = 25; // Production page size
+  const searchParams = useSearchParams();
+  
+  const [users, setUsers] = useState<LeaderboardUser[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [pagination, setPagination] = useState<PaginationInfo | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [filter, setFilter] = useState('');
+  const [searchInput, setSearchInput] = useState(''); // What user types
+  const [accomplishments, setAccomplishments] = useState<Record<string, Accomplishment[]>>({});
+  const [loadingAccomplishments, setLoadingAccomplishments] = useState<Set<string>>(new Set());
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Initialize from URL params on mount
+  useEffect(() => {
+    const initialFilter = searchParams.get('filter') || '';
+    if (initialFilter) {
+      setFilter(initialFilter);
+      setSearchInput(initialFilter);
+      // Clear any existing timeout since we want immediate filtering from URL params
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current);
+      }
+    }
+  }, [searchParams]);
+
+  useEffect(() => {
+    const fetchLeaderboardData = async () => {
+      setLoading(true);
+      try {
+        const params = new URLSearchParams({
+          page: currentPage.toString(),
+          limit: PAGE_SIZE.toString(),
+          ...(filter && { filter })
+        });
+        
+        const response = await fetch(`/api/leaderboard?${params}`);
+        if (!response.ok) {
+          throw new Error('Failed to fetch leaderboard data');
+        }
+        const data = await response.json();
+        setUsers(data.users);
+        setPagination(data.pagination);
+      } catch (err) {
+        console.error('Error fetching leaderboard:', err);
+        setError('Failed to load leaderboard');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchLeaderboardData();
+  }, [currentPage, filter]);
+
+  // Keep focus on search input after data loads
+  useEffect(() => {
+    if (filter && searchInputRef.current && !loading) {
+      // Small delay to ensure the component is fully rendered
+      setTimeout(() => {
+        searchInputRef.current?.focus();
+      }, 100);
+    }
+  }, [loading, filter]);
+
+  // Debounced search effect
+  useEffect(() => {
+    // Clear existing timeout
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
+
+    // If search input is empty or less than 3 characters, clear filter immediately
+    if (searchInput.length === 0) {
+      setFilter('');
+      setCurrentPage(1);
+      return;
+    }
+
+    // If less than 3 characters, don't search yet
+    if (searchInput.length < 3) {
+      return;
+    }
+
+    // Set timeout for search
+    searchTimeoutRef.current = setTimeout(() => {
+      setFilter(searchInput);
+      setCurrentPage(1);
+    }, 2000);
+
+    // Cleanup timeout on unmount
+    return () => {
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current);
+      }
+    };
+  }, [searchInput]);
+
+  const fetchUserAccomplishments = async (userId: string) => {
+    if (accomplishments[userId]) {
+      return; // Already loaded
+    }
+
+    setLoadingAccomplishments(prev => new Set(prev).add(userId));
+    try {
+      const response = await fetch(`/api/leaderboard/${userId}/accomplishments`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch accomplishments');
+      }
+      const data = await response.json();
+      setAccomplishments(prev => ({ ...prev, [userId]: data }));
+    } catch (err) {
+      console.error('Error fetching accomplishments:', err);
+    } finally {
+      setLoadingAccomplishments(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(userId);
+        return newSet;
+      });
+    }
+  };
+
+  const handleSearchInputChange = (value: string) => {
+    setSearchInput(value);
+  };
+
+  const formatDate = (timestamp: number) => {
+    return new Date(timestamp).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    });
+  };
+
+  const getTypeColor = (type: string) => {
+    switch (type) {
+      case 'activity':
+        return 'success';
+      case 'social':
+        return 'primary';
+      case 'meshctf':
+        return 'warning';
+      default:
+        return 'default';
+    }
+  };
+
+  const getRankIcon = (rank: number) => {
+    switch (rank) {
+      case 1:
+        return <Trophy className="h-5 w-5 text-yellow-500" />;
+      case 2:
+        return <Medal className="h-5 w-5 text-gray-400" />;
+      case 3:
+        return <Award className="h-5 w-5 text-orange-600" />;
+      default:
+        return <span className="text-lg font-bold text-default-500">#{rank}</span>;
+    }
+  };
+
+  if (loading) {
+    return (
+      <Card className="w-full">
+        <CardBody>
+          <div className="flex justify-center items-center p-8">
+            <Spinner size="lg" />
+          </div>
+        </CardBody>
+      </Card>
+    );
+  }
+
+  if (error) {
+    return (
+      <Card className="w-full">
+        <CardBody>
+          <p className="text-red-500 text-center p-4">{error}</p>
+        </CardBody>
+      </Card>
+    );
+  }
+
+  const itemClasses = {
+    base: 'p-0',
+    title: 'p-0 text-current',
+    subtitle: 'p-0',
+    indicator: 'text-2xl',
+    content: 'text-lg',
+  };
+
+  return (
+    <div className="w-full space-y-4">
+      {/* Search and Info Card */}
+      <Card>
+        <CardHeader>
+          <div className="flex flex-col w-full">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-2">
+              <div>
+                <p className="text-lg">Accomplishment Leaderboard</p>
+                <p className="text-small text-default-500">
+                  {pagination ? `Showing ${pagination.total} participants` : 'Loading...'}
+                </p>
+              </div>
+              <Input
+                ref={searchInputRef}
+                placeholder="Filter by display name (3+ chars)..."
+                value={searchInput}
+                onChange={(e) => handleSearchInputChange(e.target.value)}
+                startContent={<Search className="h-4 w-4" />}
+                className="max-w-sm"
+                variant="bordered"
+                description={searchInput.length > 0 && searchInput.length < 3 ? 
+                  `Type ${3 - searchInput.length} more character${3 - searchInput.length === 1 ? '' : 's'} to search` : 
+                  undefined
+                }
+              />
+            </div>
+          </div>
+        </CardHeader>
+      </Card>
+
+      <Accordion
+        selectionMode="multiple"
+        variant="bordered"
+        isCompact
+        itemClasses={itemClasses}
+        onSelectionChange={(keys) => {
+          // Fetch accomplishments for expanded items
+          Array.from(keys).forEach(key => {
+            fetchUserAccomplishments(key as string);
+          });
+        }}
+      >
+        {users.map((user, index) => {
+          return (
+            <AccordionItem
+              key={user.id}
+              title={
+                <div className="flex items-center gap-2">
+                  {getRankIcon(user.globalRank)}
+                  <span>{user.displayname} - Total: {user.accomplishmentCount}</span>
+                </div>
+              }
+              subtitle={`Activity: ${user.totalAccomplishmentType.activity} | Social: ${user.totalAccomplishmentType.social} | Flags: ${user.totalAccomplishmentType.meshctf}`}
+              textValue={`${user.displayname} accomplishments`}
+            >
+              <div className="space-y-4">
+                {/* Summary chips */}
+                <div className="flex flex-wrap gap-2 mb-4">
+                  <Chip color="success" variant="flat" size="sm">
+                    Activity: {user.totalAccomplishmentType.activity}
+                  </Chip>
+                  <Chip color="primary" variant="flat" size="sm">
+                    Social: {user.totalAccomplishmentType.social}
+                  </Chip>
+                  <Chip color="warning" variant="flat" size="sm">
+                    Flags: {user.totalAccomplishmentType.meshctf}
+                  </Chip>
+                  <Chip color="secondary" variant="solid" size="sm">
+                    Total: {user.accomplishmentCount}
+                  </Chip>
+                </div>
+
+                {/* Dynamic accomplishments loading */}
+                {loadingAccomplishments.has(user.id) ? (
+                  <div className="flex justify-center p-4">
+                    <Spinner size="sm" />
+                    <span className="ml-2 text-sm text-default-500">Loading accomplishments...</span>
+                  </div>
+                ) : accomplishments[user.id] && accomplishments[user.id].length > 0 ? (
+                  <div>
+                    <h4 className="font-semibold text-base mb-3">Individual Accomplishments</h4>
+                    <div className="space-y-3">
+                      {accomplishments[user.id]
+                        .sort((a, b) => b.completedAt - a.completedAt)
+                        .map((accomplishment, idx) => (
+                          <div key={idx} className="border-l-4 border-l-gray-300 pl-4 py-2">
+                            <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-1">
+                              <Chip
+                                color={getTypeColor(accomplishment.type)}
+                                variant="flat"
+                                size="sm"
+                              >
+                                {accomplishment.type.toUpperCase()}
+                              </Chip>
+                              <span className="font-medium text-base">{accomplishment.name}</span>
+                              <span className="text-sm text-default-500">
+                                {formatDate(accomplishment.completedAt)}
+                              </span>
+                            </div>
+                            {accomplishment.description && (
+                              <p className="text-sm text-default-600 mt-1">
+                                {accomplishment.description}
+                              </p>
+                            )}
+                          </div>
+                        ))}
+                    </div>
+                  </div>
+                ) : accomplishments[user.id] ? (
+                  <p className="text-default-500">No individual accomplishments to display.</p>
+                ) : (
+                  <p className="text-default-500 text-sm">Expand to load accomplishments...</p>
+                )}
+              </div>
+            </AccordionItem>
+          );
+        })}
+      </Accordion>
+
+      {/* Pagination */}
+      {pagination && pagination.totalPages > 1 && (
+        <div className="flex justify-center mt-6">
+          <Pagination
+            total={pagination.totalPages}
+            page={pagination.page}
+            onChange={setCurrentPage}
+            showControls
+            showShadow
+            color="primary"
+          />
+        </div>
+      )}
+    </div>
+  );
+}

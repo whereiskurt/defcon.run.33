@@ -68,9 +68,11 @@ export default function MqttCredentials() {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center p-8">
-        <Spinner size="lg" />
-      </div>
+      <Card className="w-full">
+        <CardBody className="flex justify-center items-center p-8">
+          <Spinner size="lg" />
+        </CardBody>
+      </Card>
     );
   }
 
@@ -107,10 +109,11 @@ export default function MqttCredentials() {
   }
 
   return (
-    <Card className="max-w-sm mx-auto">
+    <Card className="w-full">
       <CardHeader className="flex gap-3">
         <div className="flex flex-col">
-          <p className="text-lg">MQTT Credentials</p>
+          <p className="text-lg">🔐 MQTT Credentials</p>
+          <p className="text-small text-default-500">Your mesh network credentials</p>
         </div>
       </CardHeader>
       <Divider />
@@ -124,11 +127,13 @@ export default function MqttCredentials() {
                 value={userData.mqtt_username}
                 className="flex-grow"
                 variant="bordered"
+                size="sm"
               />
               <Button
                 onClick={() => copyToClipboard(userData.mqtt_username || '', 'username')}
                 variant="flat"
                 color={copying.username ? "success" : "primary"}
+                size="sm"
               >
                 {copying.username ? "Copied!" : "Copy"}
               </Button>
@@ -144,6 +149,7 @@ export default function MqttCredentials() {
                 className="flex-grow"
                 type={showPassword ? "text" : "password"}
                 variant="bordered"
+                size="sm"
                 endContent={
                   <Button
                     isIconOnly
@@ -162,6 +168,7 @@ export default function MqttCredentials() {
                 onClick={() => copyToClipboard(userData.mqtt_password || '', 'password')}
                 variant="flat"
                 color={copying.password ? "success" : "primary"}
+                size="sm"
               >
                 {copying.password ? "Copied!" : "Copy"}
               </Button>
@@ -170,9 +177,10 @@ export default function MqttCredentials() {
         </div>
       </CardBody>
       <Divider />
+      <Divider />
       <CardFooter>
         <p className="text-small text-default-500">
-          Keep these credentials secure and don't share them with others.
+          These are your credentials for connecting to the MQTT broker. Use them to participate in the Meshtastic CTF.
         </p>
       </CardFooter>
     </Card>

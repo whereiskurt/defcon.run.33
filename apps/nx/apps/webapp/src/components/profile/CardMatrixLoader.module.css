@@ -1,0 +1,153 @@
+.matrixContainer {
+  position: relative;
+  width: 100%;
+  background: #000;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+}
+
+.matrix {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: space-between;
+  padding: 0 3px;
+}
+
+.column {
+  display: flex;
+  flex-direction: column;
+  font-family: 'Courier New', monospace;
+  font-size: 10px;
+  color: #00ff00;
+  animation: fall 2s linear infinite;
+  opacity: 0.7;
+}
+
+.column:nth-child(3n+1) {
+  animation-delay: -0.1s;
+}
+
+.column:nth-child(3n+2) {
+  animation-delay: -0.5s;
+}
+
+.column:nth-child(3n) {
+  animation-delay: -0.9s;
+}
+
+.column:nth-child(5n) {
+  animation-delay: -0.3s;
+}
+
+.column:nth-child(7n) {
+  animation-delay: -0.7s;
+}
+
+@keyframes fall {
+  0% {
+    transform: translateY(-100%);
+  }
+  100% {
+    transform: translateY(calc(100% + 50px));
+  }
+}
+
+.char {
+  display: block;
+  line-height: 1.1;
+  text-shadow: 0 0 3px #00ff00;
+  animation: flicker 0.15s linear infinite;
+}
+
+@keyframes flicker {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+
+.overlay {
+  position: relative;
+  z-index: 10;
+  text-align: center;
+  color: #00ff00;
+  font-family: 'Courier New', monospace;
+  text-shadow: 0 0 8px #00ff00;
+}
+
+.loadingText {
+  font-size: 14px;
+  font-weight: bold;
+  letter-spacing: 1px;
+  animation: glow 1.5s ease-in-out infinite alternate;
+}
+
+@keyframes glow {
+  from {
+    text-shadow: 0 0 3px #00ff00, 0 0 6px #00ff00, 0 0 9px #00ff00;
+  }
+  to {
+    text-shadow: 0 0 6px #00ff00, 0 0 12px #00ff00, 0 0 18px #00ff00;
+  }
+}
+
+.dots {
+  display: inline-block;
+  margin-left: 3px;
+}
+
+.dots span {
+  animation: blink 1.2s infinite;
+}
+
+.dots span:nth-child(1) {
+  animation-delay: 0s;
+}
+
+.dots span:nth-child(2) {
+  animation-delay: 0.4s;
+}
+
+.dots span:nth-child(3) {
+  animation-delay: 0.8s;
+}
+
+@keyframes blink {
+  0%, 66% {
+    opacity: 0;
+  }
+  33% {
+    opacity: 1;
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .column {
+    font-size: 8px;
+  }
+  
+  .loadingText {
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .column {
+    font-size: 7px;
+  }
+  
+  .loadingText {
+    font-size: 10px;
+    letter-spacing: 0.5px;
+  }
+}

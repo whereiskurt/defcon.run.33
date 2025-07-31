@@ -261,3 +261,17 @@ export async function deleteAccomplishment(
   
   return result.data;
 }
+
+export async function getAllAccomplishmentsForLeaderboard() {
+  const result = await Accomplishments.scan.go();
+  
+  return result.data.map(accomplishment => ({
+    userId: accomplishment.userId,
+    type: accomplishment.type,
+    name: accomplishment.name,
+    description: accomplishment.description,
+    completedAt: accomplishment.completedAt,
+    year: accomplishment.year,
+    metadata: accomplishment.metadata
+  }));
+}

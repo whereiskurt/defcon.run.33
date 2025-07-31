@@ -8,6 +8,7 @@ import {
   CardFooter,
   Divider,
   Button,
+  Spinner,
 } from '@heroui/react';
 import { FaStrava } from 'react-icons/fa';
 import { FaCheckCircle } from 'react-icons/fa';
@@ -25,17 +26,9 @@ export default function StravaConnection() {
 
   if (status === 'loading') {
     return (
-      <Card className="max-w-sm mx-auto">
-        <CardHeader className="flex gap-3">
-          <div className="flex flex-col">
-            <p className="text-lg">Strava Connection</p>
-          </div>
-        </CardHeader>
-        <Divider />
-        <CardBody>
-          <div className="flex justify-center items-center p-4">
-            <div className="animate-pulse h-6 w-32 bg-gray-300 rounded"></div>
-          </div>
+      <Card className="w-full">
+        <CardBody className="flex justify-center items-center p-8">
+          <Spinner size="lg" />
         </CardBody>
       </Card>
     );
@@ -45,7 +38,7 @@ export default function StravaConnection() {
   const isStravaConnected = session?.user?.hasStrava;
 
   return (
-    <Card className="max-w-sm mx-auto">
+    <Card className="w-full">
       <CardHeader className="flex gap-3">
         <div className="flex flex-col">
           <p className="text-lg">Strava Connection</p>
@@ -55,8 +48,8 @@ export default function StravaConnection() {
       <Divider />
       <CardBody>
         {isStravaConnected ? (
-          <div className="flex items-center gap-3 p-4">
-            <FaCheckCircle className="text-green-500 text-2xl" />
+          <div className="flex items-center gap-3">
+            <FaCheckCircle className="text-green-500 text-xl" />
             <div>
               <p className="font-medium">Connected to Strava</p>
               <p className="text-small text-default-500">
@@ -65,16 +58,22 @@ export default function StravaConnection() {
             </div>
           </div>
         ) : (
-          <div className="flex flex-col items-center gap-4 p-4">
-            <p className="text-center">
-              Connect your Strava account
-            </p>
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+            <div className="flex-grow">
+              <p className="font-medium mb-1">
+                Connect your Strava account
+              </p>
+              <p className="text-small text-default-500">
+                Sync your activities and track your progress
+              </p>
+            </div>
             <Button
               color="danger"
               variant="flat"
-              startContent={<FaStrava size={24} />}
+              startContent={<FaStrava size={20} />}
               onClick={handleStravaConnect}
               isLoading={loading}
+              size="sm"
             >
               Connect with Strava
             </Button>

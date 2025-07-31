@@ -78,3 +78,16 @@
   display: none !important;
 }
 
+/* Force meet-here marker (DC Jack) to be 2x larger */
+.mapWrapper :global(.meet-here-marker) {
+  width: 50px !important;
+  height: 50px !important;
+  margin-left: -25px !important;
+  margin-top: -25px !important;
+}
+
+.mapWrapper :global(.meet-here-marker) svg {
+  width: 100% !important;
+  height: 100% !important;
+}
+

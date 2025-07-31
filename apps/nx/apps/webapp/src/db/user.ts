@@ -7,6 +7,7 @@ import { createHash, generateKeyPairSync } from 'crypto';
 import * as qr from 'qrcode';
 import { v4 as uuidv4 } from 'uuid';
 import { invalidateCache } from './cache';
+import { Accomplishments } from './accomplishment';
 import { act } from 'react';
 
 const accessKeyId: string = process.env['USER_DYNAMODB_ID']!;
@@ -533,4 +534,51 @@ export async function updateDisplayname(email: string, displayname: string) {
 
   invalidateCache(email, 'users');
   return result.data;
+}
+
+export async function getAllUsersWithAccomplishmentCounts() {
+  const result = await User.scan.go();
+  
+  // Get all users with their latest accomplishment
+  const usersWithLatest = await Promise.all(result.data.map(async (user) => {
+    // Get user's latest accomplishment
+    let latestAccomplishment = null;
+    try {
+      const accomplishments = await Accomplishments.query.primary({ userId: user.id })
+        .go();
+      
+      if (accomplishments.data.length > 0) {
+        // Find the most recent accomplishment by completedAt
+        const latest = accomplishments.data.reduce((prev, current) => 
+          (current.completedAt > prev.completedAt) ? current : prev
+        );
+        latestAccomplishment = latest.completedAt;
+      }
+    } catch (error) {
+      console.error(`Error fetching accomplishments for user ${user.id}:`, error);
+    }
+
+    return {
+      id: user.id,
+      displayname: user.displayname || `rabbit_${user.id.slice(0, 4)}`,
+      email: user.email,
+      totalAccomplishmentType: user.totalAccomplishmentType || { activity: 0, social: 0, meshctf: 0 },
+      totalAccomplishments: (user.totalAccomplishmentType?.activity || 0) + 
+                           (user.totalAccomplishmentType?.social || 0) + 
+                           (user.totalAccomplishmentType?.meshctf || 0),
+      latestAccomplishment
+    };
+  }));
+
+  // Sort by total accomplishments first, then by most recent accomplishment
+  return usersWithLatest.sort((a, b) => {
+    // First sort by total accomplishment count (descending)
+    if (a.totalAccomplishments !== b.totalAccomplishments) {
+      return b.totalAccomplishments - a.totalAccomplishments;
+    }
+    // If counts are equal, sort by most recent accomplishment (newest first)
+    const aLatest = a.latestAccomplishment || 0;
+    const bLatest = b.latestAccomplishment || 0;
+    return bLatest - aLatest;
+  });
 }

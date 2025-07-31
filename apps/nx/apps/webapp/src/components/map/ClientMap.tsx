@@ -3,6 +3,7 @@
 import { useTheme } from "next-themes";
 import dynamic from "next/dynamic";
 import { useMemo } from "react";
+import MatrixLoader from "./MatrixLoader";
 
 interface ClientMapProps {
   raw: string;
@@ -17,7 +18,7 @@ export default function ClientMap({ raw, mqtt_nodes, center }: ClientMapProps) {
 
   // Move the dynamic import to this client component
   const Map = useMemo(() => dynamic(() => import('@components/map/basic'), {
-    loading: () => <p>A map is loading</p>,
+    loading: () => <MatrixLoader />,
     ssr: false
   }), []);
 

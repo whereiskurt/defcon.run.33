@@ -8,7 +8,6 @@ import crypto from 'crypto';
  * @returns true if the code is valid
  */
 export function validateTOTP(otpUrl: string, code: string, window: number = 1): boolean {
-  console.log('Validating TOTP:', { otpUrl, code, window });
   try {
     // Parse the OTP URL to extract the secret
     const url = new URL(otpUrl);
@@ -41,14 +40,14 @@ export function validateTOTP(otpUrl: string, code: string, window: number = 1): 
     const currentCounter = Math.floor(currentTime / period);
 
     // Check current time window and adjacent windows
-    console.log('Current time counter:', currentCounter, 'Time:', new Date().toISOString());
+    // console.log('Current time counter:', currentCounter, 'Time:', new Date().toISOString());
     for (let i = -window; i <= window; i++) {
       const counter = currentCounter + i;
       const generatedCode = generateTOTP(secretBuffer, counter, digits, hashAlgorithm);
-      console.log(`Window ${i}: counter=${counter}, generated=${generatedCode}, input=${code}`);
+      // console.log(`Window ${i}: counter=${counter}, generated=${generatedCode}, input=${code}`);
       
       if (generatedCode === code) {
-        console.log('TOTP validation successful!');
+        // console.log('TOTP validation successful!');
         return true;
       }
     }
