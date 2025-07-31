@@ -87,6 +87,11 @@ export default function UserDetails() {
       setUser(data.user);
       setDisplaynameSuccess('Display name updated successfully!');
 
+      // Dispatch event to notify other components
+      window.dispatchEvent(new CustomEvent('displaynameUpdated', { 
+        detail: { newDisplayname: data.user.displayname } 
+      }));
+
       // Clear success message after 3 seconds
       setTimeout(() => setDisplaynameSuccess(''), 3000);
     } catch (err) {
@@ -170,7 +175,7 @@ export default function UserDetails() {
           
           {/* Display Name Section - 50% */}
           <div>
-            <p className="text-small text-default-500 mb-2">Display Name</p>
+            <p className="text-small text-default-500 mb-2">Leaderboard Display Name</p>
             <div className="flex flex-col gap-2">
               <Input
                 value={displaynameInput}
@@ -183,15 +188,18 @@ export default function UserDetails() {
                 variant="bordered"
                 maxLength={50}
                 disabled={isUpdatingDisplayname}
-                size="sm"
+                size="lg"
+                classNames={{
+                  input: "text-lg"
+                }}
               />
               <Button
                 onPress={updateDisplaynameHandler}
                 isLoading={isUpdatingDisplayname}
                 color="primary"
                 variant="flat"
-                size="sm"
-                className="w-full"
+                size="lg"
+                className="self-center px-8"
                 disabled={
                   !displaynameInput.trim() ||
                   displaynameInput.trim() === user?.displayname

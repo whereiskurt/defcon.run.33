@@ -22,10 +22,10 @@ export default async function Page() {
       {/* Row 1: User Details - Display name, email, user type all in one row */}
       <UserDetails />
       
-      {/* Row 2: Global Ranking + MQTT Credentials */}
+      {/* Row 2: MQTT Credentials + Global Ranking */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <LeaderboardRank />
         <MqttCredentials />
+        <LeaderboardRank />
       </div>
       
       {/* Row 3: Strava Connection - full width */}

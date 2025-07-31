@@ -19,7 +19,7 @@ import {
 import { signIn, signOut, useSession } from 'next-auth/react';
 
 import { useRouter } from 'next/navigation';
-import { FaPlus, FaStrava, FaUserAlt } from 'react-icons/fa';
+import { FaPlus, FaStrava, FaTrophy, FaUserAlt } from 'react-icons/fa';
 import { DashboardIcon } from './icon/dashboard';
 import { LogoutIcon } from './icon/logout';
 import { QRIcon } from './icon/qr';
@@ -132,18 +132,29 @@ const UserDropDown = (params: any) => {
               textValue="Profile"
             >
               <Link replace={true} href="/profile">
-                User Profile
+                Profile
               </Link>
             </DropdownItem>
 
             <DropdownItem
               startContent={<DashboardIcon className={iconClasses} />}
               key="dashboard"
-              className="gap-2 opacity-100 mt-2"
+              className="gap-2 opacity-100"
               textValue="Dashboard"
             >
               <Link replace={true} href="/dashboard">
                 Dashboard
+              </Link>
+            </DropdownItem>
+
+            <DropdownItem
+              startContent={<FaTrophy />}
+              key="leaderboard"
+              className="gap-2 opacity-100"
+              textValue="Leaderboard"
+            >
+              <Link replace={true} href="/leaderboard">
+                Leaderboard
               </Link>
             </DropdownItem>
           </DropdownSection>

@@ -42,7 +42,7 @@ export default function StravaConnection() {
       <CardHeader className="flex gap-3">
         <div className="flex flex-col">
           <p className="text-lg">Strava Connection</p>
-          <p className="text-small text-default-500">Connect your Strava account</p>
+          <p className="text-small text-default-500">Connecting allows automatic award of daily activity accomplishments.</p>
         </div>
       </CardHeader>
       <Divider />
@@ -85,7 +85,7 @@ export default function StravaConnection() {
         <p className="text-small text-default-500">
           {isStravaConnected
             ? "You can disconnect your Strava account from your Strava settings."
-            : "Connecting to Strava allows us to sync your activities"}
+            : "You can disconnect your Strava account from your Strava settings."}
         </p>
       </CardFooter>
     </Card>
