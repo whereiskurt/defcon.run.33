@@ -1,7 +1,9 @@
 import { auth } from '@auth';
 import { getUser } from '@db/user';
-import { createAccomplishment } from '@db/accomplishment';
+import { createAccomplishment, checkDuplicateAccomplishment } from '@db/accomplishment';
 import { NextRequest, NextResponse } from 'next/server';
+import { strapi } from '@components/cms/data';
+import { validateTOTP } from './otp';
 
 export async function POST(req: NextRequest) {
   const session = await auth();
@@ -43,13 +45,29 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // TODO: Add actual flag validation logic here
-    // For now, we'll accept any flag as valid
-    const isValidFlag = await validateFlag(ctfId, otpCode, flag.trim());
+    // Validate flag against Strapi data
+    const validationResult = await validateFlag(ctfId, otpCode, flag.trim());
     
-    if (!isValidFlag) {
+    if (!validationResult.isValid) {
       return NextResponse.json(
-        { message: 'Invalid flag or OTP code for this challenge' },
+        { message: validationResult.error || 'Invalid flag or OTP code for this challenge' },
+        { status: 400 }
+      );
+    }
+
+    // Check for duplicate accomplishment
+    const year = new Date().getFullYear();
+    const accomplishmentName = `CTF Challenge: ${validationResult.ghostName}`;
+    const isDuplicate = await checkDuplicateAccomplishment(
+      user.id,
+      'meshctf',
+      accomplishmentName,
+      year
+    );
+    
+    if (isDuplicate) {
+      return NextResponse.json(
+        { message: "Once is enough, don't you think?", isDuplicate: true },
         { status: 400 }
       );
     }
@@ -60,14 +78,16 @@ export async function POST(req: NextRequest) {
       session.user.email,
       {
         type: 'meshctf',
-        name: `CTF Challenge: ${ctfId}`,
-        description: `Completed CTF challenge ${ctfId}`,
+        name: accomplishmentName,
+        description: `Completed CTF challenge ${validationResult.ghostName} (${ctfId})`,
         completedAt: Date.now(),
-        year: new Date().getFullYear(),
+        year: year,
         metadata: {
           otp_code: otpCode,
           flag: flag.trim(),
           ctf_id: ctfId,
+          ghost_handle: ctfId,
+          ghost_name: validationResult.ghostName,
         },
       }
     );
@@ -88,25 +108,61 @@ export async function POST(req: NextRequest) {
   }
 }
 
-// Stub function for flag validation
-// TODO: Replace with actual validation logic
-async function validateFlag(ctfId: string, otpCode: string, flag: string): Promise<boolean> {
-  // This is a stub implementation
-  // In a real implementation, this would:
-  // 1. Validate the OTP code for the specific CTF challenge
-  // 2. Check if the flag is correct for the challenge
-  // 3. Potentially check if the user hasn't already submitted this flag
-  // 4. Verify timing constraints, etc.
-  
-  // For now, accept all flags that follow basic patterns
-  if (flag.startsWith('flag{') && flag.endsWith('}') && flag.length > 10) {
-    return true;
+type ValidationResult = {
+  isValid: boolean;
+  error?: string;
+  ghostName?: string;
+};
+
+// Validate flag against Strapi ghost data
+async function validateFlag(ctfId: string, otpCode: string, flag: string): Promise<ValidationResult> {
+  try {
+    // Fetch ghost data from Strapi
+    const ghosts = await strapi('/ghosts?populate=*');
+    
+    if (!ghosts.data || !Array.isArray(ghosts.data)) {
+      console.error('Invalid ghost data from Strapi');
+      return { isValid: false, error: 'Unable to fetch challenge data' };
+    }
+    
+    // Find the ghost matching the ctfId (which is the handle)
+    const ghost = ghosts.data.find((g: any) => 
+      g && g.handle === ctfId
+    );
+    
+    if (!ghost) {
+      console.error(`Ghost not found for ctfId: ${ctfId}`);
+      return { isValid: false, error: 'Keep this up and you\'ll get banned.' };
+    }
+    
+    const ghostName = ghost.name || ctfId;
+    
+    // Check if the OTP code matches
+    if (ghost.otp_url) {
+      if (!otpCode || otpCode.length !== 6 || !/^\d{6}$/.test(otpCode)) {
+        return { isValid: false, error: 'Keep this up and you\'ll get banned.' };
+      }
+      
+      // Validate TOTP with window of 1 (allows one period before/after current)
+      try {
+        const isValidOTP = validateTOTP(ghost.otp_url, otpCode, 1);
+        if (!isValidOTP) {
+          return { isValid: false, error: 'Keep this up and you\'ll get banned.' };
+        }
+      } catch (otpError) {
+        console.error('OTP validation error:', otpError);
+        return { isValid: false, error: 'Keep this up and you\'ll get banned.' };
+      }
+    }
+    
+    // Check if the flag matches
+    if (ghost.flag && ghost.flag === flag) {
+      return { isValid: true, ghostName };
+    }
+    
+    return { isValid: false, error: 'Keep this up and you\'ll get banned.' };
+  } catch (error) {
+    console.error('Error validating flag:', error);
+    return { isValid: false, error: 'Keep this up and you\'ll get banned.' };
   }
-  
-  // Also accept DEFCON-style flags
-  if (flag.startsWith('DEFCON{') && flag.endsWith('}') && flag.length > 15) {
-    return true;
-  }
-  
-  return false;
 }

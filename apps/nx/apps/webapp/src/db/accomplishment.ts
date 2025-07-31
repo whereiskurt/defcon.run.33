@@ -192,6 +192,26 @@ export async function getAccomplishmentsByYear(userId: string, year: number) {
   return result.data;
 }
 
+export async function checkDuplicateAccomplishment(
+  userId: string,
+  type: 'activity' | 'social' | 'meshctf',
+  name: string,
+  year: number
+) {
+  // Query all accomplishments for the user and filter by type, name, and year
+  const result = await Accomplishments.query
+    .primary({
+      userId,
+    })
+    .go();
+  
+  const duplicate = result.data.find(
+    (acc) => acc.type === type && acc.name === name && acc.year === year
+  );
+  
+  return duplicate !== undefined;
+}
+
 export async function updateAccomplishment(
   userId: string,
   accomplishmentId: string,

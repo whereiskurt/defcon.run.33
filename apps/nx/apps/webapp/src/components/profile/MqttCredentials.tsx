@@ -111,7 +111,6 @@ export default function MqttCredentials() {
       <CardHeader className="flex gap-3">
         <div className="flex flex-col">
           <p className="text-lg">MQTT Credentials</p>
-          <p className="text-small text-default-500">Use these credentials to connect to the MQTT broker</p>
         </div>
       </CardHeader>
       <Divider />

@@ -85,7 +85,7 @@ export default function StravaConnection() {
       <CardFooter>
         <p className="text-small text-default-500">
           {isStravaConnected
-            ? "You can disconnect your Strava account from the settings page"
+            ? "You can disconnect your Strava account from your Strava settings."
             : "Connecting to Strava allows us to sync your activities"}
         </p>
       </CardFooter>

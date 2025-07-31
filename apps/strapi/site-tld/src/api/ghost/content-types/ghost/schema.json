@@ -1,0 +1,39 @@
+{
+  "kind": "collectionType",
+  "collectionName": "ghosts",
+  "info": {
+    "singularName": "ghost",
+    "pluralName": "ghosts",
+    "displayName": "Ghost",
+    "description": ""
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "attributes": {
+    "name": {
+      "type": "string"
+    },
+    "handle": {
+      "type": "string"
+    },
+    "otp_url": {
+      "type": "string"
+    },
+    "flag": {
+      "type": "string"
+    },
+    "openai_gpt_url": {
+      "type": "string"
+    },
+    "sequence": {
+      "type": "string"
+    },
+    "gpx_filename": {
+      "type": "string"
+    },
+    "gpx_description": {
+      "type": "string"
+    }
+  }
+}
