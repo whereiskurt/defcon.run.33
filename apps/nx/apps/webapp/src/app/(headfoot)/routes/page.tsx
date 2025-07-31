@@ -3,11 +3,14 @@
 import { strapi } from '@components/cms/data';
 import ClientMap from '@components/map/ClientMap';
 import styles from './routes.module.css';
+import { env } from 'process';
 
 export default async function Page() {
 
+  const nodesUrl = env['MESHMAP_NODES_URL'] || 'https://mqtt.defcon.run/map/nodes.json';
+
   const routes = await strapi("/routes?populate=*")
-  const mqtt_nodes = await livenodes("https://mqtt.defcon.run/map/nodes.json");
+  const mqtt_nodes = await livenodes(nodesUrl);
 
   return (
     <div className={`mx-auto w-[98%] p-2 ${styles.routesContainer}`}>

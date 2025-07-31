@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bufio"
 	"encoding/base64"
 	"errors"
 	"flag"
@@ -11,7 +10,6 @@ import (
 	"os"
 	"os/signal"
 	"regexp"
-	"strconv"
 	"sync"
 	"sync/atomic"
 	"syscall"
@@ -23,10 +21,10 @@ import (
 )
 
 const (
-	NodeExpiration     = 86400 // 1 day
+	NodeExpiration     = 14400 // 4 hr
 	NeighborExpiration = 7200  // 2 hr
 	MetricsExpiration  = 7200  // 2 hr
-	PruneWriteInterval = 15 * time.Second
+	PruneWriteInterval = 60 * time.Second
 	RateLimitCount     = 4000
 	RateLimitDuration  = time.Hour
 )
@@ -230,36 +228,37 @@ func main() {
 	if Nodes == nil {
 		Nodes = make(meshtastic.NodeDB)
 	}
+
 	// load node blocklist
-	blocked := make(map[uint32]struct{})
-	if len(blockedPath) > 0 {
-		f, err := os.Open(blockedPath)
-		if err != nil {
-			log.Fatalf("[error] open blocklist: %v", err)
-		}
-		s := bufio.NewScanner(f)
-		for s.Scan() {
-			n, err := strconv.ParseUint(s.Text(), 10, 32)
-			if err == nil {
-				blocked[uint32(n)] = struct{}{}
-				log.Printf("[info] node %v blocked", n)
-			}
-		}
-		f.Close()
-		err = s.Err()
-		if err != nil {
-			log.Fatalf("[error] read blocklist: %v", err)
-		}
-	}
+	// blocked := make(map[uint32]struct{})
+	// if len(blockedPath) > 0 {
+	// 	f, err := os.Open(blockedPath)
+	// 	if err != nil {
+	// 		log.Fatalf("[error] open blocklist: %v", err)
+	// 	}
+	// 	s := bufio.NewScanner(f)
+	// 	for s.Scan() {
+	// 		n, err := strconv.ParseUint(s.Text(), 10, 32)
+	// 		if err == nil {
+	// 			blocked[uint32(n)] = struct{}{}
+	// 			log.Printf("[info] node %v blocked", n)
+	// 		}
+	// 	}
+	// 	f.Close()
+	// 	err = s.Err()
+	// 	if err != nil {
+	// 		log.Fatalf("[error] read blocklist: %v", err)
+	// 	}
+	// }
 	// maintain per-node message counters for rate limiting
-	var counters sync.Map // as map[uint32]*uint32
-	go func() {
-		for {
-			time.Sleep(RateLimitDuration)
-			log.Print("[info] clearing message counters")
-			counters.Clear()
-		}
-	}()
+	// var counters sync.Map // as map[uint32]*uint32
+	// go func() {
+	// 	for {
+	// 		time.Sleep(RateLimitDuration)
+	// 		log.Print("[info] clearing message counters")
+	// 		counters.Clear()
+	// 	}
+	// }()
 
 	channelkey := meshtastic.DefaultKey
 	base64Key := os.Getenv("MQTT_CHANNEL_KEY")
@@ -286,17 +285,17 @@ func main() {
 		},
 		TopicRegex: regexp.MustCompile(`^msh(?:/[^/]+)+/2/(?:e/[^/]+/![0-9a-f]+|map/)$`),
 		Accept: func(from uint32) bool {
-			if _, found := blocked[from]; found {
-				return false
-			}
-			v, _ := counters.LoadOrStore(from, new(uint32))
-			count := atomic.AddUint32(v.(*uint32), 1)
-			if count >= RateLimitCount {
-				if count%100 == 0 {
-					log.Printf("[info] node %v rate limited (%v messages)", from, count)
-				}
-				return false
-			}
+			// if _, found := blocked[from]; found {
+			// 	return false
+			// }
+			// v, _ := counters.LoadOrStore(from, new(uint32))
+			// count := atomic.AddUint32(v.(*uint32), 1)
+			// if count >= RateLimitCount {
+			// 	if count%100 == 0 {
+			// 		log.Printf("[info] node %v rate limited (%v messages)", from, count)
+			// 	}
+			// 	return false
+			// }
 			return true
 		},
 		BlockCipher:    meshtastic.NewBlockCipher(channelkey),
@@ -321,9 +320,9 @@ func main() {
 				log.Printf("[info] wrote %v nodes to disk", len(valid))
 			}
 			NodesMutex.Unlock()
-			if !Receiving.CompareAndSwap(true, false) {
-				log.Fatal("[crit] no messages received")
-			}
+			// if !Receiving.CompareAndSwap(true, false) {
+			// 	log.Fatal("[crit] no messages received")
+			// }
 		}
 	}()
 	// wait until exit

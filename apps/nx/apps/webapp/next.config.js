@@ -17,12 +17,30 @@ if (process.env.NODE_ENV === 'production') {
     images: {
       remotePatterns: [new URL(`https://*.defcon.run/**`)],
     },
+    async redirects() {
+      return [
+        {
+          source: '/meshtk',
+          destination: 'https://github.com/whereiskurt/meshtk',
+          permanent: true,
+        },
+      ];
+    },
   });
 } else {
   module.exports = composePlugins(...plugins)({
     nx: { svgr: false },
     images: {
       remotePatterns: [new URL(`https://*.defcon.run/**`)],
+    },
+    async redirects() {
+      return [
+        {
+          source: '/meshtk',
+          destination: 'https://github.com/whereiskurt/meshtk',
+          permanent: true,
+        },
+      ];
     },
   });
 }

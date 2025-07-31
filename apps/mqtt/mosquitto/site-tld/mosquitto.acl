@@ -13,5 +13,9 @@ topic readwrite #
 user meshmap
 topic readwrite #
 
+user ghosts
+topic readwrite #
+
+
 #mosquitto_pub -d -h use1.mqtt.defcon.run -u public -t msh/public/defcon -m hihi -p 8883
 #mosquitto_sub -d -h use1.mqtt.defcon.run -u public -t msh/# -i kphclient -p 8883

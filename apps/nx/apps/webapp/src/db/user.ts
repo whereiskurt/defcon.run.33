@@ -13,6 +13,8 @@ const secretAccessKey: string = process.env['USER_DYNAMODB_SECRET']!;
 const region: string = process.env['USER_DYNAMODB_REGION']!;
 const endpoint: string = process.env['USER_DYNAMODB_ENDPOINT']!;
 
+const creationSeed: string = process.env['USER_CREATION_SEED']!;
+
 const client = DynamoDBDocumentClient.from(
   new DynamoDBClient({
     ...(accessKeyId && secretAccessKey
@@ -414,12 +416,13 @@ async function getUserOrNew(email: string) {
   const profile_theme = 'dark';
 
   const mqttuser = createHash('sha256')
-    .update(seed)
+    .update(email + creationSeed)
     .digest('hex')
     .slice(0, 12)
     .toLowerCase();
+    
   const mqttpass = createHash('sha256')
-    .update(rsaprivSHA)
+    .update(mqttuser + creationSeed)
     .digest('hex')
     .slice(0, 12)
     .toLowerCase();

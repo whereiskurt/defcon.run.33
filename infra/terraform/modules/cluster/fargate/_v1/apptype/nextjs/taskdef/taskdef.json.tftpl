@@ -58,67 +58,71 @@
     "secrets": [
       {
         "name": "AUTH_SECRET",
-        "valueFrom": "arn:aws:ssm:us-east-1:427284555693:parameter/defcon.run/auth/secret"
+        "valueFrom": "${p_account}/auth/secret"
       },
       {
         "name": "AUTH_STRAPI_TOKEN",
-        "valueFrom": "arn:aws:ssm:us-east-1:427284555693:parameter/defcon.run/auth/strapi_token"
+        "valueFrom": "${p_account}/auth/strapi_token"
       },
       {
         "name": "AUTH_GITHUB_ID",
-        "valueFrom": "arn:aws:ssm:us-east-1:427284555693:parameter/defcon.run/auth/github/id"
+        "valueFrom": "${p_account}/auth/github/id"
       },
       {
         "name": "AUTH_GITHUB_SECRET",
-        "valueFrom": "arn:aws:ssm:us-east-1:427284555693:parameter/defcon.run/auth/github/secret"
+        "valueFrom": "${p_account}/auth/github/secret"
       },
       {
         "name": "AUTH_STRAVA_CLIENT_ID",
-        "valueFrom": "arn:aws:ssm:us-east-1:427284555693:parameter/defcon.run/auth/strava/id"
+        "valueFrom": "${p_account}/auth/strava/id"
       },
       {
         "name": "AUTH_STRAVA_CLIENT_SECRET",
-        "valueFrom": "arn:aws:ssm:us-east-1:427284555693:parameter/defcon.run/auth/strava/secret"
+        "valueFrom": "${p_account}/auth/strava/secret"
       },
       {
         "name": "AUTH_DISCORD_CLIENT_ID",
-        "valueFrom": "arn:aws:ssm:us-east-1:427284555693:parameter/defcon.run/auth/discord/id"
+        "valueFrom": "${p_account}/auth/discord/id"
       },
       {
         "name": "AUTH_DISCORD_CLIENT_SECRET",
-        "valueFrom": "arn:aws:ssm:us-east-1:427284555693:parameter/defcon.run/auth/discord/secret"
+        "valueFrom": "${p_account}/auth/discord/secret"
       },
       {
         "name": "AUTH_DYNAMODB_ID",
-        "valueFrom": "arn:aws:ssm:us-east-1:427284555693:parameter/use1.run.defcon.run/next-auth/access_key"
+        "valueFrom": "${p_app}/next-auth/access_key"
       },
       {
         "name": "AUTH_DYNAMODB_SECRET",
-        "valueFrom": "arn:aws:ssm:us-east-1:427284555693:parameter/use1.run.defcon.run/next-auth/secret_key"
+        "valueFrom": "${p_app}/next-auth/secret_key"
       },
       {
         "name": "AUTH_DYNAMODB_DBNAME",
-        "valueFrom": "arn:aws:ssm:us-east-1:427284555693:parameter/use1.run.defcon.run/next-auth/dbname"
+        "valueFrom": "${p_app}/next-auth/dbname"
       },
       {
         "name": "AUTH_SMTP_FROM",
-        "valueFrom": "arn:aws:ssm:us-east-1:427284555693:parameter/use1.email.defcon.run/ses/from_address"
+        "valueFrom": "${p_email}/ses/from_address"
       },
       {
         "name": "AUTH_SMTP_URL",
-        "valueFrom": "arn:aws:ssm:us-east-1:427284555693:parameter/use1.email.defcon.run/ses/smtp_url_v4"
+        "valueFrom": "${p_email}/ses/smtp_url_v4"
       },
       {
         "name": "USER_DYNAMODB_ID",
-        "valueFrom": "arn:aws:ssm:us-east-1:427284555693:parameter/use1.run.defcon.run/dynamodb/access_key"
+        "valueFrom": "${p_app}/dynamodb/access_key"
       },
       {
         "name": "USER_DYNAMODB_SECRET",
-        "valueFrom": "arn:aws:ssm:us-east-1:427284555693:parameter/use1.run.defcon.run/dynamodb/secret_key"
+        "valueFrom": "${p_app}/dynamodb/secret_key"
       },
       {
         "name": "USER_DYNAMODB_SINGLE_TABLE",
-        "valueFrom": "arn:aws:ssm:us-east-1:427284555693:parameter/use1.run.defcon.run/dynamodb/single_table"
+        "valueFrom": "${p_app}/dynamodb/single_table"
+      },
+      {
+        "name": "USER_CREATION_SEED",
+        "valueFrom": "${p_account}/auth/secret"
       }
     ],
     "environment": [
@@ -145,6 +149,10 @@
       {
         "name": "STRAPI_URL",
         "value": "https://strapi.defcon.run"
+      },
+      {
+        "name": "MESHMAP_NODES_URL",
+        "value": "https://mqtt.defcon.run/map/nodes.json"
       }
     ],
     "portMappings": [

@@ -108,9 +108,9 @@ func (node *Node) ClearMapReportData() {
 }
 
 func (node *Node) IsValid() bool {
-	if len(node.SeenBy) == 0 {
-		return false
-	}
+	// if len(node.SeenBy) == 0 {
+	// 	return false
+	// }
 	if len(node.LongName) == 0 {
 		return false
 	}
