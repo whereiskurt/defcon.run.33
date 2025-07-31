@@ -7,6 +7,7 @@ import { createHash, generateKeyPairSync } from 'crypto';
 import * as qr from 'qrcode';
 import { v4 as uuidv4 } from 'uuid';
 import { invalidateCache } from './cache';
+import { act } from 'react';
 
 const accessKeyId: string = process.env['USER_DYNAMODB_ID']!;
 const secretAccessKey: string = process.env['USER_DYNAMODB_SECRET']!;
@@ -49,6 +50,9 @@ const User = new Entity(
         type: 'string',
         required: true,
       },
+      displayname: {
+        type: 'string',
+      },
       eqr: {
         type: 'string',
       },
@@ -85,6 +89,21 @@ const User = new Entity(
       },
       mqtt_usertype: {
         type: ['rabbit', 'admin'] as const,
+      },
+
+      totalAccomplishmentType: {
+        type: 'map',
+        properties: {
+          activity: { type: 'number' },
+          social: { type: 'number' },
+          meshctf: { type: 'number' },
+        },
+        default: () => ({ activity: 0, social: 0, meshctf: 0 }),
+      },
+
+      totalAccomplishmentYear: {
+        type: 'any',
+        default: () => ({}),
       },
 
       createdAt: {
@@ -386,12 +405,11 @@ export async function getUser(email: string) {
 async function getUserOrNew(email: string) {
   const result = await getUser(email);
   if (result) {
-    // console.log(`User found: ${JSON.stringify(result)}`);
-    console.log(`User found for ${email}`);
     return result;
   }
 
   const id = crypto.randomUUID();
+  const displayname = `rabbit_${id.slice(0, 4)}`;
 
   const { publicKey, privateKey } = generateKeyPairSync('rsa', {
     modulusLength: 2048,
@@ -420,7 +438,7 @@ async function getUserOrNew(email: string) {
     .digest('hex')
     .slice(0, 12)
     .toLowerCase();
-    
+
   const mqttpass = createHash('sha256')
     .update(mqttuser + creationSeed)
     .digest('hex')
@@ -430,6 +448,7 @@ async function getUserOrNew(email: string) {
   const newUser = {
     id,
     email,
+    displayname,
     seed,
     hash,
     eqr,
@@ -444,4 +463,74 @@ async function getUserOrNew(email: string) {
 
   const createResult = await User.create(newUser).go();
   return createResult.data;
+}
+
+export async function UpdateUserAccomplishmentCounts(
+  email: string,
+  type: 'activity' | 'social' | 'meshctf',
+  year: number,
+  increment: boolean = true
+) {
+  const user = await getUser(email);
+  if (!user) {
+    throw new Error('User not found for accomplishment count update');
+  }
+
+  const delta = increment ? 1 : -1;
+
+  const currentTypeCounts = user.totalAccomplishmentType || {
+    activity: 0,
+    social: 0,
+    meshctf: 0,
+  };
+  const currentYearCounts = user.totalAccomplishmentYear || {};
+
+  const updatedTypeCounts = {
+    ...currentTypeCounts,
+    [type]: Math.max(0, (currentTypeCounts[type] || 0) + delta),
+  };
+
+  const updatedYearCounts = {
+    ...currentYearCounts,
+    [year.toString()]: Math.max(
+      0,
+      (currentYearCounts[year.toString()] || 0) + delta
+    ),
+  };
+
+  const result = await User.update({
+    email: email,
+    id: user.id,
+  })
+    .set({
+      totalAccomplishmentType: updatedTypeCounts,
+      totalAccomplishmentYear: updatedYearCounts,
+    })
+    .go({
+      response: 'all_new',
+    });
+
+  invalidateCache(email, 'users');
+  return result.data;
+}
+
+export async function updateDisplayname(email: string, displayname: string) {
+  const user = await getUser(email);
+  if (!user) {
+    throw new Error('User not found for displayname update');
+  }
+
+  const result = await User.update({
+    email: email,
+    id: user.id,
+  })
+    .set({
+      displayname: displayname.trim(),
+    })
+    .go({
+      response: 'all_new',
+    });
+
+  invalidateCache(email, 'users');
+  return result.data;
 }
