@@ -242,6 +242,12 @@
       windDirection, windSpeed, windGust, radiation, rainfall1, rainfall24,
       neighbors, seenBy
     } = node
+    
+    // Filter: exclude nodes with 'ghost', 'contest', or 'operative' in longName
+    const longNameLower = (longName || '').toLowerCase();
+    if (longNameLower.includes('ghost') || longNameLower.includes('contest') || longNameLower.includes('operative')) {
+      return; // Skip this node
+    }
     const id = `!${Number(nodeNum).toString(16)}`
     neighborsByNode[nodeNum] ??= new Set()
     if (neighbors) {
