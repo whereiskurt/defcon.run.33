@@ -225,7 +225,29 @@ const AddGPXLayer = ({ raw, live_nodes }: { raw: string, live_nodes: string }) =
       });
 
       const overlayMaps: OverlayMap = Object.entries(rawOverlay)
-        .sort(([, a], [, b]) => a.sortKey.localeCompare(b.sortKey))
+        .sort(([keyA, a], [keyB, b]) => {
+          // Priority order: "Meet Here" first, then "ALL", then everything else by sortKey
+          const isMeetHereA = keyA.toLowerCase().includes('here');
+          const isMeetHereB = keyB.toLowerCase().includes('here');
+          const isAllA = keyA.toLowerCase().includes('all');
+          const isAllB = keyB.toLowerCase().includes('all');
+          
+          // Meet Here layers go first
+          if (isMeetHereA && !isMeetHereB) return -1;
+          if (!isMeetHereA && isMeetHereB) return 1;
+          
+          // If both are Meet Here, sort by sortKey
+          if (isMeetHereA && isMeetHereB) {
+            return a.sortKey.localeCompare(b.sortKey);
+          }
+          
+          // ALL layer goes second (after Meet Here)
+          if (isAllA && !isAllB) return -1;
+          if (!isAllA && isAllB) return 1;
+          
+          // Everything else sorted by sortKey
+          return a.sortKey.localeCompare(b.sortKey);
+        })
         .reduce((acc, [key, value]) => {
           if (!value.visible) return acc;
           acc[key] = value.layer;
@@ -550,7 +572,7 @@ function drawRoute(data: any, layer: L.LayerGroup<any>) {
   // Add start location marker if we have one (either for routes or standalone pins)
   if (startLocation) {
     // Check if this is a "meet" pin (e.g., "Meet Here Every Day")
-    const isMeetHerePin = name.toLowerCase().includes('meet');
+    const isMeetHerePin = name.toLowerCase().includes('here');
     
     // Use DC Jack with white background for meet pins
     const iconSettings = isMeetHerePin ? {
