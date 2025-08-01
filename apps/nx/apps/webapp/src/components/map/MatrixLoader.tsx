@@ -35,7 +35,7 @@ export default function MatrixLoader({ onComplete }: MatrixLoaderProps) {
       </div>
       <div className={styles.overlay}>
         <div className={styles.loadingText}>
-          <span>MESHING TASTICALLY...</span>
+          <span>LOADING ROUTES</span>
           <div className={styles.dots}>
             <span>.</span>
             <span>.</span>

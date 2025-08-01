@@ -8,7 +8,7 @@ import 'leaflet-gpx';
 import 'leaflet/dist/leaflet.css';
 import { useTheme } from 'next-themes';
 import Link from 'next/link';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { MapContainer, TileLayer, useMap } from 'react-leaflet';
 
 interface MapProps {
@@ -63,7 +63,7 @@ const Map = ({ center: posix, raw, zoom = defaults.zoom, live_nodes, theme }: Ma
     <MapContainer
       center={posix}
       zoom={zoom}
-      style={{ zIndex: '0', height: '75vh', width: '100%' }}
+      style={{ zIndex: '0', height: 'calc(100dvh - 140px)', width: '100%' }}
     >
 
       {theme === "dark" ? (
@@ -108,6 +108,80 @@ const AddGPXLayer = ({ raw, live_nodes }: { raw: string, live_nodes: string }) =
   const hasMounted = useRef(false);
   const map = useMap();
   const routes = JSON.parse(raw);
+  const liveLayerRef = useRef<L.LayerGroup | null>(null);
+  const [showLiveNodes, setShowLiveNodes] = useState(false);
+  const keySequence = useRef<string[]>([]);
+  const sequenceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const SPECIAL_SEQUENCE = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a'];
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+        return;
+      }
+
+      if (sequenceTimeoutRef.current) {
+        clearTimeout(sequenceTimeoutRef.current);
+      }
+
+      const key = e.key === 'B' ? 'b' : e.key === 'A' ? 'a' : e.key;
+      keySequence.current.push(key);
+
+      if (keySequence.current.length > SPECIAL_SEQUENCE.length) {
+        keySequence.current.shift();
+      }
+
+      if (keySequence.current.length === SPECIAL_SEQUENCE.length &&
+          keySequence.current.every((key, index) => key === SPECIAL_SEQUENCE[index])) {
+        const newState = !showLiveNodes;
+        setShowLiveNodes(newState);
+        keySequence.current = [];
+        
+        const flash = document.createElement('div');
+        flash.style.cssText = `
+          position: fixed;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          background: #00ff00;
+          color: #000;
+          padding: 20px;
+          font-family: 'Courier New', monospace;
+          font-size: 24px;
+          font-weight: bold;
+          z-index: 9999;
+          border: 2px solid #00ff00;
+          box-shadow: 0 0 20px #00ff00;
+          text-shadow: 0 0 5px #00ff00;
+        `;
+        flash.textContent = newState ? 'GHOST MODE ACTIVATED' : 'GHOST MODE DEACTIVATED';
+        document.body.appendChild(flash);
+        setTimeout(() => document.body.removeChild(flash), 1500);
+      }
+
+      sequenceTimeoutRef.current = setTimeout(() => {
+        keySequence.current = [];
+      }, 10000);
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      if (sequenceTimeoutRef.current) {
+        clearTimeout(sequenceTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (liveLayerRef.current && map) {
+      if (showLiveNodes) {
+        map.addLayer(liveLayerRef.current);
+      } else {
+        map.removeLayer(liveLayerRef.current);
+      }
+    }
+  }, [showLiveNodes, map]);
 
   useEffect(() => {
 
@@ -117,11 +191,7 @@ const AddGPXLayer = ({ raw, live_nodes }: { raw: string, live_nodes: string }) =
       var rawOverlay: RawOverlayMap = {};
 
       const liveLayer = new L.LayerGroup();
-      rawOverlay['Live MQTT Nodes'] = {
-        layer: liveLayer,
-        sortKey: '',
-        visible: true,
-      };
+      liveLayerRef.current = liveLayer;
 
       routes.forEach((route: any) => {
         const layers = route.layers;
@@ -189,7 +259,7 @@ const AddGPXLayer = ({ raw, live_nodes }: { raw: string, live_nodes: string }) =
                 ghostMarkerSettings.mapIconUrl,
                 ghostMarkerSettings
               ),
-              iconAnchor: [50, 60],
+              iconAnchor: [15, 36],
               iconSize: [30, 36],
               popupAnchor: [0, -36],
             });
@@ -212,14 +282,14 @@ const AddGPXLayer = ({ raw, live_nodes }: { raw: string, live_nodes: string }) =
                 box-shadow: 0 0 8px rgba(0, 255, 0, 0.3);
                 max-width: 180px;
               ">
-                <div style="font-weight: bold; margin-bottom: 6px; font-size: 14px;">${nodeData.longName}]</div>
-                <div style="font-size: 14px;">Join the
+                <div style="font-weight: bold; margin-bottom: 6px; font-size: 12px;">${nodeData.longName}</div>
+                <div style="font-size: 12px;">Join the
                   <a href="/meshtastic" style="
                     color: #00ff00; 
                     text-decoration: none;
                     border-bottom: 1px solid #00ff00;
                     padding-bottom: 1px;
-                  ">mesh</a> network to chat and CTF with this ghost. 👻".
+                  ">mesh</a> to chat and CTF with this ghost 👻
                 </div>
               </div>
             `);
@@ -232,7 +302,6 @@ const AddGPXLayer = ({ raw, live_nodes }: { raw: string, live_nodes: string }) =
       
       L.control.layers({}, overlayMaps).addTo(map);
       
-      map.addLayer(liveLayer)
       
       // Create live layer and make it visible by default
       // const liveOverlayMap: OverlayMap = {};
@@ -242,6 +311,61 @@ const AddGPXLayer = ({ raw, live_nodes }: { raw: string, live_nodes: string }) =
       hasMounted.current = true;
     }
   }, [map]);
+
+  const [tapCount, setTapCount] = useState(0);
+  const tapTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    const handleMapClick = (e: L.LeafletMouseEvent) => {
+      const mapSize = map.getSize();
+      const clickPoint = map.latLngToContainerPoint(e.latlng);
+      
+      if (clickPoint.x > mapSize.x - 50 && clickPoint.y > mapSize.y - 50) {
+        setTapCount(prev => prev + 1);
+        
+        if (tapTimeoutRef.current) {
+          clearTimeout(tapTimeoutRef.current);
+        }
+        
+        tapTimeoutRef.current = setTimeout(() => {
+          setTapCount(0);
+        }, 3000);
+        
+        if (tapCount >= 14) {
+          setShowLiveNodes(prev => !prev);
+          setTapCount(0);
+          
+          const flash = document.createElement('div');
+          flash.style.cssText = `
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #00ff00;
+            color: #000;
+            padding: 20px;
+            font-family: 'Courier New', monospace;
+            font-size: 24px;
+            font-weight: bold;
+            z-index: 9999;
+            border: 2px solid #00ff00;
+            box-shadow: 0 0 20px #00ff00;
+            text-shadow: 0 0 5px #00ff00;
+          `;
+          flash.textContent = showLiveNodes ? 'GHOST MODE DEACTIVATED' : 'GHOST MODE ACTIVATED';
+          document.body.appendChild(flash);
+          setTimeout(() => document.body.removeChild(flash), 1500);
+        }
+      }
+    };
+
+    if (map) {
+      map.on('click', handleMapClick);
+      return () => {
+        map.off('click', handleMapClick);
+      };
+    }
+  }, [map, tapCount]);
 
   return <></>;
 };
@@ -445,13 +569,13 @@ function drawRoute(data: any, layer: L.LayerGroup<any>) {
       pinInnerCircleRadius: 32,
     };
     
-    // 2x the size for "Meet Here Every Day" DC Jack icon
-    const iconSize = isMeetHerePin ? [50, 50] : [25, 30];
-    const iconAnchor = isMeetHerePin ? [25, 25] : [12, 32];
-    const popupAnchor = isMeetHerePin ? [0, -25] : [0, -28];
+    // 1.5x size for "Meet Here Every Day" DC Jack icon
+    const iconSize = isMeetHerePin ? [37, 45] : [25, 30];
+    const iconAnchor = isMeetHerePin ? [18, 48] : [12, 32];
+    const popupAnchor = isMeetHerePin ? [0, -42] : [0, -28];
     
     const startPin = L.divIcon({
-      className: isMeetHerePin ? 'leaflet-data-marker meet-here-marker' : 'leaflet-data-marker',
+      className: 'leaflet-data-marker',
       html: L.Util.template(
         isMeetHerePin ? iconSettings.mapIconUrl : (startLocation.svgPin ?? iconSettings.mapIconUrl),
         iconSettings

@@ -116,12 +116,6 @@ export default function FlagSubmission({ ghosts }: FlagSubmissionProps) {
 
   return (
     <Card className="w-full mx-auto">
-      <CardHeader className="flex gap-3">
-        <div className="flex flex-col">
-          <p className="text-lg">Submit Flag</p>
-          <p className="text-small text-default-500">CTF challenge submission</p>
-        </div>
-      </CardHeader>
       <Divider />
       <CardBody>
         <div className="space-y-4">

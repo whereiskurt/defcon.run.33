@@ -19,7 +19,7 @@ import {
 import { signIn, signOut, useSession } from 'next-auth/react';
 
 import { useRouter } from 'next/navigation';
-import { FaPlus, FaStrava, FaTrophy, FaUserAlt } from 'react-icons/fa';
+import { FaDesktop, FaPlus, FaStrava, FaTrophy, FaUserAlt } from 'react-icons/fa';
 import { DashboardIcon } from './icon/dashboard';
 import { LogoutIcon } from './icon/logout';
 import { QRIcon } from './icon/qr';
@@ -137,9 +137,9 @@ const UserDropDown = (params: any) => {
             </DropdownItem>
 
             <DropdownItem
-              startContent={<DashboardIcon className={iconClasses} />}
+              startContent={<FaDesktop className={iconClasses} />}
               key="dashboard"
-              className="gap-2 opacity-100"
+              className="opacity-100"
               textValue="Dashboard"
             >
               <Link replace={true} href="/dashboard">
@@ -158,7 +158,7 @@ const UserDropDown = (params: any) => {
               </Link>
             </DropdownItem>
           </DropdownSection>
-          <DropdownSection aria-label="Profile & Actions" showDivider>
+          <DropdownSection aria-label="Profile & Actions" showDivider={!session.user.hasStrava}>
             {!session.user.hasStrava ? (
               <DropdownItem
                 startContent={
@@ -174,7 +174,7 @@ const UserDropDown = (params: any) => {
               <></>
             )}
 
-            <DropdownItem
+            {/* <DropdownItem
               startContent={
                 <>
                   <Link
@@ -198,7 +198,7 @@ const UserDropDown = (params: any) => {
               >
                 Add New Activity
               </Link>
-            </DropdownItem>
+            </DropdownItem> */}
           </DropdownSection>
 
           <DropdownSection aria-label="Profile & Actions" showDivider>

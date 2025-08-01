@@ -15,6 +15,7 @@ import { FaMoneyCheckDollar, FaQuestion, FaRadio } from 'react-icons/fa6';
 import { GrMapLocation } from 'react-icons/gr';
 import { DashboardIcon } from './icon/dashboard';
 import { MenuIcon } from './icon/menu';
+import { FaDashcube, FaDesktop, FaTrophy } from 'react-icons/fa';
 
 const iconClasses =
   'text-xl text-default-500 pointer-events-none flex-shrink-0';
@@ -64,12 +65,22 @@ const MenuDropDown = (params: any) => {
           <DropdownItem
             className="pb-2"
             textValue="dashboard"
-            startContent={<DashboardIcon className={iconClasses} />}
+            startContent={<FaDesktop className={iconClasses} />}
             key="dashboard"
             showDivider 
             onClick={() => handleNavigation('/dashboard')}
           >
             <span className="text-2xl">Dashboard</span>
+          </DropdownItem>
+
+          <DropdownItem
+            className="pb-2"
+            textValue="leaderboard"
+            startContent={<FaTrophy className={iconClasses} />}
+            key="leaderboard"
+            onClick={() => handleNavigation('/leaderboard')}
+          >
+            <span className="text-2xl">Leaderboard</span>
           </DropdownItem>
 
           <DropdownItem

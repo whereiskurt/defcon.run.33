@@ -97,75 +97,8 @@ export default async function Index() {
 
   return (
     <>
-      <Heading className="mb-2">{page_title}</Heading>
-      <Lead className="mb-2">{page_summary}</Lead>
-
-      <div className={dashboard_class}>
+        <div className={dashboard_class}>
         {cardComponents}
-
-        {/* <Card className="col-span-12 sm:col-span-4 h-[300px]">
-          <CardHeader className="absolute z-10 top-1 flex-col !items-start">
-            <p className="text-tiny text-white/60 bg-black/40 uppercase font-bold">
-              Thurdays 4PM
-            </p>
-            <h4 className="text-white  bg-black/60  font-medium text-large">
-              Rebar - Social
-            </h4>
-          </CardHeader>
-          <Image
-            removeWrapper
-            alt="Card background"
-            className="z-0 w-full h-full object-cover"
-            src="dashboard/Rebar.jpg"
-          />
-          <CardFooter className="absolute bg-white/80 bottom-0 border-t-1 border-zinc-100/50 z-10 justify-between">
-            <div>
-              <p className="text-black text-tiny">Rebar</p>
-              <p className="text-black text-tiny">Hang out with Rabbits!</p>
-            </div>
-            <Button color="primary" radius="full" size="sm">
-              <Link
-                href="https://google.com/maps?q=Rebar 1225 S Main St, Las Vegas, NV 89104"
-                target="_blank"
-                className="text-tiny text-white"
-              >
-                Open Map
-              </Link>
-            </Button>
-          </CardFooter>
-        </Card>
-
-        <Card className="col-span-12 sm:col-span-4 h-[300px]">
-          <CardHeader className="absolute z-10 top-1 flex-col !items-start">
-            <p className="text-tiny text-white/60 uppercase font-bold">
-              Friday Night
-            </p>
-            <h4 className="text-white font-medium text-large">
-              Double Down Saloon - Social
-            </h4>
-          </CardHeader>
-          <Image
-            removeWrapper
-            alt="Card background"
-            className="z-0 w-full h-full object-cover"
-            src="dashboard/DoubleDownSaloon.jpg"
-          />
-          <CardFooter className="absolute bg-white/80 bottom-0 border-t-1 border-zinc-100/50 z-10 justify-between">
-            <div>
-              <p className="text-black text-tiny">Double Down Saloon</p>
-              <p className="text-black text-tiny">Hang out with Rabbits!</p>
-            </div>
-            <Button color="primary" radius="full" size="sm">
-              <Link
-                href="https://google.com/maps?q=Double Down Saloon 4640 Paradise Rd, Las Vegas, NV 89169"
-                target="_blank"
-                className="text-tiny text-white"
-              >
-                Open Map
-              </Link>
-            </Button>
-          </CardFooter>
-        </Card> */}
       </div>
     </>
   );

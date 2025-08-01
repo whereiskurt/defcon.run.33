@@ -66,6 +66,11 @@ const Accomplishments = new Entity(
         properties: {
           flag: { type: 'string' },
           otp_code : { type: 'string' },
+          qr_flag_id: { type: 'string' },
+          qr_flag_name: { type: 'string' },
+          flag_type: { type: 'string' },
+          points: { type: 'number' },
+          scanned_at: { type: 'string' },
           distance: { type: 'string' },
           time: { type: 'string' },
           rank: { type: 'number' },
@@ -264,6 +269,23 @@ export async function deleteAccomplishment(
 
 export async function getAllAccomplishmentsForLeaderboard() {
   const result = await Accomplishments.scan.go();
+  
+  return result.data.map(accomplishment => ({
+    userId: accomplishment.userId,
+    type: accomplishment.type,
+    name: accomplishment.name,
+    description: accomplishment.description,
+    completedAt: accomplishment.completedAt,
+    year: accomplishment.year,
+    metadata: accomplishment.metadata
+  }));
+}
+
+export async function getAllAccomplishmentsForType(type: 'activity' | 'social' | 'meshctf') {
+  // Use scan with filter for type since we need to check across all users
+  const result = await Accomplishments.scan
+    .where(({ type: typeAttr }, { eq }) => eq(typeAttr, type))
+    .go();
   
   return result.data.map(accomplishment => ({
     userId: accomplishment.userId,

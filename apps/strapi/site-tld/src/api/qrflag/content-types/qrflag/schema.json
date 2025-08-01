@@ -1,0 +1,57 @@
+{
+  "kind": "collectionType",
+  "collectionName": "qrflags",
+  "info": {
+    "singularName": "qrflag",
+    "pluralName": "qrflags",
+    "displayName": "QRFlag",
+    "description": ""
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "attributes": {
+    "unique_id": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string"
+    },
+    "is_expired": {
+      "type": "boolean"
+    },
+    "max_total_uses": {
+      "type": "integer"
+    },
+    "max_uses_per_user": {
+      "type": "integer"
+    },
+    "accomplishment_name": {
+      "type": "string"
+    },
+    "accomplishment_description": {
+      "type": "string"
+    },
+    "success_message": {
+      "type": "string"
+    },
+    "location": {
+      "type": "string"
+    },
+    "points": {
+      "type": "integer"
+    },
+    "expiry_date": {
+      "type": "datetime"
+    },
+    "flag_type": {
+      "type": "enumeration",
+      "enum": [
+        "activity",
+        "social",
+        "meshctf"
+      ],
+      "default": "activity"
+    }
+  }
+}

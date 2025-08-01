@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import {
   Card,
   CardHeader,
@@ -15,7 +15,9 @@ import {
   Button,
   Pagination,
 } from '@heroui/react';
-import { Trophy, Medal, Award, Search } from 'lucide-react';
+import { Trophy, Medal, Award, Search, X, ChevronDown, ChevronUp } from 'lucide-react';
+import CardMatrixLoader from '../profile/CardMatrixLoader';
+import FlagSubmission from '../profile/FlagSubmission';
 
 type LeaderboardUser = {
   id: string;
@@ -48,9 +50,20 @@ type PaginationInfo = {
   hasPrev: boolean;
 };
 
-export default function LeaderboardTable() {
-  const PAGE_SIZE = 25; // Production page size
+type GhostData = {
+  id: number;
+  handle: string;
+  name: string;
+};
+
+type LeaderboardTableProps = {
+  ghosts?: GhostData[];
+};
+
+export default function LeaderboardTable({ ghosts }: LeaderboardTableProps) {
+  const PAGE_SIZE = 10; // Production page size
   const searchParams = useSearchParams();
+  const router = useRouter();
   
   const [users, setUsers] = useState<LeaderboardUser[]>([]);
   const [loading, setLoading] = useState(true);
@@ -61,6 +74,7 @@ export default function LeaderboardTable() {
   const [searchInput, setSearchInput] = useState(''); // What user types
   const [accomplishments, setAccomplishments] = useState<Record<string, Accomplishment[]>>({});
   const [loadingAccomplishments, setLoadingAccomplishments] = useState<Set<string>>(new Set());
+  const [flagSubmissionExpanded, setFlagSubmissionExpanded] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -176,6 +190,37 @@ export default function LeaderboardTable() {
     setSearchInput(value);
   };
 
+  const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      // Clear any existing timeout
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current);
+      }
+      // Immediately apply filter
+      if (searchInput.length === 0) {
+        setFilter('');
+      } else {
+        setFilter(searchInput);
+      }
+      setCurrentPage(1);
+    }
+  };
+
+  const handleClearSearch = () => {
+    // Clear any existing timeout
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
+    // Clear search input and filter
+    setSearchInput('');
+    setFilter('');
+    setCurrentPage(1);
+    // Update URL to remove filter query param
+    const url = new URL(window.location.href);
+    url.searchParams.delete('filter');
+    router.replace(url.pathname + (url.search ? url.search : ''));
+  };
+
   const formatDate = (timestamp: number) => {
     return new Date(timestamp).toLocaleDateString('en-US', {
       year: 'numeric',
@@ -213,10 +258,8 @@ export default function LeaderboardTable() {
   if (loading) {
     return (
       <Card className="w-full">
-        <CardBody>
-          <div className="flex justify-center items-center p-8">
-            <Spinner size="lg" />
-          </div>
+        <CardBody className="p-0">
+          <CardMatrixLoader text="LOADING LEADERBOARD" height="calc(100dvh - 140px)" />
         </CardBody>
       </Card>
     );
@@ -242,6 +285,34 @@ export default function LeaderboardTable() {
 
   return (
     <div className="w-full space-y-4">
+      {/* Flag Submission Card - Collapsible */}
+      <Card>
+        <CardHeader className="pb-0">
+          <div className="flex justify-between items-center w-full">
+            <div className="flex flex-col">
+              <p className="text-lg">🚩 Submit Flag</p>
+              <p className="text-small text-default-500 pb-2">Submit CTF flags to earn points</p>
+            </div>
+            <Button
+              isIconOnly
+              variant="light"
+              onClick={() => setFlagSubmissionExpanded(!flagSubmissionExpanded)}
+              className="shrink-0"
+            >
+              {flagSubmissionExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+            </Button>
+          </div>
+        </CardHeader>
+        {flagSubmissionExpanded && (
+          <>
+            <Divider />
+            <CardBody className="pt-4">
+              <FlagSubmission ghosts={ghosts} />
+            </CardBody>
+          </>
+        )}
+      </Card>
+
       {/* Search and Info Card */}
       <Card>
         <CardHeader>
@@ -255,14 +326,28 @@ export default function LeaderboardTable() {
               </div>
               <Input
                 ref={searchInputRef}
-                placeholder="Filter by display name (3+ chars)..."
+                placeholder="Filter by display name (3+ chars or press Enter)..."
                 value={searchInput}
                 onChange={(e) => handleSearchInputChange(e.target.value)}
+                onKeyDown={handleSearchKeyDown}
                 startContent={<Search className="h-4 w-4" />}
+                endContent={
+                  searchInput.length > 0 && (
+                    <Button
+                      isIconOnly
+                      size="sm"
+                      variant="light"
+                      onClick={handleClearSearch}
+                      className="min-w-unit-6 w-6 h-6"
+                    >
+                      <X className="h-3 w-3" />
+                    </Button>
+                  )
+                }
                 className="max-w-sm"
                 variant="bordered"
                 description={searchInput.length > 0 && searchInput.length < 3 ? 
-                  `Type ${3 - searchInput.length} more character${3 - searchInput.length === 1 ? '' : 's'} to search` : 
+                  `Type ${3 - searchInput.length} more character${3 - searchInput.length === 1 ? '' : 's'} to search or press Enter` : 
                   undefined
                 }
               />

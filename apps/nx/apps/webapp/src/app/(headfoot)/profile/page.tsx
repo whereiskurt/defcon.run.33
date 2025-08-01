@@ -4,9 +4,7 @@ import { auth } from "@auth";
 import MqttCredentials from "../../../components/profile/MqttCredentials";
 import StravaConnection from "../../../components/profile/StravaConnection";
 import UserDetails from "../../../components/profile/UserDetails";
-import FlagSubmission from "../../../components/profile/FlagSubmission";
 import LeaderboardRank from "../../../components/profile/LeaderboardRank";
-import { strapi } from '@components/cms/data';
 
 export default async function Page() {
   const session = await auth();
@@ -15,7 +13,6 @@ export default async function Page() {
     return <div>Please log in</div>;
   }
 
-  const ghosts = await strapi('/ghosts?populate=*');
 
   return (
     <div className="container mx-auto py-4 space-y-4">
@@ -31,8 +28,6 @@ export default async function Page() {
       {/* Row 3: Strava Connection - full width */}
       <StravaConnection />
       
-      {/* Row 4: Flag Submission */}
-      <FlagSubmission ghosts={ghosts.data} />
     </div>
   );
 } 
