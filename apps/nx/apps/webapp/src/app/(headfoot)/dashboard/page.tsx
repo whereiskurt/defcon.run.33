@@ -14,6 +14,7 @@ import { strapi } from '@components/cms/data';
 import { Text } from '@components/text-effects/Common';
 
 export default async function Index() {
+  const session = await auth();
   const raw = await strapi('/dashboard?populate=*');
   const {
     page_body,
@@ -78,10 +79,10 @@ export default async function Index() {
             </div>
           </div>
           {button_with_link && (
-            <Button color='primary' radius="sm" size="sm">
+            <Button color="primary" radius="sm" size="sm">
               <Link
                 isExternal={button_link_external}
-                className='text-white'
+                className="text-white"
                 href={button_link_href}
               >
                 {button_label}
@@ -95,11 +96,66 @@ export default async function Index() {
     cardComponents.push(tsxCard);
   }
 
-  return (
-    <>
-        <div className={dashboard_class}>
-        {cardComponents}
-      </div>
+
+const elky = (
+      <Card
+        isFooterBlurred
+        className="w-full h-[300px] col-span-12 sm:col-span-12 mt-2"
+      >
+        <CardHeader className="absolute z-10 top-1 flex-col items-start">
+          <Heading level={6} className="text-white/60 bg-black/60 font-bold">
+            🎂 Happy Birthday Elkentaro 🎉
+          </Heading>
+          <Heading level={5} className="text-white/90 bg-black/30">
+            Ultra Lounge Birthday Mixer
+          </Heading>
+        </CardHeader>
+        <Image
+          removeWrapper
+          alt="Bithday Boi"
+          className="z-0 w-full h-full object-cover"
+          src="dashboard/elkhbd.jpg"
+        />
+
+        <CardFooter className="absolute bg-black/20 bottom-0 z-10 border-t-1 border-default-600 dark:border-default-100">
+          <div className="flex flex-grow items-center">
+            <div className="flex flex-col ">
+              <Text
+                variant="smheading"
+                className="pl-1 pr-1 text-white/90 bg-black/30"
+              >
+                🎂 Happy Birthday Elkentaro 🎂
+              </Text>
+              <Text
+                variant="xsheading"
+                className="pl-1 pr-1 text-white/90 bg-black/30"
+              >
+                After Hours Ultra Lounge Birthday Mixer
+              </Text>
+            </div>
+          </div>
+          <Button
+            className="bg-button-dashboard-bg hover:bg-button-dashboard-hover text-button-dashboard-text"
+            radius="sm"
+            size="lg"
+            style={{ backgroundColor: 'red' }}
+          >
+            <Link isExternal className="text-white" href="https://forms.gle/tnstscUNiUkuXA1K9">
+              I want to attend!!!
+            </Link>
+          </Button>
+        </CardFooter>
+      </Card>
+    );  
+    
+    return (<>
+      <div className={dashboard_class}>{cardComponents}</div>
+      {!['elk', 'taro'].some(sub =>
+        session?.user?.email?.toLowerCase().includes(sub)
+      ) &&
+      [4, 5, 6].includes(new Date().getDay()) && (
+        <div className={dashboard_class}>{elky}</div>
+      )}
     </>
   );
 }
