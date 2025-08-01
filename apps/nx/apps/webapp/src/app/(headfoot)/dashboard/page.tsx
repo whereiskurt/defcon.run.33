@@ -104,10 +104,10 @@ const elky = (
       >
         <CardHeader className="absolute z-10 top-1 flex-col items-start">
           <Heading level={6} className="text-white/60 bg-black/60 font-bold">
-            🎂 Happy Birthday Elkentaro 🎉
+            Ultra Lounge Birthday Mixer
           </Heading>
           <Heading level={5} className="text-white/90 bg-black/30">
-            Ultra Lounge Birthday Mixer
+            🎂 Happy Birthday Elkentaro 🎉
           </Heading>
         </CardHeader>
         <Image
@@ -124,13 +124,13 @@ const elky = (
                 variant="smheading"
                 className="pl-1 pr-1 text-white/90 bg-black/30"
               >
-                🎂 Happy Birthday Elkentaro 🎂
+                Ultra Lounge Birthday Mixer
               </Text>
               <Text
                 variant="xsheading"
                 className="pl-1 pr-1 text-white/90 bg-black/30"
               >
-                After Hours Ultra Lounge Birthday Mixer
+                "All I want are hugs." - Elkentaro
               </Text>
             </div>
           </div>
@@ -138,10 +138,10 @@ const elky = (
             className="bg-button-dashboard-bg hover:bg-button-dashboard-hover text-button-dashboard-text"
             radius="sm"
             size="lg"
-            style={{ backgroundColor: 'red' }}
+            style={{ backgroundColor: 'purple' }}
           >
             <Link isExternal className="text-white" href="https://forms.gle/tnstscUNiUkuXA1K9">
-              I want to attend!!!
+              🎉 Sign-up
             </Link>
           </Button>
         </CardFooter>
