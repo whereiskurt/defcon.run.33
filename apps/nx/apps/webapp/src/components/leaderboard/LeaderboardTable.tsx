@@ -388,8 +388,6 @@ export default function LeaderboardTable({ ghosts }: LeaderboardTableProps) {
                   <div className="flex items-center gap-2">
                     {getRankIcon(user.globalRank)}
                     <span>{user.displayname}</span>
-                  </div>
-                  <div className="flex flex-wrap gap-1">
                     {user.totalPoints > 0 && (
                       <Chip 
                         className="bg-foreground text-background border-foreground" 
@@ -399,9 +397,8 @@ export default function LeaderboardTable({ ghosts }: LeaderboardTableProps) {
                         {user.totalPoints} 🥕
                       </Chip>
                     )}
-                    <Chip color="secondary" variant="flat" size="sm">
-                      {user.accomplishmentCount} 🚩
-                    </Chip>
+                  </div>
+                  <div className="flex flex-wrap gap-1">
                     <Chip color="success" variant="flat" size="sm">
                       {user.totalAccomplishmentType.activity}
                     </Chip>
@@ -432,15 +429,8 @@ export default function LeaderboardTable({ ghosts }: LeaderboardTableProps) {
                         .sort((a, b) => b.completedAt - a.completedAt)
                         .map((accomplishment, idx) => (
                           <div key={idx} className="border-l-4 border-l-gray-300 pl-4 py-1">
-                            <div className="flex flex-row items-center justify-between gap-2 mb-1">
+                            <div className="flex items-center gap-2 mb-1">
                               <span className="font-medium text-base">{accomplishment.name}</span>
-                              <Chip
-                                color={getTypeColor(accomplishment.type)}
-                                variant="flat"
-                                size="sm"
-                              >
-                                {accomplishment.type.toUpperCase()}
-                              </Chip>
                             </div>
                             <div className="flex items-center gap-3 mt-1">
                               <span className="text-sm text-default-500">
@@ -451,6 +441,13 @@ export default function LeaderboardTable({ ghosts }: LeaderboardTableProps) {
                                   +{accomplishment.metadata.points} points
                                 </span>
                               )}
+                              <Chip
+                                color={getTypeColor(accomplishment.type)}
+                                variant="flat"
+                                size="sm"
+                              >
+                                {accomplishment.type.toUpperCase()}
+                              </Chip>
                             </div>
                           </div>
                         ))}
