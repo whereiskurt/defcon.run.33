@@ -141,13 +141,6 @@ export default function UserDetails() {
 
   return (
     <Card className="w-full mx-auto">
-      <CardHeader className="flex gap-3">
-        <div className="flex flex-col">
-          <p className="text-lg">User Details</p>
-          <p className="text-small text-default-500">Your account information</p>
-        </div>
-      </CardHeader>
-      <Divider />
       <CardBody>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
           {/* Email + User Type Section - 50% */}

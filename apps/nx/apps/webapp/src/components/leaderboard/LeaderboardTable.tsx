@@ -326,7 +326,7 @@ export default function LeaderboardTable({ ghosts }: LeaderboardTableProps) {
               </div>
               <Input
                 ref={searchInputRef}
-                placeholder="Filter by display name (3+ chars or press Enter)..."
+                placeholder="Filter by Display Name"
                 value={searchInput}
                 onChange={(e) => handleSearchInputChange(e.target.value)}
                 onKeyDown={handleSearchKeyDown}
