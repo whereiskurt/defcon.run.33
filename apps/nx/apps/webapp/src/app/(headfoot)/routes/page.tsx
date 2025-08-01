@@ -1,7 +1,7 @@
 'use server';
 
 import { strapi } from '@components/cms/data';
-import ClientMap from '@components/map/ClientMap';
+import EnhancedClientMap from '@components/map/EnhancedClientMap';
 import styles from './routes.module.css';
 import { env } from 'process';
 
@@ -15,7 +15,7 @@ export default async function Page() {
   return (
     <div className={`mx-auto w-[98%] p-2 ${styles.routesContainer}`}>
       <div className={styles.mapWrapper}>
-        <ClientMap raw={JSON.stringify(routes.data)} mqtt_nodes={JSON.stringify(mqtt_nodes)} center={[36.1320813, -115.1667648]} />
+        <EnhancedClientMap raw={JSON.stringify(routes.data)} mqtt_nodes={JSON.stringify(mqtt_nodes)} center={[36.1320813, -115.1667648]} />
       </div>
     </div>
   );

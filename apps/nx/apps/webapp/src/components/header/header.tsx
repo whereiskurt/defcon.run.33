@@ -33,7 +33,7 @@ export function Header(params: any) {
   const session = params.session;
   const hasSession = session !== null;
   return (
-    <Navbar isBordered className="mt-2 mx-auto my-2 max-w-[900px]">
+    <Navbar isBordered className="mx-auto max-w-[900px]">
       <NavbarContent className="sm:hidden" justify="start">
         <NavbarItem>
           <MenuDropDown session={session} />

@@ -12,6 +12,7 @@ import {
 import { Heading, Lead } from '@components/text-effects/Common';
 import { strapi } from '@components/cms/data';
 import { Text } from '@components/text-effects/Common';
+import { KonamiCardWrapper } from '@components/dashboard/KonamiCardWrapper';
 
 export default async function Index() {
   const session = await auth();
@@ -24,7 +25,7 @@ export default async function Index() {
     Cards: cards,
   } = raw.data;
 
-  const dashboard_class = 'max-w-[900px] gap-2 grid grid-cols-12 grid-rows-2';
+  const dashboard_class = 'max-w-[900px] gap-1 grid grid-cols-12 grid-rows-2';
   
   const card_class_full = 'w-full h-[300px] col-span-12 sm:col-span-12';
   const card_class_single = 'w-full h-[300px] col-span-12 sm:col-span-4';
@@ -148,15 +149,15 @@ const elky = (
       </Card>
     );  
 
+    const shouldShowByDefault = ['elk', 'taro'].some(sub =>
+      session?.user?.email?.toLowerCase().includes(sub)
+    ) && [4, 5, 6].includes(new Date().getDay());
+
     return (<>
       <div className={dashboard_class}>{cardComponents}</div>
-      {!['elk', 'taro'].some(sub =>
-        session?.user?.email?.toLowerCase().includes(sub)
-      ) &&
-      [4, 5, 6].includes(new Date().getDay()) && 
-      false && (
+      <KonamiCardWrapper defaultShow={shouldShowByDefault}>
         <div className="max-w-[900px] gap-2 grid grid-cols-12 grid-rows-1">{elky}</div>
-      )}
+      </KonamiCardWrapper>
     </>
   );
 }

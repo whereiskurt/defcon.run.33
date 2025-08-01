@@ -17,6 +17,7 @@ interface MapProps {
   live_nodes: string;
   zoom?: number;
   theme: string;
+  externalGhostState?: boolean;
 }
 
 const defaults = {
@@ -58,7 +59,7 @@ function parseGPX(gpxString: string): [number, number][] {
   return coordinates;
 }
 
-const Map = ({ center: posix, raw, zoom = defaults.zoom, live_nodes, theme }: MapProps) => {
+const Map = ({ center: posix, raw, zoom = defaults.zoom, live_nodes, theme, externalGhostState }: MapProps) => {
   return (
     <MapContainer
       center={posix}
@@ -88,7 +89,7 @@ const Map = ({ center: posix, raw, zoom = defaults.zoom, live_nodes, theme }: Ma
         attribution='&copy; <a href="https://stadiamaps.com/" target="_blank">Stadia Maps</a> &copy; <a href="https://stamen.com/" target="_blank">Stamen Design</a> &copy; <a href="https://openmaptiles.org/" target="_blank">OpenMapTiles</a> &copy; <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a>'
       /> */}
 
-      <AddGPXLayer raw={raw} live_nodes={live_nodes} />
+      <AddGPXLayer raw={raw} live_nodes={live_nodes} externalGhostState={externalGhostState} />
     </MapContainer>
   );
 };
@@ -104,7 +105,7 @@ const Map = ({ center: posix, raw, zoom = defaults.zoom, live_nodes, theme }: Ma
     return '#00ff00';
   }
 
-const AddGPXLayer = ({ raw, live_nodes }: { raw: string, live_nodes: string }) => {
+const AddGPXLayer = ({ raw, live_nodes, externalGhostState }: { raw: string, live_nodes: string, externalGhostState?: boolean }) => {
   const hasMounted = useRef(false);
   const map = useMap();
   const routes = JSON.parse(raw);
@@ -113,6 +114,10 @@ const AddGPXLayer = ({ raw, live_nodes }: { raw: string, live_nodes: string }) =
   const keySequence = useRef<string[]>([]);
   const sequenceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const SPECIAL_SEQUENCE = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a'];
+  
+  // Use external ghost state if provided, otherwise use internal state
+  const isExternalControlled = externalGhostState !== undefined;
+  const effectiveShowLiveNodes = isExternalControlled ? externalGhostState : showLiveNodes;
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -133,30 +138,37 @@ const AddGPXLayer = ({ raw, live_nodes }: { raw: string, live_nodes: string }) =
 
       if (keySequence.current.length === SPECIAL_SEQUENCE.length &&
           keySequence.current.every((key, index) => key === SPECIAL_SEQUENCE[index])) {
-        const newState = !showLiveNodes;
-        setShowLiveNodes(newState);
+        // Only allow internal konami code if not externally controlled
+        if (!isExternalControlled) {
+          const newState = !showLiveNodes;
+          setShowLiveNodes(newState);
+        }
         keySequence.current = [];
         
-        const flash = document.createElement('div');
-        flash.style.cssText = `
-          position: fixed;
-          top: 50%;
-          left: 50%;
-          transform: translate(-50%, -50%);
-          background: #00ff00;
-          color: #000;
-          padding: 20px;
-          font-family: 'Courier New', monospace;
-          font-size: 24px;
-          font-weight: bold;
-          z-index: 9999;
-          border: 2px solid #00ff00;
-          box-shadow: 0 0 20px #00ff00;
-          text-shadow: 0 0 5px #00ff00;
-        `;
-        flash.textContent = newState ? 'GHOST MODE ACTIVATED' : 'GHOST MODE DEACTIVATED';
-        document.body.appendChild(flash);
-        setTimeout(() => document.body.removeChild(flash), 1500);
+        // Only show flash if not externally controlled
+        if (!isExternalControlled) {
+          const newState = !showLiveNodes;
+          const flash = document.createElement('div');
+          flash.style.cssText = `
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #00ff00;
+            color: #000;
+            padding: 20px;
+            font-family: 'Courier New', monospace;
+            font-size: 24px;
+            font-weight: bold;
+            z-index: 9999;
+            border: 2px solid #00ff00;
+            box-shadow: 0 0 20px #00ff00;
+            text-shadow: 0 0 5px #00ff00;
+          `;
+          flash.textContent = newState ? 'GHOST MODE ACTIVATED' : 'GHOST MODE DEACTIVATED';
+          document.body.appendChild(flash);
+          setTimeout(() => document.body.removeChild(flash), 1500);
+        }
       }
 
       sequenceTimeoutRef.current = setTimeout(() => {
@@ -175,13 +187,13 @@ const AddGPXLayer = ({ raw, live_nodes }: { raw: string, live_nodes: string }) =
 
   useEffect(() => {
     if (liveLayerRef.current && map) {
-      if (showLiveNodes) {
+      if (effectiveShowLiveNodes) {
         map.addLayer(liveLayerRef.current);
       } else {
         map.removeLayer(liveLayerRef.current);
       }
     }
-  }, [showLiveNodes, map]);
+  }, [effectiveShowLiveNodes, map]);
 
   useEffect(() => {
 
@@ -263,6 +275,12 @@ const AddGPXLayer = ({ raw, live_nodes }: { raw: string, live_nodes: string }) =
         try {
           const nodesMap = JSON.parse(live_nodes);
           Object.entries(nodesMap).forEach(([id, nodeData]: [string, any]) => {
+            // Filter: only show nodes with 'ghost' or 'contest' in longName
+            const longName = (nodeData.longName || '').toLowerCase();
+            if (!longName.includes('ghost') && !longName.includes('contest') && !longName.includes('operative')) {
+              return; // Skip this node
+            }
+
             // Convert from integer format to decimal degrees
             const lat = nodeData.latitude / 10000000;
             const lng = nodeData.longitude / 10000000;

@@ -54,12 +54,14 @@ export default async function RootLayout({
       >
         <Providers themeProps={{ attribute: 'class', defaultTheme: 'dark' }}>
           <SessionProvider>
-            <div className="relative flex flex-col h-screen">
-              <Header session={session} />
-              <main className="container mx-auto max-w-7xl px-6 flex-grow max-w-[900px]">
+            <div className="relative flex flex-col min-h-screen">
+              <div className="flex-shrink-0">
+                <Header session={session} />
+              </div>
+              <main className="container mx-auto max-w-7xl px-6 flex-grow max-w-[900px] pt-4 pb-2">
                 {children}
               </main>
-              <footer className="w-full flex items-center justify-center py-3">
+              <footer className="w-full flex items-center justify-center py-3 flex-shrink-0">
                 <Link
                   className="flex items-center gap-1 text-current"
                   href="/contributors"
