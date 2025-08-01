@@ -224,11 +224,14 @@ export default function LeaderboardTable({ ghosts }: LeaderboardTableProps) {
   };
 
   const formatDate = (timestamp: number) => {
-    return new Date(timestamp).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    });
+    const date = new Date(timestamp);
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    const seconds = String(date.getSeconds()).padStart(2, '0');
+    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
   };
 
   const getTypeColor = (type: string) => {
@@ -397,16 +400,16 @@ export default function LeaderboardTable({ ghosts }: LeaderboardTableProps) {
                       </Chip>
                     )}
                     <Chip color="secondary" variant="flat" size="sm">
-                      {user.accomplishmentCount} flags
+                      {user.accomplishmentCount} 🚩
                     </Chip>
                     <Chip color="success" variant="flat" size="sm">
-                      Activity: {user.totalAccomplishmentType.activity}
+                      {user.totalAccomplishmentType.activity}
                     </Chip>
                     <Chip color="primary" variant="flat" size="sm">
-                      Social: {user.totalAccomplishmentType.social}
+                      {user.totalAccomplishmentType.social}
                     </Chip>
                     <Chip color="warning" variant="flat" size="sm">
-                      CTF: {user.totalAccomplishmentType.meshctf}
+                      {user.totalAccomplishmentType.meshctf}
                     </Chip>
                   </div>
                 </div>
@@ -424,12 +427,13 @@ export default function LeaderboardTable({ ghosts }: LeaderboardTableProps) {
                 ) : accomplishments[user.id] && accomplishments[user.id].length > 0 ? (
                   <div>
                     <h4 className="font-semibold text-base mb-3">Individual Accomplishments</h4>
-                    <div className="space-y-3">
+                    <div className="space-y-1">
                       {accomplishments[user.id]
                         .sort((a, b) => b.completedAt - a.completedAt)
                         .map((accomplishment, idx) => (
-                          <div key={idx} className="border-l-4 border-l-gray-300 pl-4 py-2">
-                            <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-1">
+                          <div key={idx} className="border-l-4 border-l-gray-300 pl-4 py-1">
+                            <div className="flex flex-row items-center justify-between gap-2 mb-1">
+                              <span className="font-medium text-base">{accomplishment.name}</span>
                               <Chip
                                 color={getTypeColor(accomplishment.type)}
                                 variant="flat"
@@ -437,21 +441,17 @@ export default function LeaderboardTable({ ghosts }: LeaderboardTableProps) {
                               >
                                 {accomplishment.type.toUpperCase()}
                               </Chip>
-                              <span className="font-medium text-base">{accomplishment.name}</span>
+                            </div>
+                            <div className="flex items-center gap-3 mt-1">
                               <span className="text-sm text-default-500">
                                 {formatDate(accomplishment.completedAt)}
                               </span>
+                              {accomplishment.metadata?.points && accomplishment.metadata.points > 0 && (
+                                <span className="text-sm text-success-600 font-semibold">
+                                  +{accomplishment.metadata.points} points
+                                </span>
+                              )}
                             </div>
-                            {accomplishment.description && (
-                              <p className="text-sm text-default-600 mt-1">
-                                {accomplishment.description}
-                              </p>
-                            )}
-                            {accomplishment.metadata?.points && accomplishment.metadata.points > 0 && (
-                              <p className="text-sm text-success-600 font-semibold mt-1">
-                                +{accomplishment.metadata.points} points
-                              </p>
-                            )}
                           </div>
                         ))}
                     </div>
