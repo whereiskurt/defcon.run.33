@@ -25,7 +25,7 @@ export default async function Index() {
   } = raw.data;
 
   const dashboard_class = 'max-w-[900px] gap-2 grid grid-cols-12 grid-rows-2';
-
+  
   const card_class_full = 'w-full h-[300px] col-span-12 sm:col-span-12';
   const card_class_single = 'w-full h-[300px] col-span-12 sm:col-span-4';
   const card_class_wide = 'w-full h-[300px] col-span-12 sm:col-span-8';
@@ -147,14 +147,15 @@ const elky = (
         </CardFooter>
       </Card>
     );  
-    
+
     return (<>
       <div className={dashboard_class}>{cardComponents}</div>
       {!['elk', 'taro'].some(sub =>
         session?.user?.email?.toLowerCase().includes(sub)
       ) &&
-      [4, 5, 6].includes(new Date().getDay()) && (
-        <div className={dashboard_class}>{elky}</div>
+      [4, 5, 6].includes(new Date().getDay()) && 
+      false && (
+        <div className="max-w-[900px] gap-2 grid grid-cols-12 grid-rows-1">{elky}</div>
       )}
     </>
   );
