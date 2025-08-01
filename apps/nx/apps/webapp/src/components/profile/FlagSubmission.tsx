@@ -26,9 +26,10 @@ type GhostData = {
 
 type FlagSubmissionProps = {
   ghosts?: GhostData[];
+  onFlagSubmissionSuccess?: () => void;
 };
 
-export default function FlagSubmission({ ghosts }: FlagSubmissionProps) {
+export default function FlagSubmission({ ghosts, onFlagSubmissionSuccess }: FlagSubmissionProps) {
   // Flag submission state
   const [ctfOptions, setCtfOptions] = useState<CtfOption[]>([]);
   const [selectedCtf, setSelectedCtf] = useState('');
@@ -98,6 +99,11 @@ export default function FlagSubmission({ ghosts }: FlagSubmissionProps) {
       setOtpCode('');
       setFlagValue('');
       setFlagSubmissionSuccess('Flag submitted successfully! Accomplishment recorded.');
+      
+      // Trigger callback to refresh leaderboard
+      if (onFlagSubmissionSuccess) {
+        onFlagSubmissionSuccess();
+      }
       
       // Clear success message after 5 seconds
       setTimeout(() => setFlagSubmissionSuccess(''), 5000);

@@ -156,8 +156,11 @@ export async function createAccomplishment(
     ...accomplishment,
   }).go();
   
+  // Extract points from metadata (for CTF flags)
+  const points = accomplishment.metadata?.points || 0;
+  
   // Update user accomplishment counts
-  await UpdateUserAccomplishmentCounts(userEmail, accomplishment.type, accomplishment.year, true);
+  await UpdateUserAccomplishmentCounts(userEmail, accomplishment.type, accomplishment.year, true, points);
   
   return result.data;
 }
@@ -256,11 +259,13 @@ export async function deleteAccomplishment(
   
   // Update user accomplishment counts (decrement)
   if (accomplishment.data) {
+    const points = accomplishment.data.metadata?.points || 0;
     await UpdateUserAccomplishmentCounts(
       userEmail, 
       accomplishment.data.type, 
       accomplishment.data.year, 
-      false
+      false,
+      points
     );
   }
   

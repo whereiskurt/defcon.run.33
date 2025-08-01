@@ -88,6 +88,7 @@ export async function POST(req: NextRequest) {
           ctf_id: ctfId,
           ghost_handle: ctfId,
           ghost_name: validationResult.ghostName,
+          points: validationResult.points || 0,
         },
       }
     );
@@ -112,6 +113,7 @@ type ValidationResult = {
   isValid: boolean;
   error?: string;
   ghostName?: string;
+  points?: number;
 };
 
 // Validate flag against Strapi ghost data
@@ -157,7 +159,7 @@ async function validateFlag(ctfId: string, otpCode: string, flag: string): Promi
     
     // Check if the flag matches
     if (ghost.flag && ghost.flag === flag) {
-      return { isValid: true, ghostName };
+      return { isValid: true, ghostName, points: ghost.points || 0 };
     }
     
     return { isValid: false, error: 'Keep this up and you\'ll get banned.' };

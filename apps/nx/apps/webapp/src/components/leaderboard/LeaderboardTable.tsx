@@ -29,6 +29,7 @@ type LeaderboardUser = {
     meshctf: number;
   };
   accomplishmentCount: number;
+  totalPoints: number;
   globalRank: number;
 };
 
@@ -77,6 +78,7 @@ export default function LeaderboardTable({ ghosts }: LeaderboardTableProps) {
   const [flagSubmissionExpanded, setFlagSubmissionExpanded] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   // Initialize from URL params on mount
   useEffect(() => {
@@ -117,7 +119,7 @@ export default function LeaderboardTable({ ghosts }: LeaderboardTableProps) {
     };
 
     fetchLeaderboardData();
-  }, [currentPage, filter]);
+  }, [currentPage, filter, refreshTrigger]);
 
   // Keep focus on search input after data loads
   useEffect(() => {
@@ -242,6 +244,12 @@ export default function LeaderboardTable({ ghosts }: LeaderboardTableProps) {
     }
   };
 
+  const handleFlagSubmissionSuccess = () => {
+    // Refresh leaderboard data and clear accomplishments cache
+    setAccomplishments({});
+    setRefreshTrigger(prev => prev + 1);
+  };
+
   const getRankIcon = (rank: number) => {
     switch (rank) {
       case 1:
@@ -307,7 +315,7 @@ export default function LeaderboardTable({ ghosts }: LeaderboardTableProps) {
           <>
             <Divider />
             <CardBody className="pt-4">
-              <FlagSubmission ghosts={ghosts} />
+              <FlagSubmission ghosts={ghosts} onFlagSubmissionSuccess={handleFlagSubmissionSuccess} />
             </CardBody>
           </>
         )}
@@ -373,31 +381,40 @@ export default function LeaderboardTable({ ghosts }: LeaderboardTableProps) {
             <AccordionItem
               key={user.id}
               title={
-                <div className="flex items-center gap-2">
-                  {getRankIcon(user.globalRank)}
-                  <span>{user.displayname} - Total: {user.accomplishmentCount}</span>
+                <div className="flex items-center justify-between w-full">
+                  <div className="flex items-center gap-2">
+                    {getRankIcon(user.globalRank)}
+                    <span>{user.displayname}</span>
+                  </div>
+                  <div className="flex flex-wrap gap-1">
+                    {user.totalPoints > 0 && (
+                      <Chip 
+                        className="bg-foreground text-background border-foreground" 
+                        variant="bordered" 
+                        size="sm"
+                      >
+                        {user.totalPoints} 🥕
+                      </Chip>
+                    )}
+                    <Chip color="secondary" variant="flat" size="sm">
+                      {user.accomplishmentCount} flags
+                    </Chip>
+                    <Chip color="success" variant="flat" size="sm">
+                      Activity: {user.totalAccomplishmentType.activity}
+                    </Chip>
+                    <Chip color="primary" variant="flat" size="sm">
+                      Social: {user.totalAccomplishmentType.social}
+                    </Chip>
+                    <Chip color="warning" variant="flat" size="sm">
+                      CTF: {user.totalAccomplishmentType.meshctf}
+                    </Chip>
+                  </div>
                 </div>
               }
-              subtitle={`Activity: ${user.totalAccomplishmentType.activity} | Social: ${user.totalAccomplishmentType.social} | Flags: ${user.totalAccomplishmentType.meshctf}`}
+              subtitle=""
               textValue={`${user.displayname} accomplishments`}
             >
               <div className="space-y-4">
-                {/* Summary chips */}
-                <div className="flex flex-wrap gap-2 mb-4">
-                  <Chip color="success" variant="flat" size="sm">
-                    Activity: {user.totalAccomplishmentType.activity}
-                  </Chip>
-                  <Chip color="primary" variant="flat" size="sm">
-                    Social: {user.totalAccomplishmentType.social}
-                  </Chip>
-                  <Chip color="warning" variant="flat" size="sm">
-                    Flags: {user.totalAccomplishmentType.meshctf}
-                  </Chip>
-                  <Chip color="secondary" variant="solid" size="sm">
-                    Total: {user.accomplishmentCount}
-                  </Chip>
-                </div>
-
                 {/* Dynamic accomplishments loading */}
                 {loadingAccomplishments.has(user.id) ? (
                   <div className="flex justify-center p-4">
@@ -428,6 +445,11 @@ export default function LeaderboardTable({ ghosts }: LeaderboardTableProps) {
                             {accomplishment.description && (
                               <p className="text-sm text-default-600 mt-1">
                                 {accomplishment.description}
+                              </p>
+                            )}
+                            {accomplishment.metadata?.points && accomplishment.metadata.points > 0 && (
+                              <p className="text-sm text-success-600 font-semibold mt-1">
+                                +{accomplishment.metadata.points} points
                               </p>
                             )}
                           </div>

@@ -102,6 +102,11 @@ const User = new Entity(
         default: () => ({ activity: 0, social: 0, meshctf: 0 }),
       },
 
+      totalPoints: {
+        type: 'number',
+        default: () => 0,
+      },
+
       totalAccomplishmentYear: {
         type: 'any',
         default: () => ({}),
@@ -470,7 +475,8 @@ export async function UpdateUserAccomplishmentCounts(
   email: string,
   type: 'activity' | 'social' | 'meshctf',
   year: number,
-  increment: boolean = true
+  increment: boolean = true,
+  points: number = 0
 ) {
   const user = await getUser(email);
   if (!user) {
@@ -478,6 +484,7 @@ export async function UpdateUserAccomplishmentCounts(
   }
 
   const delta = increment ? 1 : -1;
+  const pointsDelta = increment ? points : -points;
 
   const currentTypeCounts = user.totalAccomplishmentType || {
     activity: 0,
@@ -485,6 +492,7 @@ export async function UpdateUserAccomplishmentCounts(
     meshctf: 0,
   };
   const currentYearCounts = user.totalAccomplishmentYear || {};
+  const currentTotalPoints = user.totalPoints || 0;
 
   const updatedTypeCounts = {
     ...currentTypeCounts,
@@ -499,6 +507,8 @@ export async function UpdateUserAccomplishmentCounts(
     ),
   };
 
+  const updatedTotalPoints = Math.max(0, currentTotalPoints + pointsDelta);
+
   const result = await User.update({
     email: email,
     id: user.id,
@@ -506,6 +516,7 @@ export async function UpdateUserAccomplishmentCounts(
     .set({
       totalAccomplishmentType: updatedTypeCounts,
       totalAccomplishmentYear: updatedYearCounts,
+      totalPoints: updatedTotalPoints,
     })
     .go({
       response: 'all_new',
@@ -566,13 +577,18 @@ export async function getAllUsersWithAccomplishmentCounts() {
       totalAccomplishments: (user.totalAccomplishmentType?.activity || 0) + 
                            (user.totalAccomplishmentType?.social || 0) + 
                            (user.totalAccomplishmentType?.meshctf || 0),
+      totalPoints: user.totalPoints || 0,
       latestAccomplishment
     };
   }));
 
-  // Sort by total accomplishments first, then by most recent accomplishment
+  // Sort by total points first, then by total accomplishments, then by most recent accomplishment
   return usersWithLatest.sort((a, b) => {
-    // First sort by total accomplishment count (descending)
+    // First sort by total points (descending)
+    if (a.totalPoints !== b.totalPoints) {
+      return b.totalPoints - a.totalPoints;
+    }
+    // If points are equal, sort by total accomplishment count (descending)  
     if (a.totalAccomplishments !== b.totalAccomplishments) {
       return b.totalAccomplishments - a.totalAccomplishments;
     }

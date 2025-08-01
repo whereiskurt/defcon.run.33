@@ -40,7 +40,8 @@ export async function GET(req: NextRequest) {
         globalRank,
         accomplishmentCount: (user.totalAccomplishmentType?.activity || 0) + 
                             (user.totalAccomplishmentType?.social || 0) + 
-                            (user.totalAccomplishmentType?.meshctf || 0)
+                            (user.totalAccomplishmentType?.meshctf || 0),
+        totalPoints: user.totalPoints || 0
       };
     });
 
