@@ -268,6 +268,12 @@ const User = new Entity(
           historical_sync_completed: { type: 'boolean' }, // Flag for first-time full historical sync
         },
       },
+      manual_upload_counts: {
+        type: 'any',
+        default: () => ({}),
+        // Structure: { "2025_day1": 2, "2025_day2": 1, "2024_day1": 0, ... }
+        // Format: "{year}_{dayKey}" -> count
+      },
     },
     indexes: {
       primary: {

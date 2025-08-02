@@ -1,5 +1,6 @@
 import { getUser, User } from './user';
 import { createStravaAccomplishment } from './accomplishment';
+import { invalidateCache } from './cache';
 
 // DEFCON dates for the last 8 years (Monday before to Monday after) - Full days in PDT/PST
 export const DEFCON_DATES = [
@@ -396,6 +397,9 @@ export async function addStravaActivitiesToUser(
   }).set({
     strava_account: updatedStravaAccount
   }).go();
+
+  // Invalidate cache so the updated sync history is returned on next request
+  invalidateCache(email, 'users');
 
   return {
     newActivitiesCount: newActivities.length,

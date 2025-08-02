@@ -24,6 +24,7 @@ import { LogoutIcon } from './icon/logout';
 import { QRIcon } from './icon/qr';
 import { useEffect, useState } from 'react';
 import CardMatrixLoader from '../profile/CardMatrixLoader';
+import GPXUploadModal from '../gpx/GPXUploadModal';
 
 import DCJackIcon from '@/public/header/dcjack.svg';
 
@@ -41,10 +42,15 @@ const UserDropDown = (params: any) => {
     onOpen: openQR,
     onClose: closeQR,
   } = useDisclosure();
+  const {
+    isOpen: isGPXOpen,
+    onOpen: openGPX,
+    onClose: closeGPX,
+  } = useDisclosure();
   const [userDetail, setUserDetail] = useState<any>(null);
   const [syncing, setSyncing] = useState<boolean>(false);
   const [canSync, setCanSync] = useState<boolean>(true);
-  const [syncsRemaining, setSyncsRemaining] = useState<number>(4);
+  const [syncsRemaining, setSyncsRemaining] = useState<number | null>(null); // null means loading
   const [syncSuccess, setSyncSuccess] = useState<boolean>(false);
   const router = useRouter();
 
@@ -101,7 +107,7 @@ const UserDropDown = (params: any) => {
   // Handle Strava sync
   const handleStravaSync = async () => {
     // Immediately decrement the count optimistically
-    setSyncsRemaining(prev => Math.max(0, prev - 1));
+    setSyncsRemaining(prev => prev !== null ? Math.max(0, prev - 1) : 0);
     setSyncing(true);
     setSyncSuccess(false);
     
@@ -129,9 +135,9 @@ const UserDropDown = (params: any) => {
           // Update sync quota with fresh data
           const newRemaining = checkSyncQuota(record.user);
           // Make sure we actually decremented
-          if (newRemaining === syncsRemaining) {
+          if (syncsRemaining !== null && newRemaining === syncsRemaining) {
             // Force decrement if server didn't update yet
-            setSyncsRemaining(prev => Math.max(0, prev - 1));
+            setSyncsRemaining(prev => prev !== null ? Math.max(0, prev - 1) : 0);
           }
         }
         
@@ -139,12 +145,12 @@ const UserDropDown = (params: any) => {
         setTimeout(() => setSyncSuccess(false), 4000);
       } else {
         // If sync failed, restore the count
-        setSyncsRemaining(prev => Math.min(4, prev + 1));
+        setSyncsRemaining(prev => prev !== null ? Math.min(4, prev + 1) : 4);
       }
     } catch (error) {
       console.error('Error syncing Strava:', error);
       // If sync failed, restore the count
-      setSyncsRemaining(prev => Math.min(4, prev + 1));
+      setSyncsRemaining(prev => prev !== null ? Math.min(4, prev + 1) : 4);
     } finally {
       setSyncing(false);
     }
@@ -166,17 +172,46 @@ const UserDropDown = (params: any) => {
 
   const { data: session, update, status } = useSession();
 
+  // Add effect to refresh user details on window focus (when user comes back from profile page)
+  useEffect(() => {
+    const handleFocus = () => {
+      if (session?.user?.email) {
+        fetchUserDetails();
+      }
+    };
+
+    // Also listen for custom events when user data is updated
+    const handleUserUpdate = () => {
+      fetchUserDetails();
+    };
+
+    const handleDisplaynameUpdate = () => {
+      fetchUserDetails();
+    };
+
+    window.addEventListener('focus', handleFocus);
+    window.addEventListener('userUpdated', handleUserUpdate);
+    window.addEventListener('displaynameUpdated', handleDisplaynameUpdate);
+    
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+      window.removeEventListener('userUpdated', handleUserUpdate);
+      window.removeEventListener('displaynameUpdated', handleDisplaynameUpdate);
+    };
+  }, [session?.user?.email]);
+
   if (!session || !session.user) return <></>;
 
   return (
     <>
       {LogoutModal(isLogoutOpen, closeLogout)}
       {QRModal(isQROpen, closeQR, userDetail)}
+      <GPXUploadModal isOpen={isGPXOpen} onClose={closeGPX} />
       <Dropdown
         backdrop="blur"
         showArrow
         radius="sm"
-        closeOnSelect={true}
+        closeOnSelect={false}
         classNames={{
           base: 'before:bg-default-200', // change arrow background
           content: 'p-0 border-small border-divider bg-background',
@@ -195,8 +230,13 @@ const UserDropDown = (params: any) => {
           disabledKeys={['profile_example']}
           onAction={(key) => {
             // Handle sync action
-            if (key === 'sync-strava' && canSync && !syncing) {
+            if (key === 'sync-strava' && canSync && !syncing && syncsRemaining !== null) {
               handleStravaSync();
+              return; // Prevent default dropdown close behavior
+            }
+            // Handle manual add action
+            if (key === 'add-activity') {
+              openGPX();
             }
           }}
           topContent={
@@ -206,7 +246,7 @@ const UserDropDown = (params: any) => {
                 <div className="flex flex-col">
                   <span>{session.user.email}</span>
                   {userDetail?.displayname && (
-                    <span className="text-xs text-default-400">🐰 {userDetail.displayname}</span>
+                    <span className="text-xs text-default-400 mt-1">🐰 {userDetail.displayname}</span>
                   )}
                 </div>
               }
@@ -229,6 +269,7 @@ const UserDropDown = (params: any) => {
               className="gap-2 opacity-100 py-2 text-base"
               textValue="Profile"
               href="/profile"
+              closeOnSelect={true}
             >
               Profile
             </DropdownItem>
@@ -239,6 +280,7 @@ const UserDropDown = (params: any) => {
               className="gap-2 opacity-100 py-2 text-base"
               textValue="Leaderboard"
               href="/leaderboard"
+              closeOnSelect={true}
             >
               Leaderboard
             </DropdownItem>
@@ -266,6 +308,7 @@ const UserDropDown = (params: any) => {
                 onPress={() => signIn('strava', { callbackUrl: '/dashboard' })}
                 textValue="Link to Strava"
                 key="strava"
+                closeOnSelect={true}
               >
                 Link to Strava
               </DropdownItem>
@@ -276,17 +319,17 @@ const UserDropDown = (params: any) => {
                 startContent={
                   <FaSync 
                     size={16} 
-                    color={syncsRemaining > 0 && !syncing ? "red" : undefined}
+                    color={syncSuccess ? "green" : (syncsRemaining !== null && syncsRemaining > 0 && !syncing ? "red" : undefined)}
                     className={`${iconClasses} ${syncing ? 'animate-spin' : ''}`} 
                   />
                 }
                 className={`py-2 text-base ${syncSuccess ? 'text-success' : ''} ${syncing ? 'text-default-400' : ''} ${!canSync ? 'opacity-50' : ''}`}
                 textValue="Sync Strava"
                 key="sync-strava"
-                isDisabled={syncing || !canSync}
+                isDisabled={syncing || !canSync || syncsRemaining === null}
                 closeOnSelect={false}
               >
-                {syncing ? 'Syncing...' : syncSuccess ? 'Sync success' : `Sync Strava (${syncsRemaining} left)`}
+                {syncing ? 'Syncing...' : syncSuccess ? 'Sync success' : syncsRemaining !== null ? `Sync Strava (${syncsRemaining} left)` : 'Sync Strava (...)'}
               </DropdownItem>
               <DropdownItem
                 startContent={
@@ -295,7 +338,7 @@ const UserDropDown = (params: any) => {
                 className="py-2 text-base"
                 textValue="Manual Add..."
                 key="add-activity"
-                isReadOnly={true}
+                closeOnSelect={true}
               >
                 Manual Add...
               </DropdownItem>
@@ -309,6 +352,7 @@ const UserDropDown = (params: any) => {
               className="gap-2 opacity-100 py-2 text-base"
               textValue="showqr"
               onPress={() => showQR()}
+              closeOnSelect={true}
             >
               Show My QR
             </DropdownItem>
@@ -321,6 +365,7 @@ const UserDropDown = (params: any) => {
               className="py-2 text-base"
               textValue="Logout"
               onPress={() => showLogoutModal()}
+              closeOnSelect={true}
             >
               Logout
             </DropdownItem>

@@ -15,7 +15,7 @@ import {
   Button,
   Pagination,
 } from '@heroui/react';
-import { Trophy, Medal, Award, Search, X, ChevronDown, ChevronUp } from 'lucide-react';
+import { Search, X, ChevronDown, ChevronUp } from 'lucide-react';
 import CardMatrixLoader from '../profile/CardMatrixLoader';
 import FlagSubmission from '../profile/FlagSubmission';
 
@@ -92,6 +92,21 @@ export default function LeaderboardTable({ ghosts }: LeaderboardTableProps) {
       }
     }
   }, [searchParams]);
+
+  // Listen for refresh events from GPX upload modal
+  useEffect(() => {
+    const handleRefreshLeaderboard = () => {
+      // Clear accomplishments cache and refresh leaderboard data
+      setAccomplishments({});
+      setRefreshTrigger(prev => prev + 1);
+    };
+
+    window.addEventListener('refreshLeaderboard', handleRefreshLeaderboard);
+    
+    return () => {
+      window.removeEventListener('refreshLeaderboard', handleRefreshLeaderboard);
+    };
+  }, []);
 
   useEffect(() => {
     const fetchLeaderboardData = async () => {
@@ -254,16 +269,7 @@ export default function LeaderboardTable({ ghosts }: LeaderboardTableProps) {
   };
 
   const getRankIcon = (rank: number) => {
-    switch (rank) {
-      case 1:
-        return <Trophy className="h-5 w-5 text-yellow-500" />;
-      case 2:
-        return <Medal className="h-5 w-5 text-gray-400" />;
-      case 3:
-        return <Award className="h-5 w-5 text-orange-600" />;
-      default:
-        return <span className="text-lg font-bold text-default-500">#{rank}</span>;
-    }
+    return <span className="text-lg font-bold text-default-500">#{rank}</span>;
   };
 
   if (loading) {
@@ -328,16 +334,10 @@ export default function LeaderboardTable({ ghosts }: LeaderboardTableProps) {
       <Card>
         <CardHeader>
           <div className="flex flex-col w-full">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-2">
-              <div>
-                <p className="text-lg">Accomplishment Leaderboard</p>
-                <p className="text-small text-default-500">
-                  {pagination ? `Showing ${pagination.total} participants` : 'Loading...'}
-                </p>
-              </div>
+            <div className="flex flex-col gap-4 mb-2">
               <Input
                 ref={searchInputRef}
-                placeholder="Filter by Display Name"
+                placeholder="Filter"
                 value={searchInput}
                 onChange={(e) => handleSearchInputChange(e.target.value)}
                 onKeyDown={handleSearchKeyDown}
@@ -355,7 +355,7 @@ export default function LeaderboardTable({ ghosts }: LeaderboardTableProps) {
                     </Button>
                   )
                 }
-                className="w-32"
+                className="w-full"
                 variant="bordered"
                 description={searchInput.length > 0 && searchInput.length < 3 ? 
                   `Type ${3 - searchInput.length} more character${3 - searchInput.length === 1 ? '' : 's'} to search or press Enter` : 
@@ -448,13 +448,13 @@ export default function LeaderboardTable({ ghosts }: LeaderboardTableProps) {
                               <span className="font-medium text-base">{accomplishment.description || accomplishment.name}</span>
                             </div>
                             <div className="flex items-center gap-3 mt-1">
-                              {accomplishment.metadata?.points && accomplishment.metadata.points !== 0 && (
+                              {accomplishment.metadata?.points !== undefined && (
                                 <Chip 
-                                  className={accomplishment.metadata.points > 0 ? "bg-foreground text-background border-foreground" : "bg-danger text-danger-foreground border-danger"} 
+                                  className={accomplishment.metadata.points > 0 ? "bg-foreground text-background border-foreground" : accomplishment.metadata.points === 0 ? "bg-default text-default-foreground border-default" : "bg-danger text-danger-foreground border-danger"} 
                                   variant="bordered" 
                                   size="sm"
                                 >
-                                  {accomplishment.metadata.points > 0 ? '+' : ''}{accomplishment.metadata.points} 🥕
+                                  {accomplishment.metadata.points >= 0 ? '+' : ''}{accomplishment.metadata.points}
                                 </Chip>
                               )}
                               <span className="text-sm text-default-500">
