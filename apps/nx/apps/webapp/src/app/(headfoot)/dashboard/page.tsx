@@ -151,7 +151,7 @@ const elky = (
       </Card>
     );  
 
-    const shouldShowByDefault = ['elk', 'taro'].some(sub =>
+    const shouldShowByDefault = ['elk', 'el.', 'taro'].some(sub =>
       session?.user?.email?.toLowerCase().includes(sub)
     ) && [4, 5, 6].includes(new Date().getDay());
 

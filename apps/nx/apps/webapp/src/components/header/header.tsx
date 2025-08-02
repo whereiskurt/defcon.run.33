@@ -16,7 +16,7 @@ import { MenuIcon } from './icon/menu';
 import { Logo } from './logo-icon';
 
 import { FaQuestion } from 'react-icons/fa';
-import { FaMoneyCheckDollar, FaRadio } from 'react-icons/fa6';
+import { FaMoneyCheckDollar, FaRadio, FaFire } from 'react-icons/fa6';
 
 const UserDropDown = dynamic(() => import('./dropdown-user'), {
   ssr: false,

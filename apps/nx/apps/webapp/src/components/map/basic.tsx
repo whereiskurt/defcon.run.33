@@ -549,7 +549,9 @@ function drawWayPointRoute(data: any, layer: L.LayerGroup<any>) {
     
     const startMarker = L.marker([lat, lon]);
     startMarker.setIcon(startPin);
-    layer.addLayer(startMarker);
+    if (!data.hideMarkers) {
+      layer.addLayer(startMarker);
+    }
 
     const googleLink = `http://google.com/maps?q=${lat},${lon}`;
     const isMobile = window.innerWidth < 640;
@@ -591,12 +593,14 @@ function drawWayPointRoute(data: any, layer: L.LayerGroup<any>) {
       color: textcolor,
       opacity,
       weight,
-      lineCap: 'round',
+      lineCap: data.lineCap || 'round',
+      lineJoin: data.lineJoin || 'round',
     });
     layer.addLayer(polyline);
     
-    // Add arrow decorations to show direction for waypoint routes
-    const decorator = (L as any).polylineDecorator(polyline, {
+    // Add arrow decorations to show direction for waypoint routes (skip for heat maps)
+    if (!data.hideArrows) {
+      const decorator = (L as any).polylineDecorator(polyline, {
       patterns: [
         {
           offset: '5%',
@@ -615,6 +619,7 @@ function drawWayPointRoute(data: any, layer: L.LayerGroup<any>) {
       ]
     });
     layer.addLayer(decorator);
+    }
   }
 }
 
@@ -745,12 +750,14 @@ function drawRoute(data: any, layer: L.LayerGroup<any>) {
       color,
       opacity,
       weight,
-      lineCap: 'round',
+      lineCap: data.lineCap || 'round',
+      lineJoin: data.lineJoin || 'round',
     });
     layer.addLayer(polyline);
     
-    // Add arrow decorations to show direction
-    const decorator = (L as any).polylineDecorator(polyline, {
+    // Add arrow decorations to show direction (skip for heat maps)
+    if (!data.hideArrows) {
+      const decorator = (L as any).polylineDecorator(polyline, {
       patterns: [
         {
           offset: '5%',
@@ -769,6 +776,7 @@ function drawRoute(data: any, layer: L.LayerGroup<any>) {
       ]
     });
     layer.addLayer(decorator);
+    }
   }
 
   // Add start location marker if we have one (either for routes or standalone pins)
@@ -895,7 +903,9 @@ function drawRoute(data: any, layer: L.LayerGroup<any>) {
         minWidth: isMobile ? 200 : 300
       });
     }
-    layer.addLayer(startMarker);
+    if (!data.hideMarkers) {
+      layer.addLayer(startMarker);
+    }
   }
 
   // Add end location marker if we have one (similar to start location logic)
@@ -968,7 +978,9 @@ function drawRoute(data: any, layer: L.LayerGroup<any>) {
       minWidth: isMobile ? 200 : 300
     });
     
-    layer.addLayer(endMarker);
+    if (!data.hideMarkers) {
+      layer.addLayer(endMarker);
+    }
   }
 }
 

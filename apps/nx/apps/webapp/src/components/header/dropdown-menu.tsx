@@ -11,7 +11,7 @@ import {
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
-import { FaMoneyCheckDollar, FaQuestion, FaRadio } from 'react-icons/fa6';
+import { FaMoneyCheckDollar, FaQuestion, FaRadio, FaFire } from 'react-icons/fa6';
 import { GrMapLocation } from 'react-icons/gr';
 import { DashboardIcon } from './icon/dashboard';
 import { MenuIcon } from './icon/menu';
@@ -91,6 +91,16 @@ const MenuDropDown = (params: any) => {
             onClick={() => handleNavigation('/routes')}
           >
             <span className="text-2xl">Routes</span>
+          </DropdownItem>
+
+          <DropdownItem
+            className="pb-2"
+            textValue="heatmap"
+            startContent={<FaFire size={24} className={iconClasses} />}
+            key="heatmap"
+            onClick={() => handleNavigation('/heatmap')}
+          >
+            <span className="text-2xl">Activity Heat Map</span>
           </DropdownItem>
 
           <DropdownItem

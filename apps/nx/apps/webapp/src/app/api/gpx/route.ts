@@ -2,7 +2,7 @@ import { auth } from '@auth';
 import { NextRequest, NextResponse } from 'next/server';
 import { createAccomplishment, Accomplishments } from '@db/accomplishment';
 import { UpdateUserAccomplishmentCounts, getUser, User } from '@db/user';
-import { MAX_UPLOADS_PER_DAY } from './upload-counts/route';
+import { MAX_UPLOADS_PER_DAY } from './constants';
 
 // Generate DEFCON years - 8 years back from DC33 (2025)
 const defconYears = Array.from({ length: 8 }, (_, i) => {

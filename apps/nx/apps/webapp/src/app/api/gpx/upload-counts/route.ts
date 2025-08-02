@@ -1,9 +1,7 @@
 import { auth } from '@auth';
 import { NextRequest, NextResponse } from 'next/server';
 import { getUser } from '@db/user';
-
-// Maximum uploads per DEFCON day (configurable)
-export const MAX_UPLOADS_PER_DAY = 2; // Change to 4 when needed
+import { MAX_UPLOADS_PER_DAY } from '../constants';
 
 export async function GET(req: NextRequest) {
   try {

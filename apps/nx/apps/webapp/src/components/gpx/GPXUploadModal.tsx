@@ -488,7 +488,7 @@ export default function GPXUploadModal({ isOpen, onClose }: GPXUploadModalProps)
               !description.trim() ||
               (uploadMethod === 'gpx' && !file) ||
               (uploadMethod === 'route' && !selectedRoute) ||
-              (defconYear && dc33Day && remainingUploads[`${defconYear}_${dc33Day}`] === 0)
+              Boolean(defconYear && dc33Day && remainingUploads[`${defconYear}_${dc33Day}`] === 0)
             }
           >
             {uploading ? 'Adding...' : 

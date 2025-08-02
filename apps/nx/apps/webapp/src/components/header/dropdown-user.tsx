@@ -141,6 +141,18 @@ const UserDropDown = (params: any) => {
           }
         }
         
+        // Trigger leaderboard refresh if user is on leaderboard page
+        if (typeof window !== 'undefined' && window.location.pathname === '/leaderboard') {
+          window.location.reload();
+        }
+        
+        // Also dispatch a custom event for any other components listening
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('stravaSync', { 
+            detail: { success: true, timestamp: Date.now() } 
+          }));
+        }
+        
         // Reset success state after 4 seconds (2x longer)
         setTimeout(() => setSyncSuccess(false), 4000);
       } else {
@@ -292,7 +304,8 @@ const UserDropDown = (params: any) => {
               key="heatmap"
               className="opacity-100 py-2 text-base"
               textValue="Heat Map"
-              isReadOnly={true}
+              href="/heatmap"
+              closeOnSelect={true}
             >
               Heat Map
             </DropdownItem>
