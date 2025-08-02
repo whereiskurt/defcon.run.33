@@ -582,11 +582,12 @@ export async function getAllUsersWithAccomplishmentCounts() {
                            (user.totalAccomplishmentType?.social || 0) + 
                            (user.totalAccomplishmentType?.meshctf || 0),
       totalPoints: user.totalPoints || 0,
-      latestAccomplishment
+      latestAccomplishment,
+      createdAt: user.createdAt || Date.now()
     };
   }));
 
-  // Sort by total points first, then by total accomplishments, then by most recent accomplishment
+  // Sort by total points first, then by total accomplishments, then by most recent accomplishment, then by account creation date
   return usersWithLatest.sort((a, b) => {
     // First sort by total points (descending)
     if (a.totalPoints !== b.totalPoints) {
@@ -599,6 +600,10 @@ export async function getAllUsersWithAccomplishmentCounts() {
     // If counts are equal, sort by most recent accomplishment (newest first)
     const aLatest = a.latestAccomplishment || 0;
     const bLatest = b.latestAccomplishment || 0;
-    return bLatest - aLatest;
+    if (aLatest !== bLatest) {
+      return bLatest - aLatest;
+    }
+    // Finally, if everything else is equal, sort by account creation date (older accounts first)
+    return a.createdAt - b.createdAt;
   });
 }

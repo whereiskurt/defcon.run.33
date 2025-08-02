@@ -355,7 +355,7 @@ export default function LeaderboardTable({ ghosts }: LeaderboardTableProps) {
                     </Button>
                   )
                 }
-                className="max-w-sm"
+                className="w-32"
                 variant="bordered"
                 description={searchInput.length > 0 && searchInput.length < 3 ? 
                   `Type ${3 - searchInput.length} more character${3 - searchInput.length === 1 ? '' : 's'} to search or press Enter` : 
@@ -387,7 +387,6 @@ export default function LeaderboardTable({ ghosts }: LeaderboardTableProps) {
                 <div className="flex items-center justify-between w-full">
                   <div className="flex items-center gap-2">
                     {getRankIcon(user.globalRank)}
-                    <span>{user.displayname}</span>
                     {user.totalPoints > 0 && (
                       <Chip 
                         className="bg-foreground text-background border-foreground" 
@@ -397,17 +396,26 @@ export default function LeaderboardTable({ ghosts }: LeaderboardTableProps) {
                         {user.totalPoints} 🥕
                       </Chip>
                     )}
+                    <span>{user.displayname}</span>
                   </div>
                   <div className="flex flex-wrap gap-1">
-                    <Chip color="success" variant="flat" size="sm">
-                      {user.totalAccomplishmentType.activity}
-                    </Chip>
-                    <Chip color="primary" variant="flat" size="sm">
-                      {user.totalAccomplishmentType.social}
-                    </Chip>
-                    <Chip color="warning" variant="flat" size="sm">
-                      {user.totalAccomplishmentType.meshctf}
-                    </Chip>
+                    {(() => {
+                      const types = [
+                        { type: 'activity', count: user.totalAccomplishmentType.activity, color: 'success' as const },
+                        { type: 'social', count: user.totalAccomplishmentType.social, color: 'primary' as const },
+                        { type: 'meshctf', count: user.totalAccomplishmentType.meshctf, color: 'warning' as const }
+                      ];
+                      
+                      // Sort by count (highest first), but maintain original order if all are zero
+                      const allZero = types.every(t => t.count === 0);
+                      const sortedTypes = allZero ? types : types.sort((a, b) => b.count - a.count);
+                      
+                      return sortedTypes.map(({ type, count, color }) => (
+                        <Chip key={type} color={color} variant="flat" size="sm">
+                          {count}
+                        </Chip>
+                      ));
+                    })()}
                   </div>
                 </div>
               }
@@ -440,9 +448,6 @@ export default function LeaderboardTable({ ghosts }: LeaderboardTableProps) {
                               <span className="font-medium text-base">{accomplishment.description || accomplishment.name}</span>
                             </div>
                             <div className="flex items-center gap-3 mt-1">
-                              <span className="text-sm text-default-500">
-                                {formatDate(accomplishment.completedAt)}
-                              </span>
                               {accomplishment.metadata?.points && accomplishment.metadata.points !== 0 && (
                                 <Chip 
                                   className={accomplishment.metadata.points > 0 ? "bg-foreground text-background border-foreground" : "bg-danger text-danger-foreground border-danger"} 
@@ -452,6 +457,9 @@ export default function LeaderboardTable({ ghosts }: LeaderboardTableProps) {
                                   {accomplishment.metadata.points > 0 ? '+' : ''}{accomplishment.metadata.points} 🥕
                                 </Chip>
                               )}
+                              <span className="text-sm text-default-500">
+                                {formatDate(accomplishment.completedAt)}
+                              </span>
                             </div>
                           </div>
                         ))}

@@ -21,7 +21,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ message: 'User not found' }, { status: 404 });
   }
 
-  // Strip out sensitive fields
+  // Strip out sensitive fields but keep sync_history
   const {
     id,
     rsaprivSHA,
@@ -29,11 +29,18 @@ export async function GET(req: NextRequest) {
     github_profile,
     discord_profile,
     strava_profile,
-    strava_account,
 
     // Add other sensitive fields here if needed
     ...safeUserData
   } = user;
+
+  // Add back just the sync_history from strava_account if it exists
+  if (user.strava_account) {
+    safeUserData.strava_account = {
+      sync_history: user.strava_account.sync_history || [],
+      historical_sync_completed: user.strava_account.historical_sync_completed || false
+    };
+  }
 
   return NextResponse.json(
     { message: 'User Fetched.', user: safeUserData },
