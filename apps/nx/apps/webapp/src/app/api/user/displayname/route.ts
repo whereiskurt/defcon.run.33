@@ -1,5 +1,5 @@
 import { auth } from '@auth';
-import { updateDisplayname } from '@db/user';
+import { updateDisplayname, getUser } from '@db/user';
 import { NextRequest, NextResponse } from 'next/server';
 import { invalidateCache } from '@db/cache';
 
@@ -31,6 +31,22 @@ export async function PUT(req: NextRequest) {
       return NextResponse.json(
         { message: 'Display name must be 50 characters or less' },
         { status: 400 }
+      );
+    }
+
+    // Check if user has at least 2 points
+    const user = await getUser(session.user.email);
+    if (!user) {
+      return NextResponse.json(
+        { message: 'User not found' },
+        { status: 404 }
+      );
+    }
+
+    if ((user.totalPoints || 0) < 2) {
+      return NextResponse.json(
+        { message: 'You need at least 2 points to change your display name' },
+        { status: 403 }
       );
     }
 

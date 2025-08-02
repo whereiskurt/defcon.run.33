@@ -81,6 +81,19 @@ const Accomplishments = new Entity(
           gpxUrl: { type: 'string' },
           photoUrls: { type: 'list', items: { type: 'string' } },
           tags: { type: 'list', items: { type: 'string' } },
+          // Strava activity specific fields
+          summary_polyline: { type: 'string' },
+          start_date: { type: 'string' },
+          end_date: { type: 'string' },
+          activity_type: { type: 'string' },
+          sport_type: { type: 'string' },
+          moving_time: { type: 'number' },
+          elapsed_time: { type: 'number' },
+          total_elevation_gain: { type: 'number' },
+          average_speed: { type: 'number' },
+          max_speed: { type: 'number' },
+          start_latlng: { type: 'list', items: { type: 'number' } },
+          end_latlng: { type: 'list', items: { type: 'number' } },
         },
       },
       createdAt: {
@@ -301,4 +314,120 @@ export async function getAllAccomplishmentsForType(type: 'activity' | 'social' |
     year: accomplishment.year,
     metadata: accomplishment.metadata
   }));
+}
+
+/**
+ * Maps Strava activity types to appropriate verbs for descriptions
+ */
+function getActivityVerb(activityType: string): string {
+  const type = activityType.toLowerCase();
+  
+  // Map common Strava activity types to appropriate verbs
+  const verbMap: Record<string, string> = {
+    'run': 'running',
+    'running': 'running',
+    'walk': 'walking',
+    'walking': 'walking',
+    'hike': 'hiking',
+    'hiking': 'hiking',
+    'ride': 'cycling',
+    'cycling': 'cycling',
+    'bike': 'cycling',
+    'virtualride': 'virtual cycling',
+    'swim': 'swimming',
+    'swimming': 'swimming',
+    'workout': 'workout',
+    'crosstraining': 'cross-training',
+    'elliptical': 'elliptical training',
+    'stairstepper': 'stair climbing',
+    'weighttraining': 'weight training',
+    'yoga': 'yoga',
+    'pilates': 'pilates',
+    'golf': 'golfing',
+    'tennis': 'playing tennis',
+    'basketball': 'playing basketball',
+    'soccer': 'playing soccer',
+    'football': 'playing football',
+    'baseball': 'playing baseball',
+    'skateboard': 'skateboarding',
+    'rollerski': 'roller skiing',
+    'ski': 'skiing',
+    'snowboard': 'snowboarding',
+    'iceskate': 'ice skating'
+  };
+  
+  return verbMap[type] || `${type} activity`;
+}
+
+export async function createStravaAccomplishment(
+  userId: string,
+  userEmail: string,
+  activity: any // StravaActivity type
+) {
+  if (!activity.id || !activity.start_date) {
+    throw new Error('Invalid Strava activity: missing required fields');
+  }
+
+  const activityDate = new Date(activity.start_date);
+  const year = activityDate.getFullYear();
+  
+  // Create accomplishment name and description using the correct activity type
+  // Strava uses 'sport_type' as the more specific type (e.g., "Run", "Walk", "Ride", "Hike")
+  // and 'type' as the general category (e.g., "Run", "Ride", "Walk")
+  const activityType = activity.sport_type || activity.type || 'Activity';
+  const name = `${activityType}: "${activity.name || 'Unnamed Activity'}"`;
+  
+  // Format distance and time for description
+  const distanceKm = activity.distance ? (activity.distance / 1000).toFixed(2) : '0';
+  const movingTimeMin = activity.moving_time ? Math.round(activity.moving_time / 60) : 0;
+  
+  // Use the correct activity type in description (walking, running, cycling, etc.)
+  const activityVerb = getActivityVerb(activityType);
+  // Convert year to DEFCON number (DC32 = 2024, DC31 = 2023, etc.)
+  const defconNumber = year - 1992; // DEFCON 1 was in 1993, so 2024 = DC32
+  const description = `DC${defconNumber} - ${distanceKm}km ${activityVerb} in ${movingTimeMin} minutes`;
+
+  // Simple points: 1 point per activity regardless of other factors
+  const points = 1;
+
+  // Check for duplicate accomplishment
+  const isDuplicate = await checkDuplicateAccomplishment(
+    userId,
+    'activity',
+    name,
+    year
+  );
+
+  if (isDuplicate) {
+    console.log(`Skipping duplicate accomplishment: ${name}`);
+    return null;
+  }
+
+  const metadata = {
+    points,
+    stravaActivityId: activity.id?.toString(),
+    summary_polyline: activity.map?.summary_polyline,
+    start_date: activity.start_date,
+    end_date: activity.start_date, // Strava doesn't have end_date, using start_date
+    activity_type: activity.type,
+    sport_type: activity.sport_type,
+    distance: activity.distance?.toString(),
+    moving_time: activity.moving_time,
+    elapsed_time: activity.elapsed_time,
+    total_elevation_gain: activity.total_elevation_gain,
+    average_speed: activity.average_speed,
+    max_speed: activity.max_speed,
+    start_latlng: activity.start_latlng,
+    end_latlng: activity.end_latlng,
+    location: activity.location_city || activity.location_state || 'Las Vegas, NV'
+  };
+
+  return await createAccomplishment(userId, userEmail, {
+    type: 'activity',
+    name,
+    description,
+    completedAt: activityDate.getTime(),
+    year,
+    metadata
+  });
 }

@@ -15,6 +15,7 @@ type UserData = {
   email: string;
   displayname?: string;
   mqtt_usertype?: string;
+  totalPoints?: number;
   // Add other fields from the API response as needed
 };
 
@@ -55,6 +56,11 @@ export default function UserDetails() {
   }, []);
 
   const updateDisplaynameHandler = async () => {
+    if ((user?.totalPoints || 0) < 2) {
+      setDisplaynameError('You need at least 2 points to change your display name');
+      return;
+    }
+
     if (!displaynameInput.trim()) {
       setDisplaynameError('Display name cannot be empty');
       return;
@@ -142,11 +148,11 @@ export default function UserDetails() {
   return (
     <Card className="w-full mx-auto">
       <CardBody>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
-          {/* Email + User Type Section - 50% */}
-          <div className="space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
+          {/* Email + User Type Section - 66% */}
+          <div className="space-y-4 md:col-span-2">
             <div>
-              <p className="text-small text-default-500 mb-2">Email</p>
+              <p className="text-lg mb-2">📧 Email</p>
               <div 
                 className="font-medium break-all leading-tight w-full"
                 style={{
@@ -166,9 +172,9 @@ export default function UserDetails() {
             </div>
           </div>
           
-          {/* Display Name Section - 50% */}
+          {/* Display Name Section - 33% */}
           <div>
-            <p className="text-small text-default-500 mb-2">Leaderboard Display Name</p>
+            <p className="text-lg mb-2">👤 Leaderboard Display Name</p>
             <div className="flex flex-col gap-2">
               <Input
                 value={displaynameInput}
@@ -186,20 +192,26 @@ export default function UserDetails() {
                   input: "text-lg"
                 }}
               />
-              <Button
-                onPress={updateDisplaynameHandler}
-                isLoading={isUpdatingDisplayname}
-                color="primary"
-                variant="flat"
-                size="lg"
-                className="self-center px-8"
-                disabled={
-                  !displaynameInput.trim() ||
-                  displaynameInput.trim() === user?.displayname
-                }
-              >
-                Update Display Name
-              </Button>
+              {(user?.totalPoints || 0) < 2 ? (
+                <p className="text-small text-default-500 text-center">
+                  You need 2 points to change your display name
+                </p>
+              ) : (
+                <Button
+                  onPress={updateDisplaynameHandler}
+                  isLoading={isUpdatingDisplayname}
+                  color="primary"
+                  variant="flat"
+                  size="lg"
+                  className="self-start px-8"
+                  disabled={
+                    !displaynameInput.trim() ||
+                    displaynameInput.trim() === user?.displayname
+                  }
+                >
+                  Update Display Name
+                </Button>
+              )}
               {displaynameError && (
                 <p className="text-red-500 text-small">
                   {displaynameError}

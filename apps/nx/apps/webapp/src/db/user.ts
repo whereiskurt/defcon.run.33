@@ -265,6 +265,7 @@ const User = new Entity(
           activities: { type: 'any' }, // Map of activity_id -> StravaActivity
           last_activities_sync: { type: 'number' }, // Timestamp of last sync
           sync_history: { type: 'any' }, // Array of sync timestamps for rate limiting
+          historical_sync_completed: { type: 'boolean' }, // Flag for first-time full historical sync
         },
       },
     },
