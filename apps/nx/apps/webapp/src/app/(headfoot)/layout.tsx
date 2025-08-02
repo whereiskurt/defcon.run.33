@@ -68,7 +68,7 @@ export default async function RootLayout({
                   title="No Bystanders"
                 >
                   <span className="text-default-600">Supported by</span>
-                  <p className="text-primary">No Bystanders</p> (v0.0.1)
+                  <p className="text-primary">No Bystanders</p> (v0.0.2)
                 </Link>
               </footer>
             </div>

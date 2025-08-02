@@ -114,37 +114,39 @@ const elky = (
         <Image
           removeWrapper
           alt="Bithday Boi"
-          className="z-0 w-full h-full object-cover"
+          className="z-0 w-full h-full object-cover object-right"
           src="dashboard/elkhbd.jpg"
         />
 
-        <CardFooter className="absolute bg-black/20 bottom-0 z-10 border-t-1 border-default-600 dark:border-default-100">
-          <div className="flex flex-grow items-center">
-            <div className="flex flex-col ">
+        <CardFooter className="absolute bg-black/20 bottom-0 z-10 border-t-1 border-default-600 dark:border-default-100 w-full">
+          <div className="flex justify-between items-center w-full">
+            <div className="flex flex-col">
               <Text
                 variant="smheading"
                 className="pl-1 pr-1 text-white/90 bg-black/30"
               >
-                Ultra Lounge Birthday Mixer
+                Birthday Mixer
               </Text>
               <Text
                 variant="xsheading"
                 className="pl-1 pr-1 text-white/90 bg-black/30"
               >
-                "All I want are hugs." - Elkentaro
+                "I just want hugs." - Elkentaro
               </Text>
             </div>
+            <div className="flex-1 flex justify-end pr-[2%] sm:pr-[5%] md:pr-[8%] lg:pr-[12%]">
+              <Button
+                className="bg-button-dashboard-bg hover:bg-button-dashboard-hover text-button-dashboard-text"
+                radius="sm"
+                size="lg"
+                style={{ backgroundColor: 'purple' }}
+              >
+                <Link isExternal className="text-white" href="https://forms.gle/tnstscUNiUkuXA1K9">
+                  🎉 Sign-up
+                </Link>
+              </Button>
+            </div>
           </div>
-          <Button
-            className="bg-button-dashboard-bg hover:bg-button-dashboard-hover text-button-dashboard-text"
-            radius="sm"
-            size="lg"
-            style={{ backgroundColor: 'purple' }}
-          >
-            <Link isExternal className="text-white" href="https://forms.gle/tnstscUNiUkuXA1K9">
-              🎉 Sign-up
-            </Link>
-          </Button>
         </CardFooter>
       </Card>
     );  
