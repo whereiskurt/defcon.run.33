@@ -152,7 +152,7 @@ export async function GET(
           qr_flag_id: uniqueId,
           qr_flag_name: qrflag.name,
           flag_type: flagType,
-          location: qrflag.location,
+          ...(qrflag.location && { location: qrflag.location }),
           points: qrflag.points || 1,
           scanned_at: new Date().toISOString(),
         },

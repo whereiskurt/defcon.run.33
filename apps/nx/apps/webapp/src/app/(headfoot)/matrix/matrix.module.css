@@ -1,0 +1,200 @@
+/* Full-screen matrix effect */
+.matrixContainer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: #000;
+  overflow: hidden;
+  z-index: 9999;
+}
+
+.matrix {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  font-family: 'Courier New', monospace;
+  font-size: 24px;
+  line-height: 1.5;
+  justify-content: space-around;
+}
+
+.column {
+  display: flex;
+  flex-direction: column;
+  animation: fall linear infinite;
+  animation-duration: calc(8s + var(--random-delay, 0s));
+  animation-delay: calc(-1 * var(--random-offset, 0s));
+}
+
+.column:nth-child(1n) {
+  --random-delay: 1s;
+  --random-offset: 0.5s;
+  font-size: 1.0em;
+}
+
+.column:nth-child(2n) {
+  --random-delay: 4s;
+  --random-offset: 6s;
+  font-size: 1.4em;
+}
+
+.column:nth-child(3n) {
+  --random-delay: 7s;
+  --random-offset: 2s;
+  font-size: 0.8em;
+}
+
+.column:nth-child(4n) {
+  --random-delay: 0.5s;
+  --random-offset: 8s;
+  font-size: 1.6em;
+}
+
+.column:nth-child(5n) {
+  --random-delay: 5.5s;
+  --random-offset: 1s;
+  font-size: 0.7em;
+}
+
+.column:nth-child(6n) {
+  --random-delay: 2.5s;
+  --random-offset: 7.5s;
+  font-size: 1.2em;
+}
+
+.column:nth-child(7n) {
+  --random-delay: 6s;
+  --random-offset: 3s;
+  font-size: 1.8em;
+}
+
+.column:nth-child(8n) {
+  --random-delay: 1.5s;
+  --random-offset: 5s;
+  font-size: 0.9em;
+}
+
+.column:nth-child(9n) {
+  --random-delay: 8s;
+  --random-offset: 0.8s;
+  font-size: 1.3em;
+}
+
+.column:nth-child(10n) {
+  --random-delay: 3s;
+  --random-offset: 6.5s;
+  font-size: 1.1em;
+}
+
+.column:nth-child(11n) {
+  font-size: 1.5em;
+}
+
+.column:nth-child(13n) {
+  font-size: 0.6em;
+}
+
+.char {
+  color: #00ff00;
+  text-shadow: 0 0 3px #00ff00;
+  display: block;
+  opacity: 1;
+  animation: fade 4s linear infinite;
+  transition: none;
+  font-size: inherit;
+}
+
+.char:nth-child(odd) {
+  animation-delay: calc(-0.5s * var(--char-index, 1));
+}
+
+.char:nth-child(even) {
+  animation-delay: calc(-0.3s * var(--char-index, 1));
+}
+
+.char:nth-child(3n) {
+  color: #00ff88;
+}
+
+.char:nth-child(5n) {
+  color: #88ff00;
+  font-weight: bold;
+}
+
+.char:nth-child(7n) {
+  color: #ffffff;
+  text-shadow: 0 0 10px #00ff00;
+  font-weight: bold;
+}
+
+.char:nth-child(11n) {
+  color: #00ff44;
+}
+
+/* Highlight "Birthday" characters only */
+.highlight {
+  color: #ffffff !important;
+  text-shadow: 0 0 8px #ffffff, 0 0 12px #ffffff !important;
+  font-weight: bold !important;
+}
+
+@keyframes fall {
+  0% {
+    transform: translateY(-100vh);
+  }
+  100% {
+    transform: translateY(100vh);
+  }
+}
+
+@keyframes fade {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+  100% {
+    opacity: 0.3;
+  }
+}
+
+/* Instructions - hidden by default */
+.instructions {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  color: #00ff00;
+  font-family: 'Courier New', monospace;
+  font-size: 12px;
+  opacity: 0.3;
+  z-index: 10000;
+  text-align: right;
+  background: rgba(0, 0, 0, 0.8);
+  padding: 10px;
+  border-radius: 5px;
+  border: 1px solid #00ff00;
+}
+
+.instructions p {
+  margin: 2px 0;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .matrix {
+    font-size: 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .matrix {
+    font-size: 18px;
+  }
+  
+  .column {
+    animation-duration: calc(10s + var(--random-delay, 0s));
+  }
+}

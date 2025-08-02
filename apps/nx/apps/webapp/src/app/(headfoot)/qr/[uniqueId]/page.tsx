@@ -60,7 +60,7 @@ export default function QRPage() {
               ? `/leaderboard?filter=${encodeURIComponent(userDisplayName)}`
               : '/leaderboard';
             router.push(leaderboardUrl);
-          }, 3000);
+          }, 6000);
         } else {
           setSuccess(false);
           setMessage(data.message || 'Failed to claim QR code');
@@ -103,9 +103,9 @@ export default function QRPage() {
               
               <p className="text-lg mb-4">{message}</p>
               
-              {success && points > 0 && (
-                <p className="text-xl font-semibold text-primary">
-                  +{points} {points === 1 ? 'point' : 'points'}
+              {success && points !== 0 && (
+                <p className={`text-xl font-semibold ${points > 0 ? 'text-primary' : 'text-danger'}`}>
+                  {points > 0 ? '+' : ''}{points} 🥕
                 </p>
               )}
               

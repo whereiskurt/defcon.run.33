@@ -2,8 +2,15 @@
 .routesContainer {
   background-color: transparent;
   border-radius: 0px;
-  box-shadow: 0 2px 2px rgba(0, 0, 0, 0.15);
-  min-height: 600px;
+  width: 100vw;
+  height: calc(100dvh + 50px);
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  padding: 0;
+  overflow: hidden;
+  z-index: 1;
 }
 
 .mapWrapper {
@@ -28,26 +35,85 @@
 
 /* Make all controls more visible in dark mode */
 :global(.dark) .mapWrapper :global(.leaflet-control) {
-  background-color: #444 !important;
-  border-color: #666 !important;
+  background-color: #1a1a1a !important;
+  border-color: #444 !important;
   color: #fff !important;
-  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.4) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.6) !important;
 }
 
-/* Specific improvements for layer control */
+/* Light mode control styling */
+:global(.light) .mapWrapper :global(.leaflet-control) {
+  background-color: #ffffff !important;
+  border-color: #d1d5db !important;
+  color: #374151 !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Zoom control button specific styling - dark mode */
+:global(.dark) .mapWrapper :global(.leaflet-control-zoom-in),
+:global(.dark) .mapWrapper :global(.leaflet-control-zoom-out) {
+  background-color: #262626 !important;
+  border-color: #525252 !important;
+  color: #f3f4f6 !important;
+}
+
+:global(.dark) .mapWrapper :global(.leaflet-control-zoom-in):hover,
+:global(.dark) .mapWrapper :global(.leaflet-control-zoom-out):hover {
+  background-color: #404040 !important;
+  color: #ffffff !important;
+}
+
+/* Zoom control button specific styling - light mode */
+:global(.light) .mapWrapper :global(.leaflet-control-zoom-in),
+:global(.light) .mapWrapper :global(.leaflet-control-zoom-out) {
+  background-color: #f9fafb !important;
+  border-color: #d1d5db !important;
+  color: #1f2937 !important;
+}
+
+:global(.light) .mapWrapper :global(.leaflet-control-zoom-in):hover,
+:global(.light) .mapWrapper :global(.leaflet-control-zoom-out):hover {
+  background-color: #f3f4f6 !important;
+  color: #111827 !important;
+}
+
+/* Layer control styling - dark mode */
 :global(.dark) .mapWrapper :global(.leaflet-control-layers) {
-  background-color: #444 !important;
-  border-color: #666 !important;
+  background-color: #1a1a1a !important;
+  border-color: #444 !important;
   color: #fff !important;
   opacity: 1 !important;
   z-index: 1000 !important;
   pointer-events: auto !important;
 }
 
-/* Make the layer control toggle button more visible */
 :global(.dark) .mapWrapper :global(.leaflet-control-layers-toggle) {
-  background-color: #444 !important;
-  filter: invert(0.8) brightness(1.2) !important;
+  background-color: #262626 !important;
+  border-color: #525252 !important;
+  filter: none !important;
+}
+
+:global(.dark) .mapWrapper :global(.leaflet-control-layers-toggle):hover {
+  background-color: #404040 !important;
+}
+
+/* Layer control styling - light mode */
+:global(.light) .mapWrapper :global(.leaflet-control-layers) {
+  background-color: #ffffff !important;
+  border-color: #d1d5db !important;
+  color: #1f2937 !important;
+  opacity: 1 !important;
+  z-index: 1000 !important;
+  pointer-events: auto !important;
+}
+
+:global(.light) .mapWrapper :global(.leaflet-control-layers-toggle) {
+  background-color: #f9fafb !important;
+  border-color: #d1d5db !important;
+}
+
+:global(.light) .mapWrapper :global(.leaflet-control-layers-toggle):hover {
+  background-color: #f3f4f6 !important;
 }
 
 /* Style the expanded layer control panel */
@@ -89,5 +155,43 @@
 .mapWrapper :global(.meet-here-marker) svg {
   width: 100% !important;
   height: 100% !important;
+}
+
+/* Align zoom controls with header content area (left edge) */
+.mapWrapper :global(.leaflet-control-zoom) {
+  margin-top: 80px !important;
+  left: calc((100vw - 900px) / 2 + 24px) !important;
+  margin-left: 0 !important;
+}
+
+/* Align layer selector with header content area (right edge) */
+.mapWrapper :global(.leaflet-control-layers) {
+  margin-top: 80px !important;
+  right: calc((100vw - 900px) / 2 + 24px) !important;
+  margin-right: 0 !important;
+}
+
+/* Responsive adjustments for smaller screens */
+@media (max-width: 900px) {
+  .mapWrapper :global(.leaflet-control-zoom) {
+    left: 24px !important;
+  }
+  
+  .mapWrapper :global(.leaflet-control-layers) {
+    right: 24px !important;
+  }
+}
+
+/* Mobile adjustments */
+@media (max-width: 640px) {
+  .mapWrapper :global(.leaflet-control-zoom) {
+    left: 16px !important;
+    margin-top: 70px !important;
+  }
+  
+  .mapWrapper :global(.leaflet-control-layers) {
+    right: 16px !important;
+    margin-top: 70px !important;
+  }
 }
 

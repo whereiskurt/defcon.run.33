@@ -1,12 +1,19 @@
 .matrixContainer {
-  position: relative;
-  width: 100%;
-  height: calc(100dvh - 140px);
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
   background: #000;
   overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
+  z-index: 2;
+  margin: 0 !important;
+  padding: 0 !important;
 }
 
 .matrix {
@@ -144,10 +151,6 @@
 
 /* Responsive adjustments */
 @media (max-width: 768px) {
-  .matrixContainer {
-    height: calc(100dvh - 140px);
-  }
-  
   .column {
     font-size: 12px;
   }
@@ -158,10 +161,6 @@
 }
 
 @media (max-width: 480px) {
-  .matrixContainer {
-    height: calc(100dvh - 140px);
-  }
-  
   .column {
     font-size: 10px;
   }

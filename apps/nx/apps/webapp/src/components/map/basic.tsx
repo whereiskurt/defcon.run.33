@@ -5,6 +5,7 @@ import { LatLngExpression, LatLngTuple } from 'leaflet';
 import 'leaflet-defaulticon-compatibility';
 import 'leaflet-defaulticon-compatibility/dist/leaflet-defaulticon-compatibility.css';
 import 'leaflet-gpx';
+import 'leaflet-polylinedecorator';
 import 'leaflet/dist/leaflet.css';
 import { useTheme } from 'next-themes';
 import Link from 'next/link';
@@ -23,6 +24,83 @@ interface MapProps {
 const defaults = {
   zoom: 13,
 };
+
+// Helper function to create expandable popup content
+function createExpandablePopup(content: string, maxChars: number = 100): HTMLElement {
+  const container = document.createElement('div');
+  const isMobile = window.innerWidth < 640;
+  
+  // Strip HTML tags for length calculation
+  const tempDiv = document.createElement('div');
+  tempDiv.innerHTML = content;
+  const textContent = tempDiv.textContent || tempDiv.innerText || '';
+  
+  if (textContent.length <= maxChars) {
+    container.innerHTML = content;
+    return container;
+  }
+  
+  // Create wrapper to maintain structure
+  const wrapper = document.createElement('span');
+  wrapper.style.display = 'inline';
+  
+  const contentSpan = document.createElement('span');
+  contentSpan.className = 'popup-content';
+  contentSpan.style.display = 'inline';
+  
+  const button = document.createElement('button');
+  button.className = 'expand-btn';
+  button.style.cssText = `
+    background: none;
+    border: none;
+    color: #0066cc;
+    cursor: pointer;
+    text-decoration: underline;
+    padding: 0 0 0 4px;
+    margin: 0;
+    font-size: ${isMobile ? '12px' : '14px'};
+    display: inline;
+  `;
+  
+  let isExpanded = false;
+  
+  const updateContent = () => {
+    if (isExpanded) {
+      // Show full content - strip block-level tags to keep inline
+      let inlineContent = content;
+      // Replace p tags with just their content
+      inlineContent = inlineContent.replace(/<p[^>]*>/gi, '').replace(/<\/p>/gi, ' ');
+      // Replace other block elements with spaces
+      inlineContent = inlineContent.replace(/<div[^>]*>/gi, '').replace(/<\/div>/gi, ' ');
+      // Clean up extra spaces
+      inlineContent = inlineContent.replace(/\s+/g, ' ').trim();
+      
+      contentSpan.innerHTML = inlineContent;
+      button.textContent = ' [Less]';
+    } else {
+      // Show truncated content
+      const truncated = textContent.substring(0, maxChars);
+      contentSpan.textContent = truncated + '...';
+      button.textContent = '[More...]';
+    }
+  };
+  
+  button.addEventListener('click', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    isExpanded = !isExpanded;
+    updateContent();
+  });
+  
+  // Initial state
+  updateContent();
+  
+  wrapper.appendChild(contentSpan);
+  wrapper.appendChild(button);
+  container.appendChild(wrapper);
+  
+  return container;
+}
 
 interface RawOverlayMap {
   [key: string]: {
@@ -64,7 +142,7 @@ const Map = ({ center: posix, raw, zoom = defaults.zoom, live_nodes, theme, exte
     <MapContainer
       center={posix}
       zoom={zoom}
-      style={{ zIndex: '0', height: 'calc(100dvh - 140px)', width: '100%' }}
+      style={{ zIndex: '0', height: '100%', width: '100%' }}
     >
 
       {theme === "dark" ? (
@@ -308,7 +386,10 @@ const AddGPXLayer = ({ raw, live_nodes, externalGhostState }: { raw: string, liv
             const marker = L.marker([lat, lng]);
             marker.setIcon(locationPin);
 
-            marker.bindPopup(`
+            // Create popup with responsive width
+            const isMobile = window.innerWidth < 640;
+            const popupContent = document.createElement('div');
+            popupContent.innerHTML = `
               <div style="
                 background: #000; 
                 color: #00ff00; 
@@ -316,14 +397,15 @@ const AddGPXLayer = ({ raw, live_nodes, externalGhostState }: { raw: string, liv
                 border: 1px solid #00ff00; 
                 border-radius: 4px; 
                 font-family: 'Courier New', monospace; 
-                font-size: 16px; 
+                font-size: ${isMobile ? '14px' : '16px'}; 
                 line-height: 1.4;
                 text-shadow: 0 0 2px #00ff00;
                 box-shadow: 0 0 8px rgba(0, 255, 0, 0.3);
-                max-width: 180px;
+                max-width: ${isMobile ? '250px' : '300px'};
+                min-width: ${isMobile ? '200px' : '250px'};
               ">
-                <div style="font-weight: bold; margin-bottom: 6px; font-size: 12px;">${nodeData.longName}</div>
-                <div style="font-size: 12px;">Join the
+                <div style="font-weight: bold; margin-bottom: 6px; font-size: ${isMobile ? '12px' : '14px'};">${nodeData.longName}</div>
+                <div style="font-size: ${isMobile ? '12px' : '14px'};">Join the
                   <a href="/meshtastic" style="
                     color: #00ff00; 
                     text-decoration: none;
@@ -332,7 +414,13 @@ const AddGPXLayer = ({ raw, live_nodes, externalGhostState }: { raw: string, liv
                   ">mesh</a> to chat and CTF with this ghost 👻
                 </div>
               </div>
-            `);
+            `;
+            
+            marker.bindPopup(popupContent, {
+              maxWidth: isMobile ? 250 : 300,
+              minWidth: isMobile ? 200 : 250,
+              className: 'mobile-friendly-popup'
+            });
             liveLayer.addLayer(marker);
           });
         } catch (error) {
@@ -464,13 +552,35 @@ function drawWayPointRoute(data: any, layer: L.LayerGroup<any>) {
     layer.addLayer(startMarker);
 
     const googleLink = `http://google.com/maps?q=${lat},${lon}`;
-    const startupPopup = L.popup({})
-      .setLatLng([lat, lon])
-      .setContent(
-        `<div class='text-lg'>${wname}<br/>${name}</div><div>${wdesc}</div><div><a class="text-xs" href="${googleLink}" rel="noreferrer" target="_blank">Google Map</a></div>`
-      );
-
-    startMarker.bindPopup(startupPopup);
+    const isMobile = window.innerWidth < 640;
+    
+    // Create popup content
+    const popupContainer = document.createElement('div');
+    popupContainer.style.cssText = `
+      max-width: ${isMobile ? '250px' : '350px'};
+      min-width: ${isMobile ? '200px' : '250px'};
+    `;
+    
+    // Build the content
+    const titleContent = `<div class='text-lg font-bold'>${wname}</div><div class='text-base'>${name}</div>`;
+    const descContent = wdesc ? `<div class='text-sm mt-2'>${wdesc}</div>` : '';
+    const linkContent = `<div class='mt-2'><a class="text-xs text-blue-500" href="${googleLink}" rel="noreferrer" target="_blank">Open in Google Maps</a></div>`;
+    
+    // Check if we need expandable content
+    const fullHtml = titleContent + descContent + linkContent;
+    if (wdesc && wdesc.length > 80) {
+      popupContainer.innerHTML = titleContent;
+      const expandableDesc = createExpandablePopup(descContent, 80);
+      popupContainer.appendChild(expandableDesc);
+      popupContainer.innerHTML += linkContent;
+    } else {
+      popupContainer.innerHTML = fullHtml;
+    }
+    
+    startMarker.bindPopup(popupContainer, {
+      maxWidth: isMobile ? 250 : 350,
+      minWidth: isMobile ? 200 : 250
+    });
     coordinates.push({ lat, lon, wname, wcmt, wdesc });
   }
 
@@ -484,6 +594,27 @@ function drawWayPointRoute(data: any, layer: L.LayerGroup<any>) {
       lineCap: 'round',
     });
     layer.addLayer(polyline);
+    
+    // Add arrow decorations to show direction for waypoint routes
+    const decorator = (L as any).polylineDecorator(polyline, {
+      patterns: [
+        {
+          offset: '5%',
+          repeat: 75,
+          symbol: (L as any).Symbol.arrowHead({
+            pixelSize: 16,
+            polygon: false,
+            pathOptions: {
+              stroke: true,
+              color: textcolor,
+              weight: 3,
+              opacity: opacity
+            }
+          })
+        }
+      ]
+    });
+    layer.addLayer(decorator);
   }
 }
 
@@ -523,6 +654,15 @@ function drawRoute(data: any, layer: L.LayerGroup<any>) {
       }
     : undefined;
 
+  const endLocation = data.endLocation
+    ? data.endLocation
+    : polylineCoordinates.length > 0
+    ? {
+        latitude: polylineCoordinates[polylineCoordinates.length - 1][0],
+        longitude: polylineCoordinates[polylineCoordinates.length - 1][1],
+      }
+    : undefined;
+
   // Check if this GPX contains waypoints
   const parser = new DOMParser();
   const xmlDoc = parser.parseFromString(data.gpx, 'application/xml');
@@ -542,7 +682,9 @@ function drawRoute(data: any, layer: L.LayerGroup<any>) {
       const lat = parseFloat(wpt.getAttribute('lat') || '0');
       const lon = parseFloat(wpt.getAttribute('lon') || '0');
       const nameNode = wpt.getElementsByTagName('name')[0];
+      const cmtNode = wpt.getElementsByTagName('cmt')[0];
       const wptName = nameNode ? nameNode.textContent || '' : '';
+      const wptCmt = cmtNode ? cmtNode.textContent || '' : '';
       
       // Create a distinct waypoint marker style
       const wptIconSettings = {
@@ -565,12 +707,33 @@ function drawRoute(data: any, layer: L.LayerGroup<any>) {
       const wptMarker = L.marker([lat, lon]);
       wptMarker.setIcon(wptPin);
       
-      // Create popup with waypoint name
-      const wptPopup = L.popup({})
-        .setLatLng([lat, lon])
-        .setContent(`<div class='text-lg font-bold'>${wptName}</div><div class='text-sm'>${name}</div>`);
+      // Create popup with waypoint name, route name, and comment
+      const isMobile = window.innerWidth < 640;
+      const popupContainer = document.createElement('div');
+      popupContainer.style.cssText = `
+        max-width: ${isMobile ? '220px' : '300px'};
+        min-width: ${isMobile ? '150px' : '200px'};
+      `;
       
-      wptMarker.bindPopup(wptPopup);
+      // Build the content
+      const titleContent = `<div class='text-lg font-bold'>${wptName}</div>`;
+      const commentContent = wptCmt ? `<div class='text-sm mt-2'>${wptCmt}</div>` : '';
+      const routeContent = `<div class='text-base mt-2'>${name}</div>`;
+      
+      // Check if we need expandable content
+      if (wptCmt && wptCmt.length > 80) {
+        popupContainer.innerHTML = titleContent;
+        const expandableComment = createExpandablePopup(commentContent, 80);
+        popupContainer.appendChild(expandableComment);
+        popupContainer.innerHTML += routeContent;
+      } else {
+        popupContainer.innerHTML = titleContent + commentContent + routeContent;
+      }
+      
+      wptMarker.bindPopup(popupContainer, {
+        maxWidth: isMobile ? 220 : 300,
+        minWidth: isMobile ? 150 : 200
+      });
       layer.addLayer(wptMarker);
     }
   }
@@ -585,6 +748,27 @@ function drawRoute(data: any, layer: L.LayerGroup<any>) {
       lineCap: 'round',
     });
     layer.addLayer(polyline);
+    
+    // Add arrow decorations to show direction
+    const decorator = (L as any).polylineDecorator(polyline, {
+      patterns: [
+        {
+          offset: '5%',
+          repeat: 75,
+          symbol: (L as any).Symbol.arrowHead({
+            pixelSize: 16,
+            polygon: false,
+            pathOptions: {
+              stroke: true,
+              color: color,
+              weight: 3,
+              opacity: opacity
+            }
+          })
+        }
+      ]
+    });
+    layer.addLayer(decorator);
   }
 
   // Add start location marker if we have one (either for routes or standalone pins)
@@ -638,17 +822,122 @@ function drawRoute(data: any, layer: L.LayerGroup<any>) {
 
     const linktemplate = `<a href="${data.gpxurl}">GPX</a>&nbsp; | &nbsp;<a target="_blank" rel="noreferrer" href="${data.stravaurl}">Strava</a>`;
 
-    const startupPopup = L.popup({})
-      .setLatLng([startLocation.latitude, startLocation.longitude])
-      .setContent(
-        `<div class='text-lg'>${name}</div><div>${linktemplate}<p>${description}</p></div>`
-      );
-
-    startMarker.bindPopup(startupPopup);
+    const isMobile = window.innerWidth < 640;
+    
+    // Create main popup container
+    const mainPopupContainer = document.createElement('div');
+    mainPopupContainer.style.cssText = `
+      max-width: ${isMobile ? '250px' : '350px'};
+      min-width: ${isMobile ? '200px' : '300px'};
+    `;
+    
+    // Add title with "Start:" prefix
+    const titleDiv = document.createElement('div');
+    titleDiv.className = 'text-lg font-bold mb-2';
+    titleDiv.textContent = `Start: ${name}`;
+    mainPopupContainer.appendChild(titleDiv);
+    
+    // Add links
+    const linksDiv = document.createElement('div');
+    linksDiv.className = 'text-sm mb-2';
+    linksDiv.innerHTML = linktemplate;
+    mainPopupContainer.appendChild(linksDiv);
+    
+    // Add description with expandable content if needed
+    if (description && description.length > 100) {
+      const descContainer = createExpandablePopup(`<p class="text-sm">${description}</p>`, 100);
+      mainPopupContainer.appendChild(descContainer);
+    } else if (description) {
+      const descDiv = document.createElement('p');
+      descDiv.className = 'text-sm';
+      descDiv.innerHTML = description;
+      mainPopupContainer.appendChild(descDiv);
+    }
+    
+    startMarker.bindPopup(mainPopupContainer, {
+      maxWidth: isMobile ? 250 : 350,
+      minWidth: isMobile ? 200 : 300
+    });
     if (polyline) {
-      polyline.bindPopup(startupPopup);
+      polyline.bindPopup(mainPopupContainer, {
+        maxWidth: isMobile ? 250 : 350,
+        minWidth: isMobile ? 200 : 300
+      });
     }
     layer.addLayer(startMarker);
+  }
+
+  // Add end location marker if we have one (similar to start location logic)
+  if (endLocation) {
+    // Use the same classic drop pin style as start pin
+    const endIconSettings = {
+      mapIconUrl:
+        '<svg version="1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 149 178"><path fill="{mapIconColor}" stroke="#FFF" stroke-width="6" stroke-miterlimit="10" d="M126 23l-6-6A69 69 0 0 0 74 1a69 69 0 0 0-51 22A70 70 0 0 0 1 74c0 21 7 38 22 52l43 47c6 6 11 6 16 0l48-51c12-13 18-29 18-48 0-20-8-37-22-51z"/><circle fill="{mapIconColorInnerCircle}" cx="74" cy="75" r="61"/><circle fill="{innerCircleColor}" cx="74" cy="75" r="{pinInnerCircleRadius}"/></svg>',
+      mapIconColor: color,
+      mapIconColorInnerCircle: color,
+      innerCircleColor: color.toLowerCase() === '#ffffff' || color.toLowerCase() === 'white' ? '#000' : '#FFF',
+      pinInnerCircleRadius: 32,
+    };
+    
+    const endPin = L.divIcon({
+      className: 'leaflet-data-marker',
+      html: L.Util.template(
+        endLocation.svgPin ?? endIconSettings.mapIconUrl,
+        endIconSettings
+      ),
+      iconAnchor: [12, 32] as [number, number],
+      iconSize: [25, 30] as [number, number],
+      popupAnchor: [0, -28] as [number, number],
+    });
+    
+    const endMarker = L.marker([
+      endLocation.latitude,
+      endLocation.longitude,
+    ], {
+      zIndexOffset: 0
+    });
+    endMarker.setIcon(endPin);
+
+    const description = data.description;
+    const linktemplate = `<a href="${data.gpxurl}">GPX</a>&nbsp; | &nbsp;<a target="_blank" rel="noreferrer" href="${data.stravaurl}">Strava</a>`;
+    const isMobile = window.innerWidth < 640;
+    
+    // Create finish popup container
+    const finishPopupContainer = document.createElement('div');
+    finishPopupContainer.style.cssText = `
+      max-width: ${isMobile ? '250px' : '350px'};
+      min-width: ${isMobile ? '200px' : '300px'};
+    `;
+    
+    // Add title with "End" prefix
+    const finishTitleDiv = document.createElement('div');
+    finishTitleDiv.className = 'text-lg font-bold mb-2';
+    finishTitleDiv.textContent = `End: ${name}`;
+    finishPopupContainer.appendChild(finishTitleDiv);
+    
+    // Add links
+    const finishLinksDiv = document.createElement('div');
+    finishLinksDiv.className = 'text-sm mb-2';
+    finishLinksDiv.innerHTML = linktemplate;
+    finishPopupContainer.appendChild(finishLinksDiv);
+    
+    // Add description with expandable content if needed
+    if (description && description.length > 100) {
+      const descContainer = createExpandablePopup(`<p class="text-sm">${description}</p>`, 100);
+      finishPopupContainer.appendChild(descContainer);
+    } else if (description) {
+      const descDiv = document.createElement('p');
+      descDiv.className = 'text-sm';
+      descDiv.innerHTML = description;
+      finishPopupContainer.appendChild(descDiv);
+    }
+    
+    endMarker.bindPopup(finishPopupContainer, {
+      maxWidth: isMobile ? 250 : 350,
+      minWidth: isMobile ? 200 : 300
+    });
+    
+    layer.addLayer(endMarker);
   }
 }
 

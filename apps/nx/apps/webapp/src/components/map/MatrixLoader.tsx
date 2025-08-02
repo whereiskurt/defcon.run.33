@@ -10,6 +10,18 @@ interface MatrixLoaderProps {
 export default function MatrixLoader({ onComplete }: MatrixLoaderProps) {
   const [isComplete, setIsComplete] = useState(false);
 
+  // Japanese birthday messages for Elkentaro
+  const birthdayChars = [
+    // "エルケンタロウさん、お誕生日おめでとう！" (Happy Birthday Elkentaro!)
+    'エ', 'ル', 'ケ', 'ン', 'タ', 'ロ', 'ウ', 'さ', 'ん', '、', 
+    'お', '誕', '生', '日', 'お', 'め', 'で', 'と', 'う', '！',
+    // "エルケンタロウさんへ誕生日おめでとう" (Birthday Wishes Elkentaro)
+    'エ', 'ル', 'ケ', 'ン', 'タ', 'ロ', 'ウ', 'さ', 'ん', 'へ',
+    '誕', '生', '日', 'お', 'め', 'で', 'と', 'う',
+    // Additional Japanese characters for variety
+    '祝', '福', '幸', '運', '愛', '心', '友', '達', '楽', '笑'
+  ];
+
   useEffect(() => {
     // Ensure minimum 2 second display time
     const timer = setTimeout(() => {
@@ -27,7 +39,7 @@ export default function MatrixLoader({ onComplete }: MatrixLoaderProps) {
           <div key={i} className={styles.column}>
             {Array.from({ length: 50 }, (_, j) => (
               <span key={j} className={styles.char}>
-                {String.fromCharCode(0x30A0 + Math.random() * 96)}
+                {birthdayChars[Math.floor(Math.random() * birthdayChars.length)]}
               </span>
             ))}
           </div>

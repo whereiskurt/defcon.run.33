@@ -138,7 +138,7 @@ const elky = (
               <Button
                 className="bg-button-dashboard-bg hover:bg-button-dashboard-hover text-button-dashboard-text"
                 radius="sm"
-                size="lg"
+                size="sm"
                 style={{ backgroundColor: 'purple' }}
               >
                 <Link isExternal className="text-white" href="https://forms.gle/tnstscUNiUkuXA1K9">

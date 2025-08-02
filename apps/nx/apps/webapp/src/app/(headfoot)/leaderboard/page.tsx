@@ -16,8 +16,7 @@ export default async function Page() {
 
   return (
     <>
-      <Heading className="mb-2">Leaderboard 🥕</Heading>
-      <Lead className="mb-2">Who's getting all the carrots?</Lead>
+      <Heading className="mb-2">🥕 Leaderboard 🥕</Heading>
       <div className="container mx-auto">
         <LeaderboardTable ghosts={ghosts.data} />
       </div>

@@ -23,7 +23,6 @@ import { FaDesktop, FaPlus, FaStrava, FaTrophy, FaUserAlt } from 'react-icons/fa
 import { DashboardIcon } from './icon/dashboard';
 import { LogoutIcon } from './icon/logout';
 import { QRIcon } from './icon/qr';
-import Link from 'next/link';
 import { useEffect, useState } from 'react';
 
 import DCJackIcon from '@/public/header/dcjack.svg';
@@ -130,21 +129,9 @@ const UserDropDown = (params: any) => {
               key="profile"
               className="gap-2 opacity-100"
               textValue="Profile"
+              href="/profile"
             >
-              <Link replace={true} href="/profile">
-                Profile
-              </Link>
-            </DropdownItem>
-
-            <DropdownItem
-              startContent={<FaDesktop className={iconClasses} />}
-              key="dashboard"
-              className="opacity-100"
-              textValue="Dashboard"
-            >
-              <Link replace={true} href="/dashboard">
-                Dashboard
-              </Link>
+              Profile
             </DropdownItem>
 
             <DropdownItem
@@ -152,56 +139,22 @@ const UserDropDown = (params: any) => {
               key="leaderboard"
               className="gap-2 opacity-100"
               textValue="Leaderboard"
+              href="/leaderboard"
             >
-              <Link replace={true} href="/leaderboard">
-                Leaderboard
-              </Link>
+              Leaderboard
             </DropdownItem>
-          </DropdownSection>
-          <DropdownSection aria-label="Profile & Actions" showDivider={!session.user.hasStrava}>
-            {!session.user.hasStrava ? (
-              <DropdownItem
-                startContent={
-                  <FaStrava color="red" size={24} className={iconClasses} />
-                }
-                onClick={() => signIn('strava', { callbackUrl: '/dashboard' })}
-                textValue="Link to Strava"
-                key="strava"
-              >
-                Link to Strava
-              </DropdownItem>
-            ) : (
-              <></>
-            )}
 
-            {/* <DropdownItem
-              startContent={
-                <>
-                  <Link
-                    replace={true}
-                    href={`/participation?show=${
-                      session.user.hasStrava ? 'strava' : 'manual'
-                    }`}
-                  >
-                    <FaPlus color="green" className={iconClasses} />
-                  </Link>
-                </>
-              }
-              key="new_activity"
-              textValue="New Activity"
+            <DropdownItem
+              startContent={<FaDesktop className={iconClasses} />}
+              key="dashboard"
+              className="opacity-100"
+              textValue="Dashboard"
+              showDivider
+              href="/dashboard"
             >
-              <Link
-                replace={true}
-                href={`/participation?show=${
-                  session.user.hasStrava ? 'strava' : 'manual'
-                }`}
-              >
-                Add New Activity
-              </Link>
-            </DropdownItem> */}
-          </DropdownSection>
+              Dashboard
+            </DropdownItem>
 
-          <DropdownSection aria-label="Profile & Actions" showDivider>
             <DropdownItem
               startContent={<QRIcon className={iconClasses} />}
               key="showqr"
@@ -212,39 +165,23 @@ const UserDropDown = (params: any) => {
               Show My QR
             </DropdownItem>
           </DropdownSection>
-          {/* <DropdownSection aria-label="Preferences2" showDivider>
-            <DropdownItem
-              isReadOnly
-              key="theme"
-              className="cursor-default"
-              textValue="Theme Selector"
-              startContent={<ThemeIcon className={iconClasses} />}
-              endContent={
-                <select
-                  className="z-10 outline-none w-24 py-0.5 rounded-md text-tiny group-data-[hover=true]:border-default-500 border-small border-default-300 dark:border-default-200 bg-transparent text-default-500"
-                  id="theme"
-                  name="theme"
-                  defaultValue={session.user.theme}
-                  onChange={handleChangeTheme}
-                >
-                  <option value={'dark'}>Dark</option>
-                  <option value={'light'}>Light</option>
-                  <option value={'modern'}>Modern</option>
-                </select>
-              }
-            >
-              Theme
-            </DropdownItem>
-            <DropdownItem
-              startContent={<SettingIcon className={iconClasses} />}
-              key="settings"
-              textValue="Settings"
-            >
-              Settings
-            </DropdownItem>
-          </DropdownSection> */}
+          
+          {!session.user.hasStrava ? (
+            <DropdownSection aria-label="Profile & Actions" showDivider>
+              <DropdownItem
+                startContent={
+                  <FaStrava color="red" size={24} className={iconClasses} />
+                }
+                onClick={() => signIn('strava', { callbackUrl: '/dashboard' })}
+                textValue="Link to Strava"
+                key="strava"
+              >
+                Link to Strava
+              </DropdownItem>
+            </DropdownSection>
+          ) : null}
 
-          <DropdownSection aria-label="Help & Feedback">
+          <DropdownSection aria-label="Logoutk">
             <DropdownItem
               startContent={<LogoutIcon className={iconClasses} />}
               key="logout"

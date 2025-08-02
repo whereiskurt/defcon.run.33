@@ -5,42 +5,45 @@ const WEBAPP_PREFIX = process.env.WEBAPP_PREFIX || 'www';
 const { composePlugins, withNx } = require('@nx/next');
 const plugins = [withNx];
 
-if (process.env.NODE_ENV === 'production') {
-  module.exports = composePlugins(...plugins)({
-    nx: { svgr: false },
-    output: 'standalone',
-    assetPrefix: `https://${WEBAPP_ORIGIN}/${WEBAPP_PREFIX}`, // rewrites <script> / <link> tags
-    webpack(config) {
-      config.output.publicPath = `https://${WEBAPP_ORIGIN}/${WEBAPP_PREFIX}/_next/`;
-      return config;
-    },
-    images: {
-      remotePatterns: [new URL(`https://*.defcon.run/**`)],
-    },
-    async redirects() {
-      return [
-        {
-          source: '/meshtk',
-          destination: 'https://github.com/whereiskurt/meshtk',
-          permanent: true,
-        },
-      ];
-    },
-  });
-} else {
-  module.exports = composePlugins(...plugins)({
-    nx: { svgr: false },
-    images: {
-      remotePatterns: [new URL(`https://*.defcon.run/**`)],
-    },
-    async redirects() {
-      return [
-        {
-          source: '/meshtk',
-          destination: 'https://github.com/whereiskurt/meshtk',
-          permanent: true,
-        },
-      ];
-    },
-  });
-}
+// Shared configuration for both environments
+const sharedConfig = {
+  nx: { svgr: false },
+  images: {
+    remotePatterns: [new URL(`https://*.defcon.run/**`)],
+  },
+  async redirects() {
+    return [
+      {
+        source: '/meshtk',
+        destination: 'https://github.com/whereiskurt/meshtk',
+        permanent: true,
+      },
+      {
+        source: '/mqtt',
+        destination: 'https://mqq.defcon.run/map/',
+        permanent: true,
+      },
+      {
+        source: '/r/:path*',
+        destination: '/qr/:path*',
+        permanent: true,
+      },
+    ];
+  },
+};
+
+// Production-specific configuration
+const productionConfig = {
+  ...sharedConfig,
+  output: 'standalone',
+  assetPrefix: `https://${WEBAPP_ORIGIN}/${WEBAPP_PREFIX}`, // rewrites <script> / <link> tags
+  webpack(config) {
+    config.output.publicPath = `https://${WEBAPP_ORIGIN}/${WEBAPP_PREFIX}/_next/`;
+    return config;
+  },
+};
+
+// Export the appropriate configuration based on environment
+module.exports = composePlugins(...plugins)(
+  process.env.NODE_ENV === 'production' ? productionConfig : sharedConfig
+);

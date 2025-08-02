@@ -423,24 +423,13 @@ export default function LeaderboardTable({ ghosts }: LeaderboardTableProps) {
                   </div>
                 ) : accomplishments[user.id] && accomplishments[user.id].length > 0 ? (
                   <div>
-                    <h4 className="font-semibold text-base mb-3">Individual Accomplishments</h4>
                     <div className="space-y-1">
                       {accomplishments[user.id]
                         .sort((a, b) => b.completedAt - a.completedAt)
                         .map((accomplishment, idx) => (
                           <div key={idx} className="border-l-4 border-l-gray-300 pl-4 py-1">
+                            <h4 className="font-semibold text-base mb-1">{accomplishment.name}</h4>
                             <div className="flex items-center gap-2 mb-1">
-                              <span className="font-medium text-base">{accomplishment.name}</span>
-                            </div>
-                            <div className="flex items-center gap-3 mt-1">
-                              <span className="text-sm text-default-500">
-                                {formatDate(accomplishment.completedAt)}
-                              </span>
-                              {accomplishment.metadata?.points && accomplishment.metadata.points > 0 && (
-                                <span className="text-sm text-success-600 font-semibold">
-                                  +{accomplishment.metadata.points} points
-                                </span>
-                              )}
                               <Chip
                                 color={getTypeColor(accomplishment.type)}
                                 variant="flat"
@@ -448,6 +437,21 @@ export default function LeaderboardTable({ ghosts }: LeaderboardTableProps) {
                               >
                                 {accomplishment.type.toUpperCase()}
                               </Chip>
+                              <span className="font-medium text-base">{accomplishment.description || accomplishment.name}</span>
+                            </div>
+                            <div className="flex items-center gap-3 mt-1">
+                              <span className="text-sm text-default-500">
+                                {formatDate(accomplishment.completedAt)}
+                              </span>
+                              {accomplishment.metadata?.points && accomplishment.metadata.points !== 0 && (
+                                <Chip 
+                                  className={accomplishment.metadata.points > 0 ? "bg-foreground text-background border-foreground" : "bg-danger text-danger-foreground border-danger"} 
+                                  variant="bordered" 
+                                  size="sm"
+                                >
+                                  {accomplishment.metadata.points > 0 ? '+' : ''}{accomplishment.metadata.points} 🥕
+                                </Chip>
+                              )}
                             </div>
                           </div>
                         ))}

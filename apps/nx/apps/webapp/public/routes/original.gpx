@@ -9,10 +9,10 @@
 </metadata>
 <wpt lat="36.1147583" lon="-115.1795226">
     <ele>0.0</ele>
-    <name>Alert!</name>
-    <cmt>Waypoint no: 1</cmt>
-    <desc>This is waypoint no: 1</desc>
-    <sym> </sym>
+    <name>Danger Zone</name>
+    <cmt>Traffic intersection and sketchy area to highway overpass. Stay alert.</cmt>
+    <desc></desc>
+    <sym></sym>
 </wpt>
 <trk>
     <name>The Original</name>

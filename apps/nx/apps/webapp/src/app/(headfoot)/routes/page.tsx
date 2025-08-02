@@ -13,7 +13,7 @@ export default async function Page() {
   const mqtt_nodes = await livenodes(nodesUrl);
 
   return (
-    <div className={`mx-auto w-[98%] p-2 ${styles.routesContainer}`}>
+    <div className={styles.routesContainer}>
       <div className={styles.mapWrapper}>
         <EnhancedClientMap raw={JSON.stringify(routes.data)} mqtt_nodes={JSON.stringify(mqtt_nodes)} center={[36.1320813, -115.1667648]} />
       </div>

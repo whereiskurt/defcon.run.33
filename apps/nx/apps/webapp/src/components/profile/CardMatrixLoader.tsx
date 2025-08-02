@@ -14,17 +14,29 @@ export default function CardMatrixLoader({
 }: CardMatrixLoaderProps) {
   const [isClient, setIsClient] = useState(false);
 
+  // Japanese birthday messages for Elkentaro
+  const birthdayChars = [
+    // "エルケンタロウさん、お誕生日おめでとう！" (Happy Birthday Elkentaro!)
+    'エ', 'ル', 'ケ', 'ン', 'タ', 'ロ', 'ウ', 'さ', 'ん', '、', 
+    'お', '誕', '生', '日', 'お', 'め', 'で', 'と', 'う', '！',
+    // "エルケンタロウさんへ誕生日おめでとう" (Birthday Wishes Elkentaro)
+    'エ', 'ル', 'ケ', 'ン', 'タ', 'ロ', 'ウ', 'さ', 'ん', 'へ',
+    '誕', '生', '日', 'お', 'め', 'で', 'と', 'う',
+    // Additional Japanese characters for variety
+    '祝', '福', '幸', '運', '愛', '心', '友', '達', '楽', '笑'
+  ];
+
   useEffect(() => {
     setIsClient(true);
   }, []);
 
   const getCharacter = (i: number, j: number) => {
     if (!isClient) {
-      // Use deterministic characters for server-side rendering
-      return String.fromCharCode(0x30A0 + ((i * 7 + j * 13) % 96));
+      // Use deterministic characters from birthday message for server-side rendering
+      return birthdayChars[(i * 7 + j * 13) % birthdayChars.length];
     }
-    // Use random characters on client-side
-    return String.fromCharCode(0x30A0 + Math.random() * 96);
+    // Use random birthday characters on client-side
+    return birthdayChars[Math.floor(Math.random() * birthdayChars.length)];
   };
 
   return (

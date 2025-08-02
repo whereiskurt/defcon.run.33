@@ -8,6 +8,7 @@ import {
   Navbar,
   NavbarContent,
   NavbarItem,
+  Tooltip,
 } from '@heroui/react';
 import dynamic from 'next/dynamic';
 import { GrMapLocation } from 'react-icons/gr';
@@ -28,6 +29,7 @@ const MenuDropDown = dynamic(() => import('./dropdown-menu'), {
 });
 
 import { ThemeSwitch } from '../theme-switch';
+import { APP_VERSION_TOOLTIP } from '../../config/version';
 
 export function Header(params: any) {
   const session = params.session;
@@ -41,17 +43,21 @@ export function Header(params: any) {
       </NavbarContent>
       <NavbarContent className="sm:hidden" justify="center">
         <NavbarItem className="">
-          <Link color="foreground" href="/dashboard">
-            <Logo />
-          </Link>
+          <Tooltip content={APP_VERSION_TOOLTIP} placement="bottom">
+            <Link color="foreground" href="/dashboard">
+              <Logo />
+            </Link>
+          </Tooltip>
         </NavbarItem>
       </NavbarContent>
       <NavbarContent className="sm:flex hidden" justify="center">
           <>
             <NavbarItem>
-              <Link color="foreground" href="/dashboard">
-                <Logo />
-              </Link>
+              <Tooltip content={APP_VERSION_TOOLTIP} placement="bottom">
+                <Link color="foreground" href="/dashboard">
+                  <Logo />
+                </Link>
+              </Tooltip>
             </NavbarItem>
           </>
         {/* <NavbarItem>
