@@ -262,6 +262,9 @@ const User = new Entity(
           refresh_token: { type: 'string' },
           token_type: { type: 'string' },
           type: { type: 'string' },
+          activities: { type: 'any' }, // Map of activity_id -> StravaActivity
+          last_activities_sync: { type: 'number' }, // Timestamp of last sync
+          sync_history: { type: 'any' }, // Array of sync timestamps for rate limiting
         },
       },
     },

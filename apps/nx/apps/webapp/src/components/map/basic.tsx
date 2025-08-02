@@ -858,8 +858,39 @@ function drawRoute(data: any, layer: L.LayerGroup<any>) {
       maxWidth: isMobile ? 250 : 350,
       minWidth: isMobile ? 200 : 300
     });
+    
+    // Create separate popup for route polyline with "Route:" prefix
     if (polyline) {
-      polyline.bindPopup(mainPopupContainer, {
+      const routePopupContainer = document.createElement('div');
+      routePopupContainer.style.cssText = `
+        max-width: ${isMobile ? '250px' : '350px'};
+        min-width: ${isMobile ? '200px' : '300px'};
+      `;
+      
+      // Add title
+      const routeTitleDiv = document.createElement('div');
+      routeTitleDiv.className = 'text-lg font-bold mb-2';
+      routeTitleDiv.textContent = name;
+      routePopupContainer.appendChild(routeTitleDiv);
+      
+      // Add links
+      const routeLinksDiv = document.createElement('div');
+      routeLinksDiv.className = 'text-sm mb-2';
+      routeLinksDiv.innerHTML = linktemplate;
+      routePopupContainer.appendChild(routeLinksDiv);
+      
+      // Add description with expandable content if needed
+      if (description && description.length > 100) {
+        const descContainer = createExpandablePopup(`<p class="text-sm">${description}</p>`, 100);
+        routePopupContainer.appendChild(descContainer);
+      } else if (description) {
+        const descDiv = document.createElement('p');
+        descDiv.className = 'text-sm';
+        descDiv.innerHTML = description;
+        routePopupContainer.appendChild(descDiv);
+      }
+      
+      polyline.bindPopup(routePopupContainer, {
         maxWidth: isMobile ? 250 : 350,
         minWidth: isMobile ? 200 : 300
       });
