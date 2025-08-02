@@ -230,7 +230,7 @@ export function HeatMapKonamiWrapper({ children, stats, routes }: HeatMapKonamiW
       {children}
       {/* Stats Panel */}
       <div 
-        className="fixed top-20 left-16 bg-white text-black p-1 rounded shadow-md border border-gray-300 z-[9999] cursor-pointer"
+        className="fixed top-16 left-16 bg-white text-black p-1 rounded shadow-md border border-gray-300 z-[9999] cursor-pointer"
         onClick={cycleDisplayMode}
         title="Click, use konami code (↑↑↓↓←→←→BA), or rapidly toggle theme 10x to cycle units"
         style={{ fontSize: '11px', minWidth: '60px' }}
