@@ -7,8 +7,12 @@ export AWS_ACCOUNT_ID=${AWS_ACCOUNT_ID:-$(aws sts get-caller-identity --query "A
 export IMAGE_TAG=${IMAGE_TAG:-"v0.0.1"}
 export REPO_NAME=${REPO_NAME:-"nginx.mqtt.defcon.run"}
 
+# docker buildx build \
+#   --platform linux/amd64,linux/arm64 \
+#   -f Dockerfile.nginx -t $REPO_NAME:$IMAGE_TAG .
+
 docker buildx build \
-  --platform linux/amd64,linux/arm64 \
+  --platform linux/amd64 \
   -f Dockerfile.nginx -t $REPO_NAME:$IMAGE_TAG .
 
 aws ecr get-login-password --region ${AWS_REGION} \
