@@ -7,6 +7,10 @@ import styles from '../routes/routes.module.css';
 import polyline from '@mapbox/polyline';
 import { HeatMapKonamiWrapper } from '@components/heatmap/HeatMapKonamiWrapper';
 
+// Configuration for consistent DEFCON layers
+const MAX_DEFCONS = 8; // Show last 8 DEFCON years
+const CURRENT_YEAR = 2025; // DC33
+
 export default async function Page() {
   const session = await auth();
   
@@ -31,8 +35,10 @@ export default async function Page() {
             raw={JSON.stringify(heatMapData.routes)} 
             mqtt_nodes={JSON.stringify([])} 
             center={[36.1320813, -115.1667648]} 
-            loadingText="DRAWING THE FIRE!"
+            loadingText="DRAWING THE FIRE"
+            loadingIndicator="🔥🔥🔥"
             disableGhostMode={true}
+            disablePopups={true}
             zoom={12}
           />
         </div>
@@ -48,6 +54,49 @@ function decodePolyline(encodedPolyline: string) {
   } catch (error) {
     console.error('Error decoding polyline:', error);
     return [];
+  }
+}
+
+// Function to parse GPX and extract coordinates
+function parseGPXToPoints(gpxContent: string): [number, number][] {
+  try {
+    const points: [number, number][] = [];
+    // Extract trackpoints using regex
+    const trackpointRegex = /<trkpt\s+lat="([^"]+)"\s+lon="([^"]+)"/g;
+    let match;
+    while ((match = trackpointRegex.exec(gpxContent)) !== null) {
+      const lat = parseFloat(match[1]);
+      const lon = parseFloat(match[2]);
+      if (!isNaN(lat) && !isNaN(lon)) {
+        points.push([lat, lon]);
+      }
+    }
+    return points;
+  } catch (error) {
+    console.error('Error parsing GPX:', error);
+    return [];
+  }
+}
+
+// Function to fetch GPX from Strapi URL
+async function fetchGPXFromStrapi(url: string): Promise<string | null> {
+  try {
+    // Ensure URL is absolute
+    const gpxUrl = url.startsWith('http') ? url : `${process.env.STRAPI_URL || 'https://cms.defcon.run'}${url}`;
+    const response = await fetch(gpxUrl, {
+      method: 'GET',
+      headers: {
+        'Authorization': `bearer ${process.env.AUTH_STRAPI_TOKEN}`
+      },
+    });
+    if (!response.ok) {
+      console.error(`Failed to fetch GPX from ${gpxUrl}: ${response.status}`);
+      return null;
+    }
+    return await response.text();
+  } catch (error) {
+    console.error('Error fetching GPX from Strapi:', error);
+    return null;
   }
 }
 
@@ -73,17 +122,128 @@ async function fetchHeatMapData() {
     // Fetch all activity accomplishments (which contain Strava data with polylines)
     const accomplishments = await getAllAccomplishmentsForType('activity');
     
-    // Group accomplishments by year to create separate layers
+    // Las Vegas bounding box (approximate)
+    const LAS_VEGAS_BOUNDS = {
+      north: 36.3,
+      south: 35.95,
+      east: -114.95,
+      west: -115.35
+    };
+    
+    // Helper function to check if a point is within Las Vegas bounds
+    const isInLasVegas = (lat: number, lng: number): boolean => {
+      return lat >= LAS_VEGAS_BOUNDS.south && 
+             lat <= LAS_VEGAS_BOUNDS.north && 
+             lng >= LAS_VEGAS_BOUNDS.west && 
+             lng <= LAS_VEGAS_BOUNDS.east;
+    };
+    
+    // Helper function to check if an activity is in Las Vegas area
+    const isActivityInLasVegas = (decodedPoints: [number, number][]): boolean => {
+      if (decodedPoints.length === 0) return false;
+      
+      // Check if at least 80% of points are within Las Vegas bounds
+      // This allows for GPS drift and activities that might briefly go outside bounds
+      const pointsInBounds = decodedPoints.filter(([lat, lng]) => isInLasVegas(lat, lng));
+      return (pointsInBounds.length / decodedPoints.length) >= 0.8;
+    };
+    
+    // Group accomplishments by year
     const accomplishmentsByYear = new Map<number, any[]>();
     
-    for (const accomplishment of accomplishments) {
-      const metadata = accomplishment.metadata;
-      
-      // Check if we have a polyline
-      if (metadata?.summary_polyline) {
-        const decodedPoints = decodePolyline(metadata.summary_polyline);
+    let totalActivityCount = 0;
+    let filteredOutCount = 0;
+    
+    // Process all accomplishments in parallel to avoid async issues
+    const processedAccomplishments = await Promise.all(
+      accomplishments.map(async (accomplishment) => {
+        const metadata = accomplishment.metadata;
+        let decodedPoints: [number, number][] = [];
         
-        if (decodedPoints.length > 0) {
+        // First, try to get points from Strava polyline
+        if (metadata?.summary_polyline) {
+          // Try to parse as JSON coordinate array first (for manual uploads)
+          try {
+            const coordArray = JSON.parse(metadata.summary_polyline);
+            if (Array.isArray(coordArray) && coordArray.length > 0 && Array.isArray(coordArray[0])) {
+              decodedPoints = coordArray as [number, number][];
+              console.log(`Parsed ${decodedPoints.length} points from JSON coordinate array`);
+            }
+          } catch {
+            // If JSON parsing fails, try polyline decoding (for Strava data)
+            decodedPoints = decodePolyline(metadata.summary_polyline);
+          }
+        }
+        
+        // If no Strava polyline, check for pre-selected route GPX URL
+        if (decodedPoints.length === 0 && metadata?.gpxUrl) {
+          console.log(`No Strava polyline for activity, fetching GPX from: ${metadata.gpxUrl}`);
+          const gpxContent = await fetchGPXFromStrapi(metadata.gpxUrl);
+          if (gpxContent) {
+            decodedPoints = parseGPXToPoints(gpxContent);
+            console.log(`Parsed ${decodedPoints.length} points from GPX`);
+          }
+        }
+        
+        // Check various possible GPX URL fields in metadata
+        if (decodedPoints.length === 0) {
+          const possibleGpxFields = [
+            (metadata as any)?.gpx_url,
+            (metadata as any)?.gpxURL,
+            (metadata as any)?.gpx,
+            (metadata as any)?.route_gpx_url, // New field from updated metadata
+            (metadata as any)?.selectedRoute?.gpx_url,
+            (metadata as any)?.selectedRoute?.gpxUrl,
+            (metadata as any)?.route?.gpx_url,
+            (metadata as any)?.route?.gpxUrl,
+          ];
+          
+          for (const gpxField of possibleGpxFields) {
+            if (gpxField && typeof gpxField === 'string') {
+              console.log(`Found GPX URL in metadata: ${gpxField}`);
+              const gpxContent = await fetchGPXFromStrapi(gpxField);
+              if (gpxContent) {
+                decodedPoints = parseGPXToPoints(gpxContent);
+                if (decodedPoints.length > 0) {
+                  console.log(`Successfully parsed ${decodedPoints.length} points from GPX`);
+                  break;
+                }
+              }
+            }
+          }
+        }
+        
+        // Log debug info for activities without points
+        if (decodedPoints.length === 0 && metadata) {
+          console.log(`No points found for accomplishment: ${accomplishment.name}`);
+          console.log('Available metadata fields:', Object.keys(metadata));
+          // Log specific fields that might contain route data
+          if ((metadata as any).selectedRoute) {
+            console.log('selectedRoute:', (metadata as any).selectedRoute);
+          }
+          if ((metadata as any).route) {
+            console.log('route:', (metadata as any).route);
+          }
+          if (accomplishment.year === 2025) {
+            console.log('DC33 activity with no points - full metadata:', JSON.stringify(metadata, null, 2));
+          }
+        }
+        
+        return {
+          accomplishment,
+          metadata,
+          decodedPoints
+        };
+      })
+    );
+    
+    // Now process the results synchronously
+    for (const { accomplishment, metadata, decodedPoints } of processedAccomplishments) {
+      if (decodedPoints.length > 0) {
+        totalActivityCount++;
+        
+        // Only include activities that are in Las Vegas area
+        if (isActivityInLasVegas(decodedPoints)) {
           const year = accomplishment.year;
           if (!accomplishmentsByYear.has(year)) {
             accomplishmentsByYear.set(year, []);
@@ -94,21 +254,25 @@ async function fetchHeatMapData() {
             metadata,
             decodedPoints
           });
+        } else {
+          filteredOutCount++;
         }
       }
     }
     
+    console.log(`Heat map: ${totalActivityCount} total activities, ${filteredOutCount} filtered out (outside Las Vegas), ${totalActivityCount - filteredOutCount} included`);
+    
     const routes: any[] = [];
     
-    // Create separate routes for each DC year as individual layers
-    if (accomplishmentsByYear.size > 0) {
-      // Sort years in descending order (newest first)
-      const sortedYears = Array.from(accomplishmentsByYear.keys()).sort((a, b) => b - a);
+    // Define consistent DEFCON years (always show these layers)
+    const defconYears = Array.from({ length: MAX_DEFCONS }, (_, i) => CURRENT_YEAR - i);
+    
+    // Create routes for each DEFCON year (whether they have data or not)
+    for (const year of defconYears) {
+      const defconNumber = year - 1992; // DEFCON 1 was in 1993
+      const yearAccomplishments = accomplishmentsByYear.get(year) || [];
       
-      for (const year of sortedYears) {
-        const yearAccomplishments = accomplishmentsByYear.get(year)!;
-        const defconNumber = year - 1992; // DEFCON 1 was in 1993, so 2024 = DC32
-        
+      if (yearAccomplishments.length > 0) {
         // Create individual routes for each activity in this year
         for (let i = 0; i < yearAccomplishments.length; i++) {
           const { accomplishment, metadata, decodedPoints } = yearAccomplishments[i];
@@ -118,20 +282,26 @@ async function fetchHeatMapData() {
           const route = {
             id: `activity_${year}_${i}`,
             name: activityName,
-            color: '#ff0000', // Red color for heat map
-            opacity: 0.7, // More opaque for highlighter effect
-            weight: 8, // Much thicker lines like highlighter
-            lineCap: 'round', // Rounded line caps
-            lineJoin: 'round', // Rounded line joins
+            color: '#ff0000',
+            opacity: 0.7,
+            weight: 8,
+            lineCap: 'round',
+            lineJoin: 'round',
             gpx: generateGPX(decodedPoints, activityName),
-            hideMarkers: true, // Custom flag to indicate no pins should be shown
-            hideArrows: true, // Custom flag to indicate no direction arrows
-            // Each activity gets its own layer based on DC year
-            layers: [{
-              title: `DC${defconNumber}`,
-              sortKey: String(100 - defconNumber).padStart(3, '0'), // Sort newest first (DC33, DC32, DC31...)
-              visible: true, // Show all layers by default
-            }],
+            hideMarkers: true,
+            hideArrows: true,
+            layers: [
+              {
+                title: 'ALL',
+                sortKey: '000', // Sort first
+                visible: true, // ALL layer is visible by default
+              },
+              {
+                title: `DC${defconNumber}`,
+                sortKey: String(100 - defconNumber).padStart(3, '0'),
+                visible: false, // Individual layers start unchecked
+              }
+            ],
             attributes: {
               title: activityName,
               description: `${activityType} activity from DC${defconNumber}`,
@@ -140,13 +310,46 @@ async function fetchHeatMapData() {
                 distance: metadata.distance,
                 movingTime: metadata.moving_time,
                 year: year,
-                defconNumber: defconNumber
+                defconNumber: defconNumber,
+                userId: accomplishment.userId // Add the user ID for stats calculation
               }
             }
           };
           
           routes.push(route);
         }
+      } else {
+        // Create an empty placeholder route for years with no data
+        const route = {
+          id: `empty_${year}`,
+          name: `No Data DC${defconNumber}`,
+          color: '#ff0000',
+          opacity: 0.7,
+          weight: 8,
+          lineCap: 'round',
+          lineJoin: 'round',
+          gpx: '<?xml version="1.0" encoding="UTF-8"?><gpx version="1.1" creator="DEFCON.run Activity Heat Map"><trk><name>Empty</name><trkseg></trkseg></trk></gpx>',
+          hideMarkers: true,
+          hideArrows: true,
+          layers: [
+            {
+              title: 'ALL',
+              sortKey: '000',
+              visible: true,
+            },
+            {
+              title: `DC${defconNumber}`,
+              sortKey: String(100 - defconNumber).padStart(3, '0'),
+              visible: false, // Individual layers start unchecked
+            }
+          ],
+          attributes: {
+            title: `DC${defconNumber} (No Data)`,
+            description: `No activities recorded for DC${defconNumber}`
+          }
+        };
+        
+        routes.push(route);
       }
     }
     
@@ -155,11 +358,8 @@ async function fetchHeatMapData() {
     let totalDistanceMeters = 0;
     let totalActivities = 0;
     
-    // Only count accomplishments that have polylines and contribute to the visualization
     accomplishmentsByYear.forEach((yearAccomplishments) => {
       for (const { accomplishment, metadata } of yearAccomplishments) {
-        // This data is already filtered to only include accomplishments with polylines
-        // since we only add them to accomplishmentsByYear if they have summary_polyline
         totalRunners.add(accomplishment.userId);
         totalActivities++;
         if (metadata.distance) {
@@ -173,10 +373,10 @@ async function fetchHeatMapData() {
       totalActivities: totalActivities,
       totalDistanceKm: Math.round(totalDistanceMeters / 1000),
       totalDistanceMeters: Math.round(totalDistanceMeters),
-      years: accomplishmentsByYear.size
+      years: defconYears.length // Always show total possible years
     };
     
-    console.log(`Generated heat map with ${routes.length} routes across ${accomplishmentsByYear.size} years`, stats);
+    console.log(`Generated heat map with ${routes.length} routes across ${defconYears.length} DEFCON years`, stats);
     
     return { routes, stats };
   } catch (error) {

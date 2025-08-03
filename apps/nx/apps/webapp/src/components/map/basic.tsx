@@ -19,6 +19,7 @@ interface MapProps {
   zoom?: number;
   theme: string;
   externalGhostState?: boolean;
+  disablePopups?: boolean; // Disable route popups (for heat map)
 }
 
 const defaults = {
@@ -137,7 +138,7 @@ function parseGPX(gpxString: string): [number, number][] {
   return coordinates;
 }
 
-const Map = ({ center: posix, raw, zoom = defaults.zoom, live_nodes, theme, externalGhostState }: MapProps) => {
+const Map = ({ center: posix, raw, zoom = defaults.zoom, live_nodes, theme, externalGhostState, disablePopups }: MapProps) => {
   return (
     <MapContainer
       center={posix}
@@ -167,7 +168,7 @@ const Map = ({ center: posix, raw, zoom = defaults.zoom, live_nodes, theme, exte
         attribution='&copy; <a href="https://stadiamaps.com/" target="_blank">Stadia Maps</a> &copy; <a href="https://stamen.com/" target="_blank">Stamen Design</a> &copy; <a href="https://openmaptiles.org/" target="_blank">OpenMapTiles</a> &copy; <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a>'
       /> */}
 
-      <AddGPXLayer raw={raw} live_nodes={live_nodes} externalGhostState={externalGhostState} />
+      <AddGPXLayer raw={raw} live_nodes={live_nodes} externalGhostState={externalGhostState} disablePopups={disablePopups} />
     </MapContainer>
   );
 };
@@ -183,7 +184,7 @@ const Map = ({ center: posix, raw, zoom = defaults.zoom, live_nodes, theme, exte
     return '#00ff00';
   }
 
-const AddGPXLayer = ({ raw, live_nodes, externalGhostState }: { raw: string, live_nodes: string, externalGhostState?: boolean }) => {
+const AddGPXLayer = ({ raw, live_nodes, externalGhostState, disablePopups }: { raw: string, live_nodes: string, externalGhostState?: boolean, disablePopups?: boolean }) => {
   const hasMounted = useRef(false);
   const map = useMap();
   const routes = JSON.parse(raw);
@@ -297,9 +298,13 @@ const AddGPXLayer = ({ raw, live_nodes, externalGhostState }: { raw: string, liv
               visible,
             };
           }
-          if (visible) {
-            const mainLayer = rawOverlay[layerTitle].layer;
-            drawRoute(route, mainLayer);
+          
+          // Always add routes to all layer groups they belong to
+          const mainLayer = rawOverlay[layerTitle].layer;
+          drawRoute(route, mainLayer, disablePopups);
+          
+          // Only add visible layers to the map initially
+          if (visible && !map.hasLayer(mainLayer)) {
             map.addLayer(mainLayer);
           }
         });
@@ -310,7 +315,7 @@ const AddGPXLayer = ({ raw, live_nodes, externalGhostState }: { raw: string, liv
             sortKey: sortKey,
             visible: true,
           };
-          drawRoute(route, rawOverlay[route.name].layer);
+          drawRoute(route, rawOverlay[route.name].layer, disablePopups);
         }
       });
 
@@ -339,7 +344,7 @@ const AddGPXLayer = ({ raw, live_nodes, externalGhostState }: { raw: string, liv
           return a.sortKey.localeCompare(b.sortKey);
         })
         .reduce((acc, [key, value]) => {
-          if (!value.visible) return acc;
+          // Include all layers in the control, regardless of initial visibility
           acc[key] = value.layer;
           return acc;
         }, {} as OverlayMap);
@@ -428,7 +433,172 @@ const AddGPXLayer = ({ raw, live_nodes, externalGhostState }: { raw: string, liv
         }
       }
       
-      L.control.layers({}, overlayMaps).addTo(map);
+      const layerControl = L.control.layers({}, overlayMaps).addTo(map);
+      
+      // Add mutual exclusion logic between "ALL" and individual DC layers
+      console.log('Setting up layer control events, available layers:', Object.keys(overlayMaps));
+      let isUpdatingLayers = false; // Prevent recursive updates
+      
+      // Intercept checkbox clicks BEFORE Leaflet processes them
+      setTimeout(() => {
+        const layerControlElement = document.querySelector('.leaflet-control-layers');
+        if (layerControlElement) {
+          const checkboxes = layerControlElement.querySelectorAll('input[type="checkbox"]');
+          checkboxes.forEach((checkbox: any) => {
+            checkbox.addEventListener('click', function(e: any) {
+              if (isUpdatingLayers) return;
+              
+              // Get the label for this checkbox
+              let label = '';
+              if (checkbox.nextSibling?.textContent) {
+                label = checkbox.nextSibling.textContent.trim();
+              } else if (checkbox.parentNode?.textContent) {
+                label = checkbox.parentNode.textContent.trim();
+              }
+              
+              console.log(`Checkbox clicked: ${label}, will be checked: ${!checkbox.checked}`);
+              
+              if (label === 'ALL' && !checkbox.checked) {
+                // ALL is being checked - uncheck all DC layers
+                console.log('ALL being checked, will hide all DC layers');
+                setTimeout(() => {
+                  Object.keys(overlayMaps).forEach(name => {
+                    if (name.startsWith('DC') && map.hasLayer(overlayMaps[name])) {
+                      map.removeLayer(overlayMaps[name]);
+                    }
+                  });
+                }, 10);
+              } else if (label.startsWith('DC') && !checkbox.checked) {
+                // DC layer is being checked - uncheck ALL
+                console.log(`${label} being checked, will hide ALL`);
+                setTimeout(() => {
+                  if (map.hasLayer(overlayMaps['ALL'])) {
+                    map.removeLayer(overlayMaps['ALL']);
+                  }
+                }, 10);
+              }
+            });
+          });
+        }
+      }, 100);
+      
+      map.on('overlayadd', function(e: any) {
+        if (isUpdatingLayers) return; // Skip if we're in the middle of updating
+        
+        console.log('Layer added:', e.name);
+        const layerName = e.name;
+        
+        isUpdatingLayers = true;
+        
+        if (layerName === 'ALL') {
+          // When ALL is checked, hide all DC layers by removing them
+          console.log('ALL layer checked, hiding DC layers...');
+          Object.keys(overlayMaps).forEach(name => {
+            if (name.startsWith('DC') && map.hasLayer(overlayMaps[name])) {
+              console.log('Hiding layer:', name);
+              map.removeLayer(overlayMaps[name]);
+            }
+          });
+        } else if (layerName.startsWith('DC')) {
+          // When any DC layer is checked, hide ALL layer (but leave other DC layers alone)
+          console.log('DC layer checked:', layerName, ', hiding ALL layer only...');
+          
+          // Hide ALL layer by removing it from map
+          if (map.hasLayer(overlayMaps['ALL'])) {
+            console.log('Hiding ALL layer');
+            map.removeLayer(overlayMaps['ALL']);
+          }
+        }
+        
+        // Force update of layer control checkboxes more aggressively
+        setTimeout(() => {
+          const layerControlElement = document.querySelector('.leaflet-control-layers');
+          if (layerControlElement) {
+            const checkboxes = layerControlElement.querySelectorAll('input[type="checkbox"]');
+            checkboxes.forEach((checkbox: any) => {
+              // Try multiple ways to get the label
+              let label = '';
+              if (checkbox.nextSibling?.textContent) {
+                label = checkbox.nextSibling.textContent.trim();
+              } else if (checkbox.parentNode?.textContent) {
+                label = checkbox.parentNode.textContent.trim();
+              }
+              
+              console.log(`Found checkbox with label: "${label}"`);
+              
+              if (label && overlayMaps[label]) {
+                const shouldBeChecked = map.hasLayer(overlayMaps[label]);
+                console.log(`${label}: checkbox.checked=${checkbox.checked}, shouldBeChecked=${shouldBeChecked}, hasLayer=${map.hasLayer(overlayMaps[label])}`);
+                
+                if (checkbox.checked !== shouldBeChecked) {
+                  console.log(`FORCE updating checkbox for ${label}: ${checkbox.checked} -> ${shouldBeChecked}`);
+                  checkbox.checked = shouldBeChecked;
+                  
+                  // Force a visual update
+                  if (shouldBeChecked) {
+                    checkbox.setAttribute('checked', 'checked');
+                  } else {
+                    checkbox.removeAttribute('checked');
+                  }
+                } else {
+                  console.log(`${label}: no update needed (already correct)`);
+                }
+              }
+            });
+          }
+          isUpdatingLayers = false; // Re-enable after update
+        }, 100); // Even longer delay
+      });
+      
+      map.on('overlayremove', function(e: any) {
+        if (isUpdatingLayers) return; // Skip if we're in the middle of updating
+        
+        console.log('Layer removed:', e.name);
+        const layerName = e.name;
+        
+        isUpdatingLayers = true;
+        
+        if (layerName === 'ALL') {
+          console.log('ALL layer unchecked');
+          // When ALL is unchecked, don't auto-check anything
+          // User can manually check individual DC layers
+        } else if (layerName.startsWith('DC')) {
+          console.log('DC layer unchecked:', layerName);
+          // Check if no DC layers are visible
+          const anyDCVisible = Object.keys(overlayMaps).some(name => 
+            name.startsWith('DC') && map.hasLayer(overlayMaps[name])
+          );
+          
+          console.log('Any DC layers still visible?', anyDCVisible);
+          
+          // If no DC layers are visible and ALL is not visible, auto-check ALL
+          if (!anyDCVisible && !map.hasLayer(overlayMaps['ALL'])) {
+            console.log('Auto-checking ALL layer');
+            map.addLayer(overlayMaps['ALL']);
+          }
+        }
+        
+        // Force update of layer control checkboxes more aggressively  
+        setTimeout(() => {
+          const layerControlElement = document.querySelector('.leaflet-control-layers');
+          if (layerControlElement) {
+            const checkboxes = layerControlElement.querySelectorAll('input[type="checkbox"]');
+            checkboxes.forEach((checkbox: any) => {
+              const label = checkbox.parentNode?.textContent?.trim() || checkbox.nextSibling?.textContent?.trim();
+              if (label && overlayMaps[label]) {
+                const shouldBeChecked = map.hasLayer(overlayMaps[label]);
+                if (checkbox.checked !== shouldBeChecked) {
+                  console.log(`Updating checkbox for ${label}: ${checkbox.checked} -> ${shouldBeChecked}`);
+                  checkbox.checked = shouldBeChecked;
+                  // Trigger change event to make sure Leaflet knows
+                  checkbox.dispatchEvent(new Event('change', { bubbles: true }));
+                }
+              }
+            });
+          }
+          isUpdatingLayers = false; // Re-enable after update
+        }, 50); // Increased delay
+      });
       
       
       // Create live layer and make it visible by default
@@ -623,7 +793,7 @@ function drawWayPointRoute(data: any, layer: L.LayerGroup<any>) {
   }
 }
 
-function drawRoute(data: any, layer: L.LayerGroup<any>) {
+function drawRoute(data: any, layer: L.LayerGroup<any>, disablePopups = false) {
   const id = data.id;
 
   const fullUrl = `${window.location.protocol}//${window.location.host}/${data.gpxurl}`;
@@ -898,10 +1068,13 @@ function drawRoute(data: any, layer: L.LayerGroup<any>) {
         routePopupContainer.appendChild(descDiv);
       }
       
-      polyline.bindPopup(routePopupContainer, {
-        maxWidth: isMobile ? 250 : 350,
-        minWidth: isMobile ? 200 : 300
-      });
+      // Only bind popup if not disabled (heat map disables popups)
+      if (!disablePopups) {
+        polyline.bindPopup(routePopupContainer, {
+          maxWidth: isMobile ? 250 : 350,
+          minWidth: isMobile ? 200 : 300
+        });
+      }
     }
     if (!data.hideMarkers) {
       layer.addLayer(startMarker);

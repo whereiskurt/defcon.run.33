@@ -6,9 +6,10 @@ import styles from './MatrixLoader.module.css';
 interface MatrixLoaderProps {
   onComplete?: () => void;
   text?: string;
+  loadingIndicator?: string;
 }
 
-export default function MatrixLoader({ onComplete, text = "LOADING ROUTES" }: MatrixLoaderProps) {
+export default function MatrixLoader({ onComplete, text = "LOADING ROUTES", loadingIndicator = "..." }: MatrixLoaderProps) {
   const [isComplete, setIsComplete] = useState(false);
 
   // Japanese birthday messages for Elkentaro
@@ -50,9 +51,7 @@ export default function MatrixLoader({ onComplete, text = "LOADING ROUTES" }: Ma
         <div className={styles.loadingText}>
           <span>{text}</span>
           <div className={styles.dots}>
-            <span>.</span>
-            <span>.</span>
-            <span>.</span>
+            <span>{loadingIndicator}</span>
           </div>
         </div>
       </div>

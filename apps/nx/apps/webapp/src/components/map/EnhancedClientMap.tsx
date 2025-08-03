@@ -11,19 +11,21 @@ interface EnhancedClientMapProps {
   mqtt_nodes: string;
   center: [number, number];
   loadingText?: string;
+  loadingIndicator?: string;
   disableGhostMode?: boolean;
+  disablePopups?: boolean;
   zoom?: number;
 }
 
-export default function EnhancedClientMap({ raw, mqtt_nodes, center, loadingText, disableGhostMode, zoom }: EnhancedClientMapProps) {
+export default function EnhancedClientMap({ raw, mqtt_nodes, center, loadingText, loadingIndicator, disableGhostMode, disablePopups, zoom }: EnhancedClientMapProps) {
   const { theme } = useTheme();
   const [externalGhostState, setExternalGhostState] = useState(false);
 
   // Move the dynamic import to this client component
   const Map = useMemo(() => dynamic(() => import('@components/map/basic'), {
-    loading: () => <MatrixLoader text={loadingText} />,
+    loading: () => <MatrixLoader text={loadingText} loadingIndicator={loadingIndicator} />,
     ssr: false
-  }), [loadingText]);
+  }), [loadingText, loadingIndicator]);
 
   const handleGhostToggle = (showGhosts: boolean) => {
     setExternalGhostState(showGhosts);
@@ -36,6 +38,7 @@ export default function EnhancedClientMap({ raw, mqtt_nodes, center, loadingText
       center={center} 
       theme={theme || 'dark'}
       externalGhostState={externalGhostState}
+      disablePopups={disablePopups}
       zoom={zoom}
     />
   );
