@@ -11,8 +11,12 @@ export REPO_NAME="nginx.etherpad.defcon.run"
 aws ecr get-login-password --region "$AWS_REGION" \
  | docker login --username AWS --password-stdin "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
 
+# docker buildx build \
+#   --platform linux/amd64,linux/arm64 \
+#   -f nginx/Dockerfile.nginx -t $REPO_NAME:$IMAGE_TAG nginx/
+
 docker buildx build \
-  --platform linux/amd64,linux/arm64 \
+  --platform linux/amd64 \
   -f nginx/Dockerfile.nginx -t $REPO_NAME:$IMAGE_TAG nginx/
 
 docker tag "${REPO_NAME}:${IMAGE_TAG}" \
