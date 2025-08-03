@@ -150,7 +150,7 @@ export default function MatrixRainPortal({ duration = 3000, onComplete }: Matrix
               letterSpacing: '0.2em'
             }}
           >
-            DEFCON.RUN ACCOMPLISHMENT ADDED
+            🥕 GOOD BUNBUN! 🐰
           </p>
           <p 
             className="text-center text-sm font-mono mt-2"

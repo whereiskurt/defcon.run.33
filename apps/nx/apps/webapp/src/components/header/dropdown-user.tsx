@@ -19,7 +19,7 @@ import {
 import { signIn, signOut, useSession } from 'next-auth/react';
 
 import { useRouter } from 'next/navigation';
-import { FaFire, FaPlus, FaStrava, FaTrophy, FaUserAlt, FaSync } from 'react-icons/fa';
+import { FaPlus, FaStrava, FaTrophy, FaUserAlt, FaSync } from 'react-icons/fa';
 import { LogoutIcon } from './icon/logout';
 import { QRIcon } from './icon/qr';
 import { useEffect, useState } from 'react';
@@ -298,18 +298,6 @@ const UserDropDown = (params: any) => {
             </DropdownItem>
           </DropdownSection>
           
-          <DropdownSection aria-label="Heat Map" showDivider>
-            <DropdownItem
-              startContent={<FaFire color="red" className={iconClasses} />}
-              key="heatmap"
-              className="opacity-100 py-2 text-base"
-              textValue="Heat Map"
-              href="/heatmap"
-              closeOnSelect={true}
-            >
-              Heat Map
-            </DropdownItem>
-          </DropdownSection>
           
           {!session.user.hasStrava ? (
             <DropdownSection aria-label="Profile & Actions" showDivider>

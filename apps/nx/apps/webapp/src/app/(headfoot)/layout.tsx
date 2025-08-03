@@ -64,7 +64,13 @@ export default async function RootLayout({
               <main className="container mx-auto max-w-7xl px-6 flex-grow max-w-[900px] pt-4 pb-2">
                 {children}
               </main>
-              <footer className="w-full flex items-center justify-center py-3 flex-shrink-0 relative z-20 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-t border-divider">
+              <footer className="w-full flex items-center justify-between py-3 flex-shrink-0 relative z-20 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-t border-divider px-6">
+                <Link
+                  className="text-sm text-default-500 hover:text-primary transition-colors"
+                  href="/faq"
+                >
+                  FAQ
+                </Link>
                 <Tooltip content={APP_VERSION_TOOLTIP} placement="top">
                   <Link
                     className="flex items-center gap-1 text-current"
@@ -73,10 +79,11 @@ export default async function RootLayout({
                   >
                     <span className="text-default-600"></span>
                     <p className="text-primary">
-                      👟 Casual Ultra + NeverDNF + You 🐇
+                      🐰 Casual Ultra + NeverDNF + You 🐇
                     </p>
                   </Link>
                 </Tooltip>
+                <div></div>
               </footer>
             </div>
           </SessionProvider>

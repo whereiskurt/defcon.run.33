@@ -80,6 +80,14 @@ export function Header(params: any) {
                 </Button>
               </Link>
             </NavbarItem>
+            <NavbarItem>
+              <Link className='p-0 m-0' color="foreground" href="/heatmap">
+                <Button variant="ghost">
+                  <FaFire size={24} />
+                  HeatMap
+                </Button>
+              </Link>
+            </NavbarItem>
           </>
         ) : (
           <>
@@ -91,7 +99,14 @@ export function Header(params: any) {
                 </Button>
               </Link>
             </NavbarItem>
-          
+            <NavbarItem>
+              <Link className='p-0 m-0' color="foreground" href="/heatmap">
+                <Button variant="ghost">
+                  <FaFire size={24} />
+                  HeatMap
+                </Button>
+              </Link>
+            </NavbarItem>
           </>
         )}
         <NavbarItem>
@@ -109,15 +124,6 @@ export function Header(params: any) {
             <Button variant="ghost">
               <FaMoneyCheckDollar size={24} />
               Contributors
-            </Button>
-          </Link>
-        </NavbarItem>
-
-        <NavbarItem>
-          <Link className='p-0 m-0' color="foreground" href="/faq">
-            <Button variant="ghost">
-              <FaQuestion size={24} />
-              FAQ
             </Button>
           </Link>
         </NavbarItem>

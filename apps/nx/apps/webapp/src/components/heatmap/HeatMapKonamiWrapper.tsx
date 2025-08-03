@@ -313,7 +313,7 @@ export function HeatMapKonamiWrapper({ children, stats, routes }: HeatMapKonamiW
           </div>
           <div className="text-xs text-gray-600 flex items-center space-x-1">
             <span className="font-mono text-black">{currentStats.totalRunners.toLocaleString()}</span>
-            <span>👟</span>
+            <span>🐰</span>
             <span>×</span>
             <span className="font-mono text-black">{currentStats.totalActivities.toLocaleString()}</span>
             <span>🥕</span>

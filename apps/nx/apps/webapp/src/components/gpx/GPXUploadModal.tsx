@@ -156,13 +156,13 @@ export default function GPXUploadModal({ isOpen, onClose }: GPXUploadModalProps)
   const handleUpload = async () => {
     // Validate based on upload method
     if (uploadMethod === 'gpx') {
-      if (!file || !activityType || !defconYear || !dc33Day || !description.trim()) {
-        setError('Please select a GPX file, activity type, DEFCON year, day, and provide a description');
+      if (!file || !activityType || !defconYear || !dc33Day) {
+        setError('Please select a GPX file, activity type, DEFCON year, and day');
         return;
       }
     } else {
-      if (!selectedRoute || !activityType || !defconYear || !dc33Day || !description.trim()) {
-        setError('Please select a route, activity type, DEFCON year, day, and provide a description');
+      if (!selectedRoute || !activityType || !defconYear || !dc33Day) {
+        setError('Please select a route, activity type, DEFCON year, and day');
         return;
       }
     }
@@ -326,6 +326,50 @@ export default function GPXUploadModal({ isOpen, onClose }: GPXUploadModalProps)
           )}
 
           <div className="space-y-4">
+            <Select
+              label="DEFCON Year"
+              placeholder="Select DEFCON year"
+              selectedKeys={defconYear ? [defconYear] : []}
+              onSelectionChange={(keys) => setDefconYear(Array.from(keys)[0] as string)}
+              isRequired
+            >
+              {defconYears.map((defcon) => (
+                <SelectItem key={defcon.key}>
+                  {defcon.label}
+                </SelectItem>
+              ))}
+            </Select>
+
+            <Select
+              label={`${defconYears.find(d => d.key === defconYear)?.label || 'DEFCON'} Day`}
+              placeholder="Select which day"
+              selectedKeys={dc33Day ? [dc33Day] : []}
+              onSelectionChange={(keys) => setDc33Day(Array.from(keys)[0] as string)}
+              isRequired
+              description={
+                defconYear && dc33Day
+                  ? `${remainingUploads[`${defconYear}_${dc33Day}`] ?? maxUploadsPerDay} of ${maxUploadsPerDay} uploads remaining`
+                  : undefined
+              }
+            >
+              {dc33Days.map((day) => {
+                const uploadKey = `${defconYear}_${day.key}`;
+                const remaining = remainingUploads[uploadKey] ?? maxUploadsPerDay;
+                return (
+                  <SelectItem 
+                    key={day.key}
+                    endContent={
+                      <Chip size="sm" variant="flat" color={remaining > 0 ? "success" : "danger"}>
+                        {remaining}/{maxUploadsPerDay} left
+                      </Chip>
+                    }
+                  >
+                    {day.label}
+                  </SelectItem>
+                );
+              })}
+            </Select>
+
             <RadioGroup
               label="Upload Method"
               value={uploadMethod}
@@ -408,12 +452,11 @@ export default function GPXUploadModal({ isOpen, onClose }: GPXUploadModalProps)
 
             <Input
               ref={descriptionRef}
-              label="Description"
-              placeholder="Describe your activity..."
+              label="Description (Optional)"
+              placeholder="What happens in Vegas..."
               value={description}
               onValueChange={setDescription}
               maxLength={100}
-              isRequired
               onFocus={() => {
                 // On mobile, scroll the input into view when focused
                 if (window.innerWidth <= 768) {
@@ -426,50 +469,6 @@ export default function GPXUploadModal({ isOpen, onClose }: GPXUploadModalProps)
                 }
               }}
             />
-
-            <Select
-              label="DEFCON Year"
-              placeholder="Select DEFCON year"
-              selectedKeys={defconYear ? [defconYear] : []}
-              onSelectionChange={(keys) => setDefconYear(Array.from(keys)[0] as string)}
-              isRequired
-            >
-              {defconYears.map((defcon) => (
-                <SelectItem key={defcon.key}>
-                  {defcon.label}
-                </SelectItem>
-              ))}
-            </Select>
-
-            <Select
-              label={`${defconYears.find(d => d.key === defconYear)?.label || 'DEFCON'} Day`}
-              placeholder="Select which day"
-              selectedKeys={dc33Day ? [dc33Day] : []}
-              onSelectionChange={(keys) => setDc33Day(Array.from(keys)[0] as string)}
-              isRequired
-              description={
-                defconYear && dc33Day
-                  ? `${remainingUploads[`${defconYear}_${dc33Day}`] ?? maxUploadsPerDay} of ${maxUploadsPerDay} uploads remaining`
-                  : undefined
-              }
-            >
-              {dc33Days.map((day) => {
-                const uploadKey = `${defconYear}_${day.key}`;
-                const remaining = remainingUploads[uploadKey] ?? maxUploadsPerDay;
-                return (
-                  <SelectItem 
-                    key={day.key}
-                    endContent={
-                      <Chip size="sm" variant="flat" color={remaining > 0 ? "success" : "danger"}>
-                        {remaining}/{maxUploadsPerDay} left
-                      </Chip>
-                    }
-                  >
-                    {day.label}
-                  </SelectItem>
-                );
-              })}
-            </Select>
           </div>
 
         </ModalBody>
@@ -485,7 +484,6 @@ export default function GPXUploadModal({ isOpen, onClose }: GPXUploadModalProps)
               !activityType || 
               !defconYear ||
               !dc33Day || 
-              !description.trim() ||
               (uploadMethod === 'gpx' && !file) ||
               (uploadMethod === 'route' && !selectedRoute) ||
               Boolean(defconYear && dc33Day && remainingUploads[`${defconYear}_${dc33Day}`] === 0)
