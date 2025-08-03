@@ -195,3 +195,171 @@
   }
 }
 
+/* Minimal effects for /routes page - clean and crisp */
+.mapWrapper :global(.leaflet-interactive) {
+  filter: none;
+  opacity: 1;
+}
+
+.mapWrapper :global(path[stroke]) {
+  filter: none;
+  transition: filter 0.3s ease;
+}
+
+/* Enhanced blur effects ONLY for /heatmap page - mobile optimized */
+:global(body[data-pathname="/heatmap"]) .mapWrapper :global(.leaflet-interactive) {
+  filter: blur(1.5px) 
+          drop-shadow(0 0 3px currentColor) 
+          drop-shadow(0 0 6px currentColor) 
+          drop-shadow(0 0 12px rgba(255, 102, 0, 0.4));
+  opacity: 0.8;
+}
+
+:global(body[data-pathname="/heatmap"]) .mapWrapper :global(path[stroke="#ff0000"]) {
+  filter: blur(2px) 
+          drop-shadow(0 0 4px #ff6600) 
+          drop-shadow(0 0 8px #ff8800) 
+          drop-shadow(0 0 12px rgba(255, 102, 0, 0.6))
+          drop-shadow(0 0 20px rgba(255, 102, 0, 0.3));
+}
+
+:global(body[data-pathname="/heatmap"]) .mapWrapper :global(path[stroke]) {
+  filter: blur(1.8px) 
+          drop-shadow(0 0 4px #ff6600) 
+          drop-shadow(0 0 8px #ff8800) 
+          drop-shadow(0 0 12px rgba(255, 136, 0, 0.5))
+          drop-shadow(0 0 18px rgba(255, 136, 0, 0.3));
+  transition: filter 0.3s ease;
+}
+
+/* Softer fade-out effect for heat map layers */
+.mapWrapper :global(.leaflet-zoom-hide) {
+  opacity: 0 !important;
+  transition: opacity 0.5s ease-out;
+}
+
+/* Fire color cycling animation - enhanced for mobile consistency */
+@keyframes fireColorCycle {
+  0% {
+    filter: blur(2px) 
+            drop-shadow(0 0 3px #ffaa00)  /* High: warm yellow-orange */
+            drop-shadow(0 0 8px #ff6600)  /* Mid: bright orange */
+            drop-shadow(0 0 15px rgba(255, 102, 0, 0.6))   /* Low: stronger glow for mobile */
+            drop-shadow(0 0 25px rgba(255, 102, 0, 0.3));  /* Extra glow layer */
+  }
+  15% {
+    filter: blur(2px) 
+            drop-shadow(0 0 4px #ff8800)  /* High: orange */
+            drop-shadow(0 0 10px #ff4400) /* Mid: red-orange */
+            drop-shadow(0 0 18px rgba(255, 68, 0, 0.7))    /* Low: stronger glow */
+            drop-shadow(0 0 28px rgba(255, 68, 0, 0.4));   /* Extra glow layer */
+  }
+  30% {
+    filter: blur(2px) 
+            drop-shadow(0 0 5px #ff4400)  /* High: red-orange */
+            drop-shadow(0 0 12px #ff2200) /* Mid: bright red */
+            drop-shadow(0 0 20px rgba(255, 34, 0, 0.8))    /* Low: stronger glow */
+            drop-shadow(0 0 30px rgba(255, 34, 0, 0.4));   /* Extra glow layer */
+  }
+  45% {
+    filter: blur(2px) 
+            drop-shadow(0 0 4px #ff2200)  /* High: bright red */
+            drop-shadow(0 0 9px #cc1100)  /* Mid: dark red */
+            drop-shadow(0 0 16px rgba(204, 17, 0, 0.7))    /* Low: stronger glow */
+            drop-shadow(0 0 26px rgba(204, 17, 0, 0.4));   /* Extra glow layer */
+  }
+  60% {
+    filter: blur(2px) 
+            drop-shadow(0 0 5px #ff3300)  /* High: red */
+            drop-shadow(0 0 11px #ff5500) /* Mid: orange-red */
+            drop-shadow(0 0 18px rgba(255, 85, 0, 0.7))    /* Low: stronger glow */
+            drop-shadow(0 0 28px rgba(255, 85, 0, 0.4));   /* Extra glow layer */
+  }
+  75% {
+    filter: blur(2px) 
+            drop-shadow(0 0 6px #ff6600)  /* High: orange */
+            drop-shadow(0 0 13px #ff8800) /* Mid: warm orange */
+            drop-shadow(0 0 22px rgba(255, 136, 0, 0.6))   /* Low: stronger glow */
+            drop-shadow(0 0 32px rgba(255, 136, 0, 0.3));  /* Extra glow layer */
+  }
+  90% {
+    filter: blur(2px) 
+            drop-shadow(0 0 4px #ff9900)  /* High: golden orange */
+            drop-shadow(0 0 9px #ffaa00)  /* Mid: yellow-orange */
+            drop-shadow(0 0 17px rgba(255, 170, 0, 0.5))   /* Low: stronger glow */
+            drop-shadow(0 0 27px rgba(255, 170, 0, 0.3));  /* Extra glow layer */
+  }
+  100% {
+    filter: blur(2px) 
+            drop-shadow(0 0 3px #ffaa00)  /* High: warm yellow-orange */
+            drop-shadow(0 0 8px #ff6600)  /* Mid: bright orange */
+            drop-shadow(0 0 15px rgba(255, 102, 0, 0.6))   /* Low: stronger glow */
+            drop-shadow(0 0 25px rgba(255, 102, 0, 0.3));  /* Extra glow layer */
+  }
+}
+
+@keyframes fireFlicker {
+  0%, 100% { opacity: 0.85; }
+  12% { opacity: 0.9; }
+  25% { opacity: 0.8; }
+  37% { opacity: 0.95; }
+  50% { opacity: 0.88; }
+  62% { opacity: 0.92; }
+  75% { opacity: 0.83; }
+  87% { opacity: 0.9; }
+}
+
+/* Fire mode activated - ONLY on /heatmap page */
+:global(body.fireMode[data-pathname="/heatmap"]) .mapWrapper :global(path[stroke]) {
+  animation: fireColorCycle 3s ease-in-out infinite, fireFlicker 1.2s ease-in-out infinite;
+}
+
+:global(body.fireMode[data-pathname="/heatmap"]) .mapWrapper :global(path[stroke="#ff0000"]) {
+  animation: fireColorCycle 2.5s ease-in-out infinite, fireFlicker 0.9s ease-in-out infinite;
+}
+
+/* Mobile-specific enhancements for stronger fire effects on small screens */
+@media (max-width: 768px) {
+  :global(body[data-pathname="/heatmap"]) .mapWrapper :global(path[stroke]) {
+    filter: blur(2.2px) 
+            drop-shadow(0 0 5px #ff6600) 
+            drop-shadow(0 0 10px #ff8800) 
+            drop-shadow(0 0 15px rgba(255, 136, 0, 0.7))
+            drop-shadow(0 0 25px rgba(255, 136, 0, 0.4))
+            drop-shadow(0 0 35px rgba(255, 68, 0, 0.2));
+  }
+  
+  :global(body.fireMode[data-pathname="/heatmap"]) .mapWrapper :global(path[stroke]) {
+    /* Mobile fire gets extra intensity layers */
+    animation: fireColorCycle 3s ease-in-out infinite, fireFlicker 1.2s ease-in-out infinite;
+  }
+  
+  /* Enhanced fire animation for mobile */
+  @keyframes fireColorCycleMobile {
+    0% {
+      filter: blur(2.5px) 
+              drop-shadow(0 0 4px #ffaa00)
+              drop-shadow(0 0 10px #ff6600)
+              drop-shadow(0 0 18px rgba(255, 102, 0, 0.8))
+              drop-shadow(0 0 30px rgba(255, 102, 0, 0.5))
+              drop-shadow(0 0 40px rgba(255, 68, 0, 0.3));
+    }
+    50% {
+      filter: blur(2.8px) 
+              drop-shadow(0 0 6px #ff2200)
+              drop-shadow(0 0 14px #ff4400)
+              drop-shadow(0 0 24px rgba(255, 34, 0, 0.9))
+              drop-shadow(0 0 35px rgba(255, 34, 0, 0.6))
+              drop-shadow(0 0 45px rgba(204, 17, 0, 0.3));
+    }
+    100% {
+      filter: blur(2.5px) 
+              drop-shadow(0 0 4px #ffaa00)
+              drop-shadow(0 0 10px #ff6600)
+              drop-shadow(0 0 18px rgba(255, 102, 0, 0.8))
+              drop-shadow(0 0 30px rgba(255, 102, 0, 0.5))
+              drop-shadow(0 0 40px rgba(255, 68, 0, 0.3));
+    }
+  }
+}
+

@@ -62,7 +62,7 @@ interface Route {
 
 export default function GPXUploadModal({ isOpen, onClose }: GPXUploadModalProps) {
   const { data: session } = useSession();
-  const [uploadMethod, setUploadMethod] = useState<'gpx' | 'route'>('gpx');
+  const [uploadMethod, setUploadMethod] = useState<'gpx' | 'route'>('route');
   const [file, setFile] = useState<File | null>(null);
   const [activityType, setActivityType] = useState<string>('');
   const [description, setDescription] = useState<string>('');
@@ -237,7 +237,7 @@ export default function GPXUploadModal({ isOpen, onClose }: GPXUploadModalProps)
 
   const handleClose = () => {
     // Reset all state
-    setUploadMethod('gpx');
+    setUploadMethod('route');
     setFile(null);
     setActivityType('');
     setDescription('');
@@ -344,8 +344,8 @@ export default function GPXUploadModal({ isOpen, onClose }: GPXUploadModalProps)
               }}
               orientation="horizontal"
             >
-              <Radio value="gpx">Upload GPX File</Radio>
               <Radio value="route">Select Existing Route</Radio>
+              <Radio value="gpx">Upload GPX File</Radio>
             </RadioGroup>
 
             {uploadMethod === 'gpx' && (

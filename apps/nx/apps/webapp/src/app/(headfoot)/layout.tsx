@@ -12,6 +12,7 @@ import { Header } from '@header';
 import { auth } from '@auth';
 import { SessionProvider } from 'next-auth/react';
 import { redirect } from 'next/navigation';
+import { PathnameBinder } from '@/src/components/PathnameBinder';
 
 export const metadata: Metadata = {
   title: {
@@ -55,6 +56,7 @@ export default async function RootLayout({
       >
         <Providers themeProps={{ attribute: 'class', defaultTheme: 'dark' }}>
           <SessionProvider>
+            <PathnameBinder />
             <div className="relative flex flex-col min-h-screen">
               <div className="flex-shrink-0">
                 <Header session={session} />

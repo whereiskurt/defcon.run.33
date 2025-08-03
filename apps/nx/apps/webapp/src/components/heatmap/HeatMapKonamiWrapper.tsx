@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { useTheme } from 'next-themes';
 
 interface HeatMapStats {
   totalRunners: number;
@@ -25,13 +24,6 @@ export function HeatMapKonamiWrapper({ children, stats, routes }: HeatMapKonamiW
   const sequenceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const KONAMI_SEQUENCE = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a'];
   
-  // Theme toggle sequence state
-  const { theme } = useTheme();
-  const themeToggleCount = useRef(0);
-  const themeToggleTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const previousTheme = useRef<string | undefined>(theme);
-  const REQUIRED_TOGGLES = 10;
-  const TOGGLE_TIMEOUT = 4000; // 4 seconds
 
   // Layer visibility tracking
   const [visibleLayers, setVisibleLayers] = useState<Set<string>>(() => {
@@ -218,74 +210,6 @@ export function HeatMapKonamiWrapper({ children, stats, routes }: HeatMapKonamiW
     };
   }, [displayMode]);
 
-  // Theme toggle sequence tracking
-  useEffect(() => {
-    // Skip initial theme load
-    if (previousTheme.current === undefined) {
-      previousTheme.current = theme;
-      return;
-    }
-
-    // Only count if theme actually changed
-    if (theme !== previousTheme.current && theme !== undefined) {
-      previousTheme.current = theme;
-      
-      // Reset timeout on each toggle
-      if (themeToggleTimeoutRef.current) {
-        clearTimeout(themeToggleTimeoutRef.current);
-      }
-
-      themeToggleCount.current += 1;
-
-      if (themeToggleCount.current >= REQUIRED_TOGGLES) {
-        cycleDisplayMode();
-        themeToggleCount.current = 0;
-        
-        // Visual feedback flash for theme-triggered unit change
-        const flash = document.createElement('div');
-        flash.style.cssText = `
-          position: fixed;
-          top: 50%;
-          left: 50%;
-          transform: translate(-50%, -50%);
-          background: #ff0000;
-          color: #fff;
-          padding: 15px 30px;
-          border-radius: 8px;
-          font-size: 16px;
-          font-weight: bold;
-          z-index: 10000;
-          pointer-events: none;
-          opacity: 0.9;
-          box-shadow: 0 0 15px #ff0000;
-          max-width: 900px;
-          width: calc(100% - 2rem);
-          text-align: center;
-        `;
-        const nextMode = displayMode === 'km' ? 'miles' : displayMode === 'miles' ? 'steps' : 'km';
-        flash.textContent = `Theme toggle detected! Units changed to ${nextMode.toUpperCase()}`;
-        document.body.appendChild(flash);
-        
-        setTimeout(() => {
-          if (document.body.contains(flash)) {
-            document.body.removeChild(flash);
-          }
-        }, 2000);
-        return;
-      }
-
-      // Set timeout to reset toggle count
-      themeToggleTimeoutRef.current = setTimeout(() => {
-        themeToggleCount.current = 0;
-      }, TOGGLE_TIMEOUT);
-    }
-
-    return () => {
-      if (themeToggleTimeoutRef.current) {
-        clearTimeout(themeToggleTimeoutRef.current);
-      }
-    };
-  }, [theme, displayMode]);
 
   // Track zoom button position to position stats panel beside it
   useEffect(() => {
@@ -364,7 +288,7 @@ export function HeatMapKonamiWrapper({ children, stats, routes }: HeatMapKonamiW
       <div 
         className="fixed bg-white text-black p-1 rounded shadow-md border border-gray-300 z-[9999] cursor-pointer"
         onClick={cycleDisplayMode}
-        title="Click, use konami code (↑↑↓↓←→←→BA), or rapidly toggle theme 10x to cycle units"
+        title="Click or use konami code (↑↑↓↓←→←→BA) to cycle units"
         style={{ 
           fontSize: '11px', 
           minWidth: '60px',
