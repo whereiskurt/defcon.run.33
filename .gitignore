@@ -52,3 +52,5 @@ terragrunt-debug.tfvars.json
 out
 .nx/installation
 .nx/
+
+.env*
