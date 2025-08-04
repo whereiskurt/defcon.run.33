@@ -65,36 +65,37 @@ resource "aws_wafv2_web_acl" "this" {
     }
   }
 
-  rule {
-    name     = "BlockStrapiWithoutCookies"
-    priority = 8
-    action {
-      block {
-        custom_response {
-          response_code            = 469
-          custom_response_body_key = "strapi-block-response"
-        }
-      }
-    }
+  # TEMPORARILY COMMENTED OUT - RE-ENABLE AFTER TESTING
+  # rule {
+  #   name     = "BlockStrapiWithoutCookies"
+  #   priority = 8
+  #   action {
+  #     block {
+  #       custom_response {
+  #         response_code            = 469
+  #         custom_response_body_key = "strapi-block-response"
+  #       }
+  #     }
+  #   }
 
-    statement {
-      and_statement {
-        # 1. Match requests to strapi hostname only (etherpad excluded)
-        statement {
-          byte_match_statement {
-            field_to_match {
-              single_header {
-                name = "host"
-              }
-            }
-            positional_constraint = "CONTAINS"
-            search_string         = "strapi"
-            text_transformation {
-              priority = 1
-              type     = "NONE"
-            }
-          }
-        }
+  #   statement {
+  #     and_statement {
+  #       # 1. Match requests to strapi hostname only (etherpad excluded)
+  #       statement {
+  #         byte_match_statement {
+  #           field_to_match {
+  #             single_header {
+  #               name = "host"
+  #             }
+  #           }
+  #           positional_constraint = "CONTAINS"
+  #           search_string         = "strapi"
+  #           text_transformation {
+  #             priority = 1
+  #             type     = "NONE"
+  #           }
+  #         }
+  #       }
 
         # COMMENTED OUT FOR NOW - RE-ENABLE LATER
         # # 2. Exclude etherpad /p/* paths from cookie requirement
@@ -285,61 +286,61 @@ resource "aws_wafv2_web_acl" "this" {
         #   }
         # }
 
-        # 2. Block if EITHER sess OR csrf cookie is missing (renumbered from 9)
-        statement {
-          or_statement {
-            # Missing sess cookie
-            statement {
-              not_statement {
-                statement {
-                  byte_match_statement {
-                    field_to_match {
-                      single_header {
-                        name = "cookie"
-                      }
-                    }
-                    positional_constraint = "CONTAINS"
-                    search_string         = "sess="
-                    text_transformation {
-                      priority = 1
-                      type     = "NONE"
-                    }
-                  }
-                }
-              }
-            }
-
-            # Missing csrf cookie
-            statement {
-              not_statement {
-                statement {
-                  byte_match_statement {
-                    field_to_match {
-                      single_header {
-                        name = "cookie"
-                      }
-                    }
-                    positional_constraint = "CONTAINS"
-                    search_string         = "csrf="
-                    text_transformation {
-                      priority = 1
-                      type     = "NONE"
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-
-    visibility_config {
-      sampled_requests_enabled   = true
-      cloudwatch_metrics_enabled = true
-      metric_name                = "BlockStrapiWithoutCookies"
-    }
-  }
+  #       # 2. Block if EITHER sess OR csrf cookie is missing (renumbered from 9)
+  #       statement {
+  #         or_statement {
+  #           # Missing sess cookie
+  #           statement {
+  #             not_statement {
+  #               statement {
+  #                 byte_match_statement {
+  #                   field_to_match {
+  #                     single_header {
+  #                       name = "cookie"
+  #                     }
+  #                   }
+  #                   positional_constraint = "CONTAINS"
+  #                   search_string         = "sess="
+  #                   text_transformation {
+  #                     priority = 1
+  #                     type     = "NONE"
+  #                   }
+  #                 }
+  #               }
+  #             }
+  #           }
+  #
+  #           # Missing csrf cookie
+  #           statement {
+  #             not_statement {
+  #               statement {
+  #                 byte_match_statement {
+  #                   field_to_match {
+  #                     single_header {
+  #                       name = "cookie"
+  #                     }
+  #                   }
+  #                   positional_constraint = "CONTAINS"
+  #                   search_string         = "csrf="
+  #                   text_transformation {
+  #                     priority = 1
+  #                     type     = "NONE"
+  #                   }
+  #                 }
+  #               }
+  #             }
+  #           }
+  #         }
+  #       }
+  #     }
+  #   }
+  #
+  #   visibility_config {
+  #     sampled_requests_enabled   = true
+  #     cloudwatch_metrics_enabled = true
+  #     metric_name                = "BlockStrapiWithoutCookies"
+  #   }
+  # }
 
   rule {
     name     = "AllowListBypass"

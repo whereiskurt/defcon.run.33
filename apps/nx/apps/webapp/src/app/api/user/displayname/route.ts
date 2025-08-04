@@ -27,9 +27,9 @@ export async function PUT(req: NextRequest) {
       );
     }
 
-    if (trimmedDisplayname.length > 50) {
+    if (trimmedDisplayname.length > 16) {
       return NextResponse.json(
-        { message: 'Display name must be 50 characters or less' },
+        { message: 'Display name must be 16 characters or less' },
         { status: 400 }
       );
     }

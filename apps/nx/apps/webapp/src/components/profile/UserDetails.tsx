@@ -67,6 +67,11 @@ export default function UserDetails() {
       return;
     }
 
+    if (displaynameInput.trim().length > 16) {
+      setDisplaynameError('Display name must be 16 characters or less');
+      return;
+    }
+
     if (displaynameInput.trim() === user?.displayname) {
       setDisplaynameError('Display name is the same as current');
       return;
@@ -180,13 +185,19 @@ export default function UserDetails() {
               <Input
                 value={displaynameInput}
                 onChange={(e) => {
-                  setDisplaynameInput(e.target.value);
+                  const value = e.target.value;
+                  setDisplaynameInput(value);
                   setDisplaynameError('');
                   setDisplaynameSuccess('');
+                  
+                  // Real-time validation feedback
+                  if (value.trim().length > 16) {
+                    setDisplaynameError('Display name must be 16 characters or less');
+                  }
                 }}
                 placeholder="Enter display name"
                 variant="bordered"
-                maxLength={50}
+                maxLength={16}
                 disabled={isUpdatingDisplayname || (user?.totalPoints || 0) < 2}
                 isReadOnly={(user?.totalPoints || 0) < 2}
                 size="lg"
@@ -195,6 +206,17 @@ export default function UserDetails() {
                   inputWrapper: (user?.totalPoints || 0) < 2 ? 'opacity-60' : ''
                 }}
               />
+              {/* Character counter */}
+              <div className="flex justify-between items-center">
+                <span className="text-tiny text-default-400">
+                  {displaynameInput.length}/16 characters
+                </span>
+                {displaynameInput.length > 12 && displaynameInput.length <= 16 && (
+                  <span className="text-tiny text-warning">
+                    {16 - displaynameInput.length} characters remaining
+                  </span>
+                )}
+              </div>
               {(user?.totalPoints || 0) < 2 ? (
                 <p className="text-small text-default-500 text-center">
                   <Chip

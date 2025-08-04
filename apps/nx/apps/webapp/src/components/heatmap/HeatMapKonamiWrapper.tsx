@@ -47,10 +47,7 @@ export function HeatMapKonamiWrapper({ children, stats, routes }: HeatMapKonamiW
   
   // Function to calculate stats from visible routes
   const calculateStatsFromVisibleLayers = useCallback((visibleLayerNames: string[]) => {
-    console.log('=== Calculating stats for visible layers:', visibleLayerNames);
-    
     if (visibleLayerNames.length === 0) {
-      console.log('No layers visible - returning zero stats');
       return {
         totalRunners: 0,
         totalActivities: 0,
@@ -62,16 +59,10 @@ export function HeatMapKonamiWrapper({ children, stats, routes }: HeatMapKonamiW
     
     // Filter routes based on visible layers
     const visibleRoutes = routes.filter(route => {
-      const hasVisibleLayer = route.layers?.some((layer: any) => 
+      return route.layers?.some((layer: any) => 
         visibleLayerNames.includes(layer.title)
       );
-      if (hasVisibleLayer) {
-        console.log('Route visible:', route.id, 'layers:', route.layers?.map((l: any) => l.title));
-      }
-      return hasVisibleLayer;
     });
-    
-    console.log(`Found ${visibleRoutes.length} visible routes out of ${routes.length} total`);
     
     // Calculate stats from visible routes
     const runners = new Set();
@@ -80,10 +71,9 @@ export function HeatMapKonamiWrapper({ children, stats, routes }: HeatMapKonamiW
     
     visibleRoutes.forEach(route => {
       const routeDetails = route.attributes?.route_details;
-      console.log('Route details:', routeDetails);
       
       if (routeDetails && routeDetails.userId) {
-        runners.add(routeDetails.userId); // Use actual user ID
+        runners.add(routeDetails.userId);
         activities++;
         if (routeDetails.distance) {
           totalDistanceMeters += parseFloat(routeDetails.distance);
@@ -99,7 +89,6 @@ export function HeatMapKonamiWrapper({ children, stats, routes }: HeatMapKonamiW
       years: new Set(visibleRoutes.map(route => route.attributes?.route_details?.year).filter(Boolean)).size
     };
     
-    console.log('Calculated stats:', newStats);
     return newStats;
   }, [routes]);
 
@@ -247,6 +236,8 @@ export function HeatMapKonamiWrapper({ children, stats, routes }: HeatMapKonamiW
 
   // Listen for layer visibility changes and update stats
   useEffect(() => {
+    let lastVisibleLayersString = '';
+    
     const updateStatsFromMap = () => {
       // Get currently visible layers
       const visibleLayers: string[] = [];
@@ -262,19 +253,23 @@ export function HeatMapKonamiWrapper({ children, stats, routes }: HeatMapKonamiW
           }
         });
       }
-
-      console.log('Visible layers for stats:', visibleLayers);
       
-      // Calculate new stats
-      const newStats = calculateStatsFromVisibleLayers(visibleLayers);
-      setCurrentStats(newStats);
+      // Only update if layers actually changed
+      const currentVisibleLayersString = visibleLayers.sort().join(',');
+      if (currentVisibleLayersString !== lastVisibleLayersString) {
+        lastVisibleLayersString = currentVisibleLayersString;
+        
+        // Calculate new stats
+        const newStats = calculateStatsFromVisibleLayers(visibleLayers);
+        setCurrentStats(newStats);
+      }
     };
 
     // Trigger immediate update
     updateStatsFromMap();
 
-    // Set up a periodic check
-    const interval = setInterval(updateStatsFromMap, 1000);
+    // Use less aggressive polling - every 2 seconds instead of 1
+    const interval = setInterval(updateStatsFromMap, 2000);
 
     return () => clearInterval(interval);
   }, [calculateStatsFromVisibleLayers]);

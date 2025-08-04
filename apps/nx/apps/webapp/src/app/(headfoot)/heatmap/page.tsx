@@ -35,11 +35,11 @@ export default async function Page() {
             raw={JSON.stringify(heatMapData.routes)} 
             mqtt_nodes={JSON.stringify([])} 
             center={[36.1320813, -115.1667648]} 
-            loadingText="DRAWING THE FIRE"
-            loadingIndicator="🔥🔥🔥"
+            loadingText="🔥🔥🔥 DRAWING THE FIRE 🔥🔥🔥"
+            loadingIndicator=" . . ."
             disableGhostMode={true}
             disablePopups={true}
-            zoom={12}
+            zoom={13}
           />
         </div>
       </HeatMapKonamiWrapper>
@@ -284,7 +284,7 @@ async function fetchHeatMapData() {
             name: activityName,
             color: '#ff0000',
             opacity: 0.7,
-            weight: 8,
+            weight: 4,
             lineCap: 'round',
             lineJoin: 'round',
             gpx: generateGPX(decodedPoints, activityName),
@@ -325,7 +325,7 @@ async function fetchHeatMapData() {
           name: `No Data DC${defconNumber}`,
           color: '#ff0000',
           opacity: 0.7,
-          weight: 8,
+          weight: 4,
           lineCap: 'round',
           lineJoin: 'round',
           gpx: '<?xml version="1.0" encoding="UTF-8"?><gpx version="1.1" creator="DEFCON.run Activity Heat Map"><trk><name>Empty</name><trkseg></trkseg></trk></gpx>',

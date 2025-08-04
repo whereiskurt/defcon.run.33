@@ -208,27 +208,22 @@
 
 /* Enhanced blur effects ONLY for /heatmap page - mobile optimized */
 :global(body[data-pathname="/heatmap"]) .mapWrapper :global(.leaflet-interactive) {
-  filter: blur(1.5px) 
-          drop-shadow(0 0 3px currentColor) 
-          drop-shadow(0 0 6px currentColor) 
-          drop-shadow(0 0 12px rgba(255, 102, 0, 0.4));
+  filter: blur(0.8px) 
+          drop-shadow(0 0 2px currentColor) 
+          drop-shadow(0 0 4px rgba(255, 102, 0, 0.3));
   opacity: 0.8;
 }
 
 :global(body[data-pathname="/heatmap"]) .mapWrapper :global(path[stroke="#ff0000"]) {
-  filter: blur(2px) 
-          drop-shadow(0 0 4px #ff6600) 
-          drop-shadow(0 0 8px #ff8800) 
-          drop-shadow(0 0 12px rgba(255, 102, 0, 0.6))
-          drop-shadow(0 0 20px rgba(255, 102, 0, 0.3));
+  filter: blur(1px) 
+          drop-shadow(0 0 2px #ff6600) 
+          drop-shadow(0 0 4px rgba(255, 102, 0, 0.4));
 }
 
 :global(body[data-pathname="/heatmap"]) .mapWrapper :global(path[stroke]) {
-  filter: blur(1.8px) 
-          drop-shadow(0 0 4px #ff6600) 
-          drop-shadow(0 0 8px #ff8800) 
-          drop-shadow(0 0 12px rgba(255, 136, 0, 0.5))
-          drop-shadow(0 0 18px rgba(255, 136, 0, 0.3));
+  filter: blur(1px) 
+          drop-shadow(0 0 2px #ff6600) 
+          drop-shadow(0 0 4px rgba(255, 136, 0, 0.3));
   transition: filter 0.3s ease;
 }
 
@@ -321,12 +316,9 @@
 /* Mobile-specific enhancements for stronger fire effects on small screens */
 @media (max-width: 768px) {
   :global(body[data-pathname="/heatmap"]) .mapWrapper :global(path[stroke]) {
-    filter: blur(2.2px) 
-            drop-shadow(0 0 5px #ff6600) 
-            drop-shadow(0 0 10px #ff8800) 
-            drop-shadow(0 0 15px rgba(255, 136, 0, 0.7))
-            drop-shadow(0 0 25px rgba(255, 136, 0, 0.4))
-            drop-shadow(0 0 35px rgba(255, 68, 0, 0.2));
+    filter: blur(1.2px) 
+            drop-shadow(0 0 3px #ff6600) 
+            drop-shadow(0 0 6px rgba(255, 136, 0, 0.4));
   }
   
   :global(body.fireMode[data-pathname="/heatmap"]) .mapWrapper :global(path[stroke]) {

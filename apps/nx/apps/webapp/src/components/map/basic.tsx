@@ -796,21 +796,53 @@ function drawWayPointRoute(data: any, layer: L.LayerGroup<any>) {
 function drawRoute(data: any, layer: L.LayerGroup<any>, disablePopups = false) {
   const id = data.id;
 
-  const fullUrl = `${window.location.protocol}//${window.location.host}/${data.gpxurl}`;
+  // Handle GPX URL - could be a full URL (public bucket) or a relative path
+  let fullUrl: string;
   if (data.gpxurl) {
+    if (data.gpxurl.startsWith('http://') || data.gpxurl.startsWith('https://')) {
+      // Already a full URL (e.g., public bucket URL from Strapi)
+      fullUrl = data.gpxurl;
+    } else if (data.gpxurl.startsWith('/')) {
+      // Absolute path - prepend with current host
+      fullUrl = `${window.location.protocol}//${window.location.host}${data.gpxurl}`;
+    } else {
+      // Relative path - prepend with current host and slash
+      fullUrl = `${window.location.protocol}//${window.location.host}/${data.gpxurl}`;
+    }
+    
     try {
-      const xhr = new XMLHttpRequest();
-      xhr.open('GET', fullUrl, false); // false makes the request synchronous
-      xhr.send(null);
-      if (xhr.status === 200) {
-        data.gpx = xhr.responseText;
+      // Check if this is a remote URL that needs proxying
+      if (fullUrl.startsWith('http://') || fullUrl.startsWith('https://')) {
+        // For remote URLs, proxy through our API to avoid CORS issues
+        const proxyUrl = `/api/gpx/fetch?url=${encodeURIComponent(fullUrl)}`;
+        console.log(`Fetching GPX via proxy: ${fullUrl}`);
+        
+        const xhr = new XMLHttpRequest();
+        xhr.open('GET', proxyUrl, false); // Synchronous request to our proxy
+        xhr.send(null);
+        
+        if (xhr.status === 200) {
+          data.gpx = xhr.responseText;
+        } else {
+          console.error(`Failed to fetch GPX via proxy. Status: ${xhr.status}`);
+          return; // Skip drawing this route
+        }
       } else {
-        throw new Error(
-          `Failed to fetch GPX from ${fullUrl}. Status: ${xhr.status}`
-        );
+        // Local file - use direct XMLHttpRequest as before
+        const xhr = new XMLHttpRequest();
+        xhr.open('GET', fullUrl, false);
+        xhr.send(null);
+        if (xhr.status === 200) {
+          data.gpx = xhr.responseText;
+        } else {
+          throw new Error(
+            `Failed to fetch GPX from ${fullUrl}. Status: ${xhr.status}`
+          );
+        }
       }
     } catch (error) {
       console.error(`Error fetching GPX from ${fullUrl}:`, error);
+      return; // Skip drawing this route if there's an error
     }
   }
   const polylineCoordinates: [number, number][] = parseGPX(data.gpx);

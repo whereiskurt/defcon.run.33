@@ -98,7 +98,7 @@ async function generateHeatMapData() {
             name: activityName,
             color: '#ff0000', // Red color for heat map
             opacity: 0.7, // More opaque for highlighter effect
-            weight: 8, // Much thicker lines like highlighter
+            weight: 4, // Thinner lines for better visibility with many routes
             lineCap: 'round', // Rounded line caps
             lineJoin: 'round', // Rounded line joins
             gpx: generateGPX(decodedPoints, activityName),
