@@ -31,8 +31,11 @@ export default async function Index() {
   const card_class_single = 'w-full h-[300px] col-span-12 sm:col-span-4';
   const card_class_wide = 'w-full h-[300px] col-span-12 sm:col-span-8';
 
+  // Filter cards based on is_active property - include if is_active is not explicitly false
+  const activeCards = cards.filter((card: any) => card.is_active !== false);
+  
   const cardComponents = [];
-  for (const card of cards) {
+  for (const card of activeCards) {
     const {
       card_class = card_class_single,
       card_title_class = 'text-white/60 bg-black/60',

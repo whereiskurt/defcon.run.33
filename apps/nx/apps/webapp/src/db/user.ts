@@ -112,6 +112,14 @@ const User = new Entity(
         default: () => ({}),
       },
 
+      quota: {
+        type: 'map',
+        properties: {
+          qrSheet: { type: 'number' },
+        },
+        default: () => ({ qrSheet: 10 }),
+      },
+
       createdAt: {
         type: 'number',
         default: () => Date.now(),
@@ -416,6 +424,31 @@ export async function getUser(email: string) {
     return result.data[0];
   }
   return null;
+}
+
+export async function getUserById(email: string) {
+  return getUser(email);
+}
+
+export async function updateUser(userData: { email: string; quota?: any; [key: string]: any }) {
+  const { email, ...updates } = userData;
+  const user = await getUser(email);
+  
+  if (!user) {
+    throw new Error('User not found for update');
+  }
+
+  const result = await User.update({
+    email: email,
+    id: user.id,
+  })
+    .set(updates)
+    .go({
+      response: 'all_new',
+    });
+
+  invalidateCache(email, 'users');
+  return result.data;
 }
 
 async function getUserOrNew(email: string) {
