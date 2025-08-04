@@ -6,7 +6,7 @@ services:
       dockerfile: Dockerfile
       platforms:
         - linux/amd64
-        - linux/arm64
+        # - linux/arm64
     user: "0:0"
     tty: true
     stdin_open: true

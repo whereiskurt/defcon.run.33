@@ -66,56 +66,226 @@ resource "aws_wafv2_web_acl" "this" {
   }
 
   rule {
-    name     = "BlockEtherpadStrapiWithoutCookies"
+    name     = "BlockStrapiWithoutCookies"
     priority = 8
     action {
       block {
         custom_response {
           response_code            = 469
-          custom_response_body_key = "etherpad-strapi-block-response"
+          custom_response_body_key = "strapi-block-response"
         }
       }
     }
 
     statement {
       and_statement {
-        # 1. Match requests to etherpad or strapi hostname
+        # 1. Match requests to strapi hostname only (etherpad excluded)
         statement {
-          or_statement {
-            statement {
-              byte_match_statement {
-                field_to_match {
-                  single_header {
-                    name = "host"
-                  }
-                }
-                positional_constraint = "CONTAINS"
-                search_string         = "etherpad"
-                text_transformation {
-                  priority = 1
-                  type     = "NONE"
-                }
+          byte_match_statement {
+            field_to_match {
+              single_header {
+                name = "host"
               }
             }
-            statement {
-              byte_match_statement {
-                field_to_match {
-                  single_header {
-                    name = "host"
-                  }
-                }
-                positional_constraint = "CONTAINS"
-                search_string         = "strapi"
-                text_transformation {
-                  priority = 1
-                  type     = "NONE"
-                }
-              }
+            positional_constraint = "CONTAINS"
+            search_string         = "strapi"
+            text_transformation {
+              priority = 1
+              type     = "NONE"
             }
           }
         }
 
-        # 2. Block if EITHER sess OR csrf cookie is missing
+        # COMMENTED OUT FOR NOW - RE-ENABLE LATER
+        # # 2. Exclude etherpad /p/* paths from cookie requirement
+        # statement {
+        #   not_statement {
+        #     statement {
+        #       and_statement {
+        #         statement {
+        #           byte_match_statement {
+        #             field_to_match {
+        #               single_header {
+        #                 name = "host"
+        #               }
+        #             }
+        #             positional_constraint = "CONTAINS"
+        #             search_string         = "etherpad"
+        #             text_transformation {
+        #               priority = 1
+        #               type     = "NONE"
+        #             }
+        #           }
+        #         }
+        #         statement {
+        #           byte_match_statement {
+        #             field_to_match {
+        #               uri_path {}
+        #             }
+        #             positional_constraint = "STARTS_WITH"
+        #             search_string         = "/p/"
+        #             text_transformation {
+        #               priority = 1
+        #               type     = "NONE"
+        #             }
+        #           }
+        #         }
+        #       }
+        #     }
+        #   }
+        # }
+
+        # # 3. Exclude all /static/* paths from cookie requirement (all hosts)
+        # statement {
+        #   not_statement {
+        #     statement {
+        #       byte_match_statement {
+        #         field_to_match {
+        #           uri_path {}
+        #         }
+        #         positional_constraint = "STARTS_WITH"
+        #         search_string         = "/static/"
+        #         text_transformation {
+        #           priority = 1
+        #           type     = "NONE"
+        #         }
+        #       }
+        #     }
+        #   }
+        # }
+
+        # # 4. Exclude favicon.ico from cookie requirement (all hosts)
+        # statement {
+        #   not_statement {
+        #     statement {
+        #       byte_match_statement {
+        #         field_to_match {
+        #           uri_path {}
+        #         }
+        #         positional_constraint = "EXACTLY"
+        #         search_string         = "/favicon.ico"
+        #         text_transformation {
+        #           priority = 1
+        #           type     = "NONE"
+        #         }
+        #       }
+        #     }
+        #   }
+        # }
+
+        # # 5. Exclude /locales.json from cookie requirement (all hosts)
+        # statement {
+        #   not_statement {
+        #     statement {
+        #       byte_match_statement {
+        #         field_to_match {
+        #           uri_path {}
+        #         }
+        #         positional_constraint = "EXACTLY"
+        #         search_string         = "/locales.json"
+        #         text_transformation {
+        #           priority = 1
+        #           type     = "NONE"
+        #         }
+        #       }
+        #     }
+        #   }
+        # }
+
+        # # 6. Exclude /pluginfw/* paths from cookie requirement (all hosts)
+        # statement {
+        #   not_statement {
+        #     statement {
+        #       byte_match_statement {
+        #         field_to_match {
+        #           uri_path {}
+        #         }
+        #         positional_constraint = "STARTS_WITH"
+        #         search_string         = "/pluginfw/"
+        #         text_transformation {
+        #           priority = 1
+        #           type     = "NONE"
+        #         }
+        #       }
+        #     }
+        #   }
+        # }
+
+        # # 7. Exclude /socket.io/ paths with padId parameter from cookie requirement
+        # statement {
+        #   not_statement {
+        #     statement {
+        #       and_statement {
+        #         statement {
+        #           byte_match_statement {
+        #             field_to_match {
+        #               uri_path {}
+        #             }
+        #             positional_constraint = "STARTS_WITH"
+        #             search_string         = "/socket.io/"
+        #             text_transformation {
+        #               priority = 1
+        #               type     = "NONE"
+        #             }
+        #           }
+        #         }
+        #         statement {
+        #           byte_match_statement {
+        #             field_to_match {
+        #               query_string {}
+        #             }
+        #             positional_constraint = "CONTAINS"
+        #             search_string         = "padId="
+        #             text_transformation {
+        #               priority = 1
+        #               type     = "NONE"
+        #             }
+        #           }
+        #         }
+        #       }
+        #     }
+        #   }
+        # }
+
+        # # 8. Exclude etherpad /padbootstrap* paths from cookie requirement
+        # statement {
+        #   not_statement {
+        #     statement {
+        #       and_statement {
+        #         statement {
+        #           byte_match_statement {
+        #             field_to_match {
+        #               single_header {
+        #                 name = "host"
+        #               }
+        #             }
+        #             positional_constraint = "CONTAINS"
+        #             search_string         = "etherpad"
+        #             text_transformation {
+        #               priority = 1
+        #               type     = "NONE"
+        #             }
+        #           }
+        #         }
+        #         statement {
+        #           byte_match_statement {
+        #             field_to_match {
+        #               uri_path {}
+        #             }
+        #             positional_constraint = "STARTS_WITH"
+        #             search_string         = "/padbootstrap"
+        #             text_transformation {
+        #               priority = 1
+        #               type     = "NONE"
+        #             }
+        #           }
+        #         }
+        #       }
+        #     }
+        #   }
+        # }
+
+        # 2. Block if EITHER sess OR csrf cookie is missing (renumbered from 9)
         statement {
           or_statement {
             # Missing sess cookie
@@ -167,7 +337,7 @@ resource "aws_wafv2_web_acl" "this" {
     visibility_config {
       sampled_requests_enabled   = true
       cloudwatch_metrics_enabled = true
-      metric_name                = "BlockEtherpadStrapiWithoutCookies"
+      metric_name                = "BlockStrapiWithoutCookies"
     }
   }
 
@@ -281,7 +451,7 @@ resource "aws_wafv2_web_acl" "this" {
   }
 
   rule {
-    name     = "AllowAuthHeaderOnStrapiUpload"
+    name     = "AllowAuthHeaderOrExpressSid"
     priority = 12
 
     action {
@@ -290,7 +460,7 @@ resource "aws_wafv2_web_acl" "this" {
 
     statement {
       and_statement {
-        # 1. Check if Authorization header is present (any value)
+        # 1. Check if Authorization header is present (any value) or express.sid cookie
         statement {
           or_statement {
             # 1. Check if Authorization header is present (any value)
@@ -403,7 +573,7 @@ resource "aws_wafv2_web_acl" "this" {
 
     visibility_config {
       cloudwatch_metrics_enabled = true
-      metric_name                = "allow-auth-header-on-strapi-upload"
+      metric_name                = "allow-auth-header-or-express-sid"
       sampled_requests_enabled   = true
     }
   }
@@ -688,7 +858,7 @@ resource "aws_wafv2_web_acl" "this" {
   }
 
   custom_response_body {
-    key          = "etherpad-strapi-block-response"
+    key          = "strapi-block-response"
     content_type = "TEXT_HTML"
     content      = "<h1>469</h1><h2>Access Blocked</h2><p>Your request has been blocked by automated defenses. Contact support and mention code 469.</p>"
   }

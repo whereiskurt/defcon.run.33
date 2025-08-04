@@ -102,7 +102,7 @@
   /*
    * Name your instance!
    */
-  "title": "${TITLE:Etherpad}",
+  "title": "${TITLE:RabbitDen}",
 
   /*
    * Pathname of the favicon you want to use. If null, the skin's favicon is
@@ -255,7 +255,7 @@
   "padOptions": {
     "noColors":         "${PAD_OPTIONS_NO_COLORS:false}",
     "showControls":     "${PAD_OPTIONS_SHOW_CONTROLS:true}",
-    "showChat":         "${PAD_OPTIONS_SHOW_CHAT:true}",
+    "showChat":         "${PAD_OPTIONS_SHOW_CHAT:false}",
     "showLineNumbers":  "${PAD_OPTIONS_SHOW_LINE_NUMBERS:true}",
     "useMonospaceFont": "${PAD_OPTIONS_USE_MONOSPACE_FONT:false}",
     "userName":         "${PAD_OPTIONS_USER_NAME:null}",
@@ -694,6 +694,8 @@
         }
       ]
     },
+
+    "ep_markdown_default": false
 
   /* Set the time to live for the tokens
      This is the time of seconds a user is logged into Etherpad

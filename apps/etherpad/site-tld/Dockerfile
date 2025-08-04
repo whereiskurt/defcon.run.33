@@ -40,7 +40,7 @@ ARG SETTINGS=./settings.json.docker
 #
 # EXAMPLE:
 #   ETHERPAD_PLUGINS="ep_codepad ep_author_neat"
-ARG ETHERPAD_PLUGINS=
+ARG ETHERPAD_PLUGINS="ep_markdown	ep_set_title_on_pad"
 
 # local plugins to install while building the container. By default no plugins are
 # installed.
@@ -155,7 +155,7 @@ RUN bin/installDeps.sh && \
 
 FROM build_${BUILD_ENV} AS production
 
-ARG ETHERPAD_PLUGINS=
+ARG ETHERPAD_PLUGINS="ep_markdown	ep_set_title_on_pad"
 ARG ETHERPAD_LOCAL_PLUGINS=
 ARG ETHERPAD_LOCAL_PLUGINS_ENV=
 ARG ETHERPAD_GITHUB_PLUGINS=
