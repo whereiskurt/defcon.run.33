@@ -298,9 +298,22 @@ const UserDropDown = (params: any) => {
             </DropdownItem>
           </DropdownSection>
           
+          <DropdownSection aria-label="Activity Management" showDivider>
+            <DropdownItem
+              startContent={
+                <FaPlus color="green" size={16} className={iconClasses} />
+              }
+              className="py-2 text-base"
+              textValue="Manual Add..."
+              key="add-activity"
+              closeOnSelect={true}
+            >
+              Manual Add...
+            </DropdownItem>
+          </DropdownSection>
           
           {!session.user.hasStrava ? (
-            <DropdownSection aria-label="Profile & Actions" showDivider>
+            <DropdownSection aria-label="Strava Integration" showDivider>
               <DropdownItem
                 startContent={
                   <FaStrava color="red" size={24} className={iconClasses} />
@@ -331,17 +344,6 @@ const UserDropDown = (params: any) => {
                 closeOnSelect={false}
               >
                 {syncing ? 'Syncing...' : syncSuccess ? 'Sync success' : syncsRemaining !== null ? `Sync Strava (${syncsRemaining} left)` : 'Sync Strava (...)'}
-              </DropdownItem>
-              <DropdownItem
-                startContent={
-                  <FaPlus color="green" size={16} className={iconClasses} />
-                }
-                className="py-2 text-base"
-                textValue="Manual Add..."
-                key="add-activity"
-                closeOnSelect={true}
-              >
-                Manual Add...
               </DropdownItem>
             </DropdownSection>
           )}

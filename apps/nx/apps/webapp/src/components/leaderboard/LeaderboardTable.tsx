@@ -31,6 +31,7 @@ type LeaderboardUser = {
   accomplishmentCount: number;
   totalPoints: number;
   globalRank: number;
+  mqtt_usertype?: string;
 };
 
 type Accomplishment = {
@@ -62,11 +63,12 @@ type LeaderboardTableProps = {
 };
 
 export default function LeaderboardTable({ ghosts }: LeaderboardTableProps) {
-  const PAGE_SIZE = 10; // Production page size
+  const PAGE_SIZE = 15; // Production page size
   const searchParams = useSearchParams();
   const router = useRouter();
   
   const [users, setUsers] = useState<LeaderboardUser[]>([]);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [pagination, setPagination] = useState<PaginationInfo | null>(null);
@@ -124,6 +126,7 @@ export default function LeaderboardTable({ ghosts }: LeaderboardTableProps) {
         }
         const data = await response.json();
         setUsers(data.users);
+        setCurrentUserId(data.currentUserId);
         setPagination(data.pagination);
       } catch (err) {
         console.error('Error fetching leaderboard:', err);
@@ -380,9 +383,13 @@ export default function LeaderboardTable({ ghosts }: LeaderboardTableProps) {
         }}
       >
         {users.map((user, index) => {
+          const isCurrentUser = user.id === currentUserId;
+          const displayName = user.displayname + (user.mqtt_usertype === 'wildhare' ? ' ⭐️' : '');
+          
           return (
             <AccordionItem
               key={user.id}
+              className={isCurrentUser ? 'bg-green-400/20 dark:bg-green-500/30 border-green-500/50' : ''}
               title={
                 <div className="flex items-center justify-between w-full">
                   <div className="flex items-center gap-2">
@@ -396,7 +403,7 @@ export default function LeaderboardTable({ ghosts }: LeaderboardTableProps) {
                         {user.totalPoints} 🥕
                       </Chip>
                     )}
-                    <span>{user.displayname}</span>
+                    <span>{displayName}</span>
                   </div>
                   <div className="flex flex-wrap gap-1">
                     {(() => {
@@ -420,7 +427,7 @@ export default function LeaderboardTable({ ghosts }: LeaderboardTableProps) {
                 </div>
               }
               subtitle=""
-              textValue={`${user.displayname} accomplishments`}
+              textValue={`${displayName} accomplishments`}
             >
               <div className="space-y-4">
                 {/* Dynamic accomplishments loading */}
@@ -454,7 +461,7 @@ export default function LeaderboardTable({ ghosts }: LeaderboardTableProps) {
                                   variant="bordered" 
                                   size="sm"
                                 >
-                                  {accomplishment.metadata.points >= 0 ? '+' : ''}{accomplishment.metadata.points}
+                                  {accomplishment.metadata.points >= 0 ? '+' : ''}{accomplishment.metadata.points} 🥕
                                 </Chip>
                               )}
                               <span className="text-sm text-default-500">

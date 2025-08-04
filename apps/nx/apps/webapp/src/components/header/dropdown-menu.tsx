@@ -100,7 +100,7 @@ const MenuDropDown = (params: any) => {
             key="heatmap"
             onClick={() => handleNavigation('/heatmap')}
           >
-            <span className="text-2xl">Activity Heat Map</span>
+            <span className="text-2xl">HeatMap</span>
           </DropdownItem>
 
           <DropdownItem

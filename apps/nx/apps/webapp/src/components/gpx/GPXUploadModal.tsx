@@ -13,10 +13,11 @@ import {
   Chip,
   Link,
   RadioGroup,
-  Radio
+  Radio,
+  Progress
 } from '@heroui/react';
 import { useState, useRef, useEffect } from 'react';
-import { Upload, CheckCircle, AlertCircle, ExternalLink, Trophy } from 'lucide-react';
+import { Upload, CheckCircle, AlertCircle, ExternalLink, Trophy, Lock, QrCode } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import MatrixRainPortal from '../effects/MatrixRainPortal';
 
@@ -79,16 +80,19 @@ export default function GPXUploadModal({ isOpen, onClose }: GPXUploadModalProps)
   const [showMatrixEffect, setShowMatrixEffect] = useState(false);
   const [remainingUploads, setRemainingUploads] = useState<Record<string, number>>({});
   const [maxUploadsPerDay, setMaxUploadsPerDay] = useState<number>(2);
+  const [socialAccomplishmentCount, setSocialAccomplishmentCount] = useState<number>(0);
+  const [hasAccess, setHasAccess] = useState<boolean>(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const descriptionRef = useRef<HTMLInputElement>(null);
 
-  // Fetch routes and upload counts when modal opens
+  // Fetch routes, upload counts, and check social accomplishments when modal opens
   useEffect(() => {
     if (isOpen) {
       if (routes.length === 0) {
         fetchRoutes();
       }
       fetchUploadCounts();
+      checkSocialAccomplishments();
     }
   }, [isOpen]);
 
@@ -134,6 +138,20 @@ export default function GPXUploadModal({ isOpen, onClose }: GPXUploadModalProps)
       }
     } catch (error) {
       console.error('Error fetching upload counts:', error);
+    }
+  };
+
+  const checkSocialAccomplishments = async () => {
+    try {
+      const response = await fetch('/api/user/accomplishments?type=social');
+      if (response.ok) {
+        const data = await response.json();
+        const count = data.accomplishments?.length || 0;
+        setSocialAccomplishmentCount(count);
+        setHasAccess(count >= 2);
+      }
+    } catch (error) {
+      console.error('Error checking social accomplishments:', error);
     }
   };
 
@@ -189,7 +207,12 @@ export default function GPXUploadModal({ isOpen, onClose }: GPXUploadModalProps)
 
       const result = await response.json();
 
-      if (response.ok) {
+      if (response.status === 403) {
+        // User doesn't have enough social accomplishments
+        setSocialAccomplishmentCount(result.socialCount || 0);
+        setHasAccess(false);
+        setError(result.message || 'You need at least 2 social accomplishments to upload GPX files.');
+      } else if (response.ok) {
         setSuccess(true);
         setHasEverSucceeded(true);
         setAccomplishmentId(result.accomplishmentId);
@@ -294,6 +317,29 @@ export default function GPXUploadModal({ isOpen, onClose }: GPXUploadModalProps)
             }
           }}
         >
+          {!hasAccess && (
+            <div className="flex flex-col gap-3 p-4 bg-warning-50 border border-warning-200 rounded-lg">
+              <div className="flex items-center gap-2 text-warning-800">
+                <Lock className="h-5 w-5" />
+                <span className="font-medium">Unlock Required</span>
+              </div>
+              <p className="text-warning-700 text-sm">
+                You need at least 2 social accomplishments to upload GPX files.
+              </p>
+              <Progress 
+                value={(socialAccomplishmentCount / 2) * 100} 
+                color="warning" 
+                className="max-w-md"
+                label={`${socialAccomplishmentCount} / 2 social accomplishments`}
+                showValueLabel
+              />
+              <div className="flex items-center gap-2 text-sm text-warning-600">
+                <QrCode className="h-4 w-4" />
+                <span>Scan QR codes at DEFCON or participate in social activities to unlock this feature!</span>
+              </div>
+            </div>
+          )}
+
           {hasEverSucceeded && accomplishmentId && (
             <div className="flex flex-col gap-3 p-4 bg-success-50 border border-success-200 rounded-lg">
               <div className="flex items-center gap-2 text-success-800">
@@ -325,7 +371,7 @@ export default function GPXUploadModal({ isOpen, onClose }: GPXUploadModalProps)
             </div>
           )}
 
-          <div className="space-y-4">
+          <div className="space-y-4" style={{ opacity: hasAccess ? 1 : 0.5, pointerEvents: hasAccess ? 'auto' : 'none' }}>
             <Select
               label="DEFCON Year"
               placeholder="Select DEFCON year"
@@ -480,6 +526,7 @@ export default function GPXUploadModal({ isOpen, onClose }: GPXUploadModalProps)
             onPress={handleUpload}
             isLoading={uploading}
             isDisabled={
+              !hasAccess ||
               uploading || 
               !activityType || 
               !defconYear ||
@@ -489,7 +536,8 @@ export default function GPXUploadModal({ isOpen, onClose }: GPXUploadModalProps)
               Boolean(defconYear && dc33Day && remainingUploads[`${defconYear}_${dc33Day}`] === 0)
             }
           >
-            {uploading ? 'Adding...' : 
+            {!hasAccess ? 'Unlock Required' :
+             uploading ? 'Adding...' : 
              (defconYear && dc33Day && remainingUploads[`${defconYear}_${dc33Day}`] === 0) ? 'Limit Reached' : 
              'Add Another'}
           </Button>

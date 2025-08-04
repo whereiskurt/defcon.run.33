@@ -89,7 +89,7 @@ const User = new Entity(
         type: 'string',
       },
       mqtt_usertype: {
-        type: ['rabbit', 'admin'] as const,
+        type: ['rabbit', 'admin', 'wildhare'] as const,
       },
 
       totalAccomplishmentType: {

@@ -1,5 +1,5 @@
 import { auth } from '@auth';
-import { getAllUsersWithAccomplishmentCounts } from '@db/user';
+import { getAllUsersWithAccomplishmentCounts, getUser } from '@db/user';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(req: NextRequest) {
@@ -13,6 +13,9 @@ export async function GET(req: NextRequest) {
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '10');
     const filter = searchParams.get('filter') || '';
+    
+    // Get current user for highlighting
+    const currentUser = await getUser(session.user.email);
     
     // Get all users with their accomplishment counts (this is the master list, already sorted)
     const allUsers = await getAllUsersWithAccomplishmentCounts();
@@ -31,22 +34,26 @@ export async function GET(req: NextRequest) {
     const offset = (page - 1) * limit;
     const paginatedUsers = filteredUsers.slice(offset, offset + limit);
 
-    // Return users without accomplishments (they'll be loaded dynamically)
-    // Include global rank for each user based on original unfiltered list
-    const leaderboardData = paginatedUsers.map((user, index) => {
-      const globalRank = allUsers.findIndex(u => u.id === user.id) + 1; // Find rank in original full sorted list
-      return {
-        ...user,
-        globalRank,
-        accomplishmentCount: (user.totalAccomplishmentType?.activity || 0) + 
-                            (user.totalAccomplishmentType?.social || 0) + 
-                            (user.totalAccomplishmentType?.meshctf || 0),
-        totalPoints: user.totalPoints || 0
-      };
-    });
+    // Get full user data with mqtt_usertype for each user in the paginated results
+    const usersWithMqttType = await Promise.all(
+      paginatedUsers.map(async (user) => {
+        const fullUser = await getUser(user.email);
+        const globalRank = allUsers.findIndex(u => u.id === user.id) + 1; // Find rank in original full sorted list
+        return {
+          ...user,
+          globalRank,
+          accomplishmentCount: (user.totalAccomplishmentType?.activity || 0) + 
+                              (user.totalAccomplishmentType?.social || 0) + 
+                              (user.totalAccomplishmentType?.meshctf || 0),
+          totalPoints: user.totalPoints || 0,
+          mqtt_usertype: fullUser?.mqtt_usertype || 'rabbit'
+        };
+      })
+    );
 
     return NextResponse.json({
-      users: leaderboardData,
+      users: usersWithMqttType,
+      currentUserId: currentUser?.id,
       pagination: {
         page,
         limit,

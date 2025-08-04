@@ -1,6 +1,6 @@
 import { auth } from '@auth';
 import { NextRequest, NextResponse } from 'next/server';
-import { createAccomplishment, Accomplishments } from '@db/accomplishment';
+import { createAccomplishment, Accomplishments, getAccomplishmentsByType } from '@db/accomplishment';
 import { UpdateUserAccomplishmentCounts, getUser, User } from '@db/user';
 import { MAX_UPLOADS_PER_DAY } from './constants';
 
@@ -161,20 +161,27 @@ export async function POST(req: NextRequest) {
       const tracks = parseGPX(gpxContent);
 
       if (tracks.length === 0) {
-        // Try to parse waypoints as fallback
-        const waypoints = parseGPXWaypoints(gpxContent);
-        if (waypoints.length === 0) {
-          return NextResponse.json(
-            { message: 'No valid tracks or waypoints found in GPX file' },
-            { status: 400 }
-          );
+        // Try to parse routes as fallback
+        const routes = parseGPXRoutes(gpxContent);
+        if (routes.length > 0) {
+          // Convert first route to a track
+          tracks.push(routes[0]);
+        } else {
+          // Try to parse waypoints as fallback
+          const waypoints = parseGPXWaypoints(gpxContent);
+          if (waypoints.length === 0) {
+            return NextResponse.json(
+              { message: 'No valid tracks, routes, or waypoints found in GPX file' },
+              { status: 400 }
+            );
+          }
+          
+          // Convert waypoints to a single track with straight-line connections
+          tracks.push({
+            name: 'Waypoint Route',
+            points: waypoints
+          });
         }
-        
-        // Convert waypoints to a single track with straight-line connections
-        tracks.push({
-          name: 'Waypoint Route',
-          points: waypoints
-        });
       }
 
       // Check if activity is in Las Vegas area
@@ -279,8 +286,17 @@ export async function POST(req: NextRequest) {
               if (gpxResponse.ok) {
                 const gpxContent = await gpxResponse.text();
                 console.log(`GPX content length: ${gpxContent.length}`);
-                const tracks = parseGPX(gpxContent);
+                let tracks = parseGPX(gpxContent);
                 console.log(`Parsed ${tracks.length} tracks`);
+
+                // If no tracks found, try parsing routes
+                if (tracks.length === 0) {
+                  const routes = parseGPXRoutes(gpxContent);
+                  console.log(`Parsed ${routes.length} routes`);
+                  if (routes.length > 0) {
+                    tracks = routes;
+                  }
+                }
 
                 if (tracks.length > 0 && tracks[0].points.length > 0) {
                   const track = tracks[0];
@@ -373,6 +389,19 @@ export async function POST(req: NextRequest) {
     const user = await getUser(session.user.email);
     if (!user) {
       return NextResponse.json({ message: 'User not found' }, { status: 404 });
+    }
+
+    // Check if user has at least 2 social accomplishments
+    const socialAccomplishments = await getAccomplishmentsByType(user.id, 'social');
+    if (socialAccomplishments.length < 2) {
+      return NextResponse.json(
+        { 
+          message: 'You need at least 2 social accomplishments to upload GPX files. Scan QR codes or participate in social activities to unlock this feature.',
+          socialCount: socialAccomplishments.length,
+          requiredCount: 2
+        },
+        { status: 403 }
+      );
     }
 
     // Validate DEFCON year and day are valid
@@ -703,6 +732,57 @@ function parseGPXWaypoints(gpxContent: string): GPXTrackPoint[] {
   }
 
   return waypoints;
+}
+
+function parseGPXRoutes(gpxContent: string): GPXTrack[] {
+  const routes: GPXTrack[] = [];
+
+  try {
+    // Parse routes using regex - similar to tracks but with <rte> and <rtept> tags
+    const routeMatches = gpxContent.match(/<rte[^>]*>[\s\S]*?<\/rte>/g) || [];
+
+    for (const routeMatch of routeMatches) {
+      const nameMatch = routeMatch.match(/<name[^>]*>(.*?)<\/name>/);
+      const routeName = nameMatch ? nameMatch[1] : 'Route';
+
+      // Match route points (rtept) instead of track points (trkpt)
+      const rteptMatches =
+        routeMatch.match(
+          /<rtept[^>]*lat="([^"]*)"[^>]*lon="([^"]*)"[^>]*>[\s\S]*?<\/rtept>/g
+        ) || [];
+
+      const points: GPXTrackPoint[] = [];
+
+      for (const rteptMatch of rteptMatches) {
+        const latMatch = rteptMatch.match(/lat="([^"]*)"/);
+        const lonMatch = rteptMatch.match(/lon="([^"]*)"/);
+
+        if (latMatch && lonMatch) {
+          const lat = parseFloat(latMatch[1]);
+          const lon = parseFloat(lonMatch[1]);
+
+          if (!isNaN(lat) && !isNaN(lon)) {
+            // Also try to extract elevation if present
+            const eleMatch = rteptMatch.match(/<ele[^>]*>(.*?)<\/ele>/);
+            const ele = eleMatch ? parseFloat(eleMatch[1]) : undefined;
+            
+            points.push({ lat, lon, ...(ele !== undefined && !isNaN(ele) && { ele }) });
+          }
+        }
+      }
+
+      if (points.length > 0) {
+        routes.push({
+          name: routeName,
+          points,
+        });
+      }
+    }
+  } catch (error) {
+    console.error('Error parsing GPX routes:', error);
+  }
+
+  return routes;
 }
 
 async function fetchRouteFromStrapi(routeId: string): Promise<any> {

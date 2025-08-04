@@ -167,7 +167,7 @@ export default function UserDetails() {
             <div>
               <p className="text-small text-default-500 mb-2">User Type</p>
               <p className="font-medium text-sm">
-                {user.mqtt_usertype || 'Not specified'}
+                {user.mqtt_usertype || 'Not specified'}{user.mqtt_usertype === 'wildhare' ? ' ⭐️' : ''}
               </p>
             </div>
           </div>
