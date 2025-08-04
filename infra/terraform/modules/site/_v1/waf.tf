@@ -9,6 +9,17 @@ resource "aws_wafv2_ip_set" "allow_list" {
   provider = aws.global-application
 }
 
+resource "aws_wafv2_ip_set" "deny_list" {
+  count              = var.use_global_waf ? 1 : 0
+  name               = "global-denylist-${replace(var.account_zonename, ".", "-")}-${random_id.rnd.hex}"
+  scope              = "CLOUDFRONT"
+  description        = "Deny list of IPs that are blocked from all access"
+  ip_address_version = "IPV4"
+  addresses = [
+  ]
+  provider = aws.global-application
+}
+
 resource "aws_wafv2_web_acl" "this" {
   count    = var.use_global_waf ? 1 : 0
   name     = "global-webacl-${replace(var.account_zonename, ".", "-")}-${random_id.rnd.hex}"
@@ -35,6 +46,132 @@ resource "aws_wafv2_web_acl" "this" {
   }
 
   rule {
+    name     = "DenyListBlock"
+    priority = 5
+    action {
+      block {}
+    }
+
+    statement {
+      ip_set_reference_statement {
+        arn = aws_wafv2_ip_set.deny_list[0].arn
+      }
+    }
+
+    visibility_config {
+      sampled_requests_enabled   = true
+      cloudwatch_metrics_enabled = true
+      metric_name                = "DenyListBlock"
+    }
+  }
+
+  rule {
+    name     = "BlockEtherpadStrapiWithoutCookies"
+    priority = 8
+    action {
+      block {
+        custom_response {
+          response_code            = 469
+          custom_response_body_key = "etherpad-strapi-block-response"
+        }
+      }
+    }
+
+    statement {
+      and_statement {
+        # 1. Match requests to etherpad or strapi hostname
+        statement {
+          or_statement {
+            statement {
+              byte_match_statement {
+                field_to_match {
+                  single_header {
+                    name = "host"
+                  }
+                }
+                positional_constraint = "CONTAINS"
+                search_string         = "etherpad"
+                text_transformation {
+                  priority = 1
+                  type     = "NONE"
+                }
+              }
+            }
+            statement {
+              byte_match_statement {
+                field_to_match {
+                  single_header {
+                    name = "host"
+                  }
+                }
+                positional_constraint = "CONTAINS"
+                search_string         = "strapi"
+                text_transformation {
+                  priority = 1
+                  type     = "NONE"
+                }
+              }
+            }
+          }
+        }
+
+        # 2. Block if EITHER sess OR csrf cookie is missing
+        statement {
+          or_statement {
+            # Missing sess cookie
+            statement {
+              not_statement {
+                statement {
+                  byte_match_statement {
+                    field_to_match {
+                      single_header {
+                        name = "cookie"
+                      }
+                    }
+                    positional_constraint = "CONTAINS"
+                    search_string         = "sess="
+                    text_transformation {
+                      priority = 1
+                      type     = "NONE"
+                    }
+                  }
+                }
+              }
+            }
+
+            # Missing csrf cookie
+            statement {
+              not_statement {
+                statement {
+                  byte_match_statement {
+                    field_to_match {
+                      single_header {
+                        name = "cookie"
+                      }
+                    }
+                    positional_constraint = "CONTAINS"
+                    search_string         = "csrf="
+                    text_transformation {
+                      priority = 1
+                      type     = "NONE"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+
+    visibility_config {
+      sampled_requests_enabled   = true
+      cloudwatch_metrics_enabled = true
+      metric_name                = "BlockEtherpadStrapiWithoutCookies"
+    }
+  }
+
+  rule {
     name     = "AllowListBypass"
     priority = 10
     action {
@@ -55,8 +192,97 @@ resource "aws_wafv2_web_acl" "this" {
   }
 
   rule {
-    name     = "AllowAuthHeaderOnStrapiUpload"
+    name     = "AllowAuthenticatedUsers"
     priority = 11
+
+    action {
+      allow {}
+    }
+
+    statement {
+      and_statement {
+        # 1. Exclude /login/* and /api/auth/* paths
+        statement {
+          not_statement {
+            statement {
+              or_statement {
+                statement {
+                  byte_match_statement {
+                    field_to_match {
+                      uri_path {}
+                    }
+                    positional_constraint = "STARTS_WITH"
+                    search_string         = "/login/"
+                    text_transformation {
+                      priority = 1
+                      type     = "NONE"
+                    }
+                  }
+                }
+                statement {
+                  byte_match_statement {
+                    field_to_match {
+                      uri_path {}
+                    }
+                    positional_constraint = "STARTS_WITH"
+                    search_string         = "/api/auth/"
+                    text_transformation {
+                      priority = 1
+                      type     = "NONE"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+
+        # 2. Check if "sess" cookie is present
+        statement {
+          byte_match_statement {
+            field_to_match {
+              single_header {
+                name = "cookie"
+              }
+            }
+            positional_constraint = "CONTAINS"
+            search_string         = "sess="
+            text_transformation {
+              priority = 1
+              type     = "NONE"
+            }
+          }
+        }
+
+        # 3. Check if "csrf" cookie is present
+        statement {
+          byte_match_statement {
+            field_to_match {
+              single_header {
+                name = "cookie"
+              }
+            }
+            positional_constraint = "CONTAINS"
+            search_string         = "csrf="
+            text_transformation {
+              priority = 1
+              type     = "NONE"
+            }
+          }
+        }
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = true
+      metric_name                = "allow-authenticated-users"
+      sampled_requests_enabled   = true
+    }
+  }
+
+  rule {
+    name     = "AllowAuthHeaderOnStrapiUpload"
+    priority = 12
 
     action {
       allow {}
@@ -184,7 +410,7 @@ resource "aws_wafv2_web_acl" "this" {
 
   rule {
     name     = "AWS-AWSManagedRulesCommonRuleSet"
-    priority = 20
+    priority = 21
     override_action {
       none {} ##Could set back to none{} to not override the block rules.
     }
@@ -235,7 +461,7 @@ resource "aws_wafv2_web_acl" "this" {
   # Add AWS Managed Rules: SQLi (SQL Injection) Rule Set
   rule {
     name     = "AWS-AWSManagedRulesSQLiRuleSet"
-    priority = 30
+    priority = 31
     override_action {
       none {}
     }
@@ -257,7 +483,7 @@ resource "aws_wafv2_web_acl" "this" {
   # Add AWS Managed Rules: Known Bad Inputs Rule Set
   rule {
     name     = "AWS-AWSManagedRulesKnownBadInputsRuleSet"
-    priority = 40
+    priority = 41
     override_action {
       none {}
     }
@@ -276,16 +502,122 @@ resource "aws_wafv2_web_acl" "this" {
     }
   }
 
+  # Add AWS Managed Rules: Bot Control for Login/Auth endpoints
+  rule {
+    name     = "AWS-AWSManagedRulesBotControlRuleSet-AuthEndpoints"
+    priority = 42
+    override_action {
+      none {}
+    }
+
+    statement {
+      managed_rule_group_statement {
+        vendor_name = "AWS"
+        name        = "AWSManagedRulesBotControlRuleSet"
+
+        scope_down_statement {
+          or_statement {
+            statement {
+              byte_match_statement {
+                field_to_match {
+                  uri_path {}
+                }
+                positional_constraint = "STARTS_WITH"
+                search_string         = "/login/"
+                text_transformation {
+                  priority = 1
+                  type     = "NONE"
+                }
+              }
+            }
+            statement {
+              byte_match_statement {
+                field_to_match {
+                  uri_path {}
+                }
+                positional_constraint = "STARTS_WITH"
+                search_string         = "/api/auth/"
+                text_transformation {
+                  priority = 1
+                  type     = "NONE"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+
+    visibility_config {
+      sampled_requests_enabled   = true
+      cloudwatch_metrics_enabled = true
+      metric_name                = "AWSBotControlAuthEndpoints"
+    }
+  }
+
+  # Add AWS Managed Rules: Amazon IP Reputation List for Login/Auth endpoints
+  rule {
+    name     = "AWS-AWSManagedRulesAmazonIpReputationList-AuthEndpoints"
+    priority = 43
+    override_action {
+      none {}
+    }
+
+    statement {
+      managed_rule_group_statement {
+        vendor_name = "AWS"
+        name        = "AWSManagedRulesAmazonIpReputationList"
+
+        scope_down_statement {
+          or_statement {
+            statement {
+              byte_match_statement {
+                field_to_match {
+                  uri_path {}
+                }
+                positional_constraint = "STARTS_WITH"
+                search_string         = "/login/"
+                text_transformation {
+                  priority = 1
+                  type     = "NONE"
+                }
+              }
+            }
+            statement {
+              byte_match_statement {
+                field_to_match {
+                  uri_path {}
+                }
+                positional_constraint = "STARTS_WITH"
+                search_string         = "/api/auth/"
+                text_transformation {
+                  priority = 1
+                  type     = "NONE"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+
+    visibility_config {
+      sampled_requests_enabled   = true
+      cloudwatch_metrics_enabled = true
+      metric_name                = "AWSReputationListAuthEndpoints"
+    }
+  }
+
   rule {
     name     = "LimitRequestsByIP"
-    priority = 50
+    priority = 51
     action {
       block {}
     }
 
     statement {
       rate_based_statement {
-        limit              = 1000 # 1000 requests in a 5-minute period
+        limit              = 500 # 500 requests in a 5-minute period
         aggregate_key_type = "IP"
       }
     }
@@ -293,13 +625,43 @@ resource "aws_wafv2_web_acl" "this" {
     visibility_config {
       sampled_requests_enabled   = true
       cloudwatch_metrics_enabled = true
-      metric_name                = "RateLimit"
+      metric_name                = "RateLimitIP"
+    }
+  }
+
+  rule {
+    name     = "LimitRequestsBySession"
+    priority = 52
+    action {
+      block {}
+    }
+
+    statement {
+      rate_based_statement {
+        limit              = 60 # 60 requests per minute
+        aggregate_key_type = "CUSTOM_KEYS"
+        custom_key {
+          cookie {
+            name = "sess"
+            text_transformation {
+              priority = 1
+              type     = "NONE"
+            }
+          }
+        }
+      }
+    }
+
+    visibility_config {
+      sampled_requests_enabled   = true
+      cloudwatch_metrics_enabled = true
+      metric_name                = "RateLimitSession"
     }
   }
 
   rule {
     name     = "BlockCountries"
-    priority = 60
+    priority = 62
     action {
       block {}
     }
@@ -323,6 +685,12 @@ resource "aws_wafv2_web_acl" "this" {
     content = jsonencode({
       message = "Request not acceptable. Your IP has been temporarily blocked due to exceeding the rate limit."
     })
+  }
+
+  custom_response_body {
+    key          = "etherpad-strapi-block-response"
+    content_type = "TEXT_HTML"
+    content      = "<h1>469</h1><h2>Access Blocked</h2><p>Your request has been blocked by automated defenses. Contact support and mention code 469.</p>"
   }
 }
 
