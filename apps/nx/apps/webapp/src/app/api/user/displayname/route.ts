@@ -1,5 +1,5 @@
 import { auth } from '@auth';
-import { updateDisplayname, getUser } from '@db/user';
+import { updateDisplayname, getUser, updateUser } from '@db/user';
 import { NextRequest, NextResponse } from 'next/server';
 import { invalidateCache } from '@db/cache';
 
@@ -34,7 +34,7 @@ export async function PUT(req: NextRequest) {
       );
     }
 
-    // Check if user has at least 2 points
+    // Check if user has at least 2 points (social flag unlock)
     const user = await getUser(session.user.email);
     if (!user) {
       return NextResponse.json(
@@ -45,8 +45,32 @@ export async function PUT(req: NextRequest) {
 
     if ((user.totalPoints || 0) < 2) {
       return NextResponse.json(
-        { message: 'You need at least 2 points to change your display name' },
+        { message: 'You need at least 2 points to unlock display name changes' },
         { status: 403 }
+      );
+    }
+
+    // Check daily quota (after social flag is unlocked)
+    const today = new Date().toISOString().split('T')[0];
+    const quota = user.quota || {};
+    const resetDate = quota.displaynameChangesResetDate || '';
+    let remainingChanges = quota.displaynameChanges ?? 3;
+
+    // Reset quota if it's a new day
+    if (resetDate !== today) {
+      remainingChanges = 3;
+      await updateUser({
+        email: session.user.email,
+        quota: {
+          ...quota,
+          displaynameChanges: 2, // Will be decremented to 2 after this change
+          displaynameChangesResetDate: today
+        }
+      });
+    } else if (remainingChanges <= 0) {
+      return NextResponse.json(
+        { message: 'You have reached your daily limit of 3 display name changes. Please try again tomorrow.' },
+        { status: 429 }
       );
     }
 
@@ -57,6 +81,18 @@ export async function PUT(req: NextRequest) {
         { message: 'Failed to update display name' },
         { status: 500 }
       );
+    }
+
+    // Decrement the quota after successful update
+    if (resetDate === today) {
+      await updateUser({
+        email: session.user.email,
+        quota: {
+          ...quota,
+          displaynameChanges: remainingChanges - 1,
+          displaynameChangesResetDate: today
+        }
+      });
     }
 
     // Strip out sensitive fields before returning
@@ -74,7 +110,8 @@ export async function PUT(req: NextRequest) {
     return NextResponse.json(
       { 
         message: 'Display name updated successfully', 
-        user: safeUserData 
+        user: safeUserData,
+        remainingChangesToday: resetDate === today ? remainingChanges - 1 : 2
       },
       { status: 200 }
     );

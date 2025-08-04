@@ -36,7 +36,7 @@ export default async function Page() {
             mqtt_nodes={JSON.stringify([])} 
             center={[36.1320813, -115.1667648]} 
             loadingText="🔥🔥🔥 DRAWING THE FIRE 🔥🔥🔥"
-            loadingIndicator=" . . ."
+            loadingIndicator=""
             disableGhostMode={true}
             disablePopups={true}
             zoom={13}

@@ -23,6 +23,11 @@ const sharedConfig = {
         destination: 'https://mqq.defcon.run/map/',
         permanent: true,
       },
+      {
+        source: '/q',
+        destination: 'https://mqq.defcon.run/qr',
+        permanent: true,
+      },
     ];
   },
 };

@@ -8,11 +8,11 @@ import {
   CardFooter,
   Divider,
   Button,
-  Spinner,
 } from '@heroui/react';
 import { FaStrava, FaSync } from 'react-icons/fa';
 import { FaCheckCircle } from 'react-icons/fa';
 import { signIn, useSession } from 'next-auth/react';
+import CardMatrixLoader from './CardMatrixLoader';
 
 export default function StravaConnection() {
   const { data: session, status } = useSession();
@@ -42,26 +42,28 @@ export default function StravaConnection() {
       const data = await response.json();
 
       if (response.ok) {
+        const quotaText = data.remainingQuota !== undefined ? ` (${data.remainingQuota} syncs remaining)` : '';
+        
         if (data.syncType === 'first-time') {
           // First time historical sync
           if (data.newActivities > 0) {
             const accomplishmentText = data.accomplishmentsCreated > 0 ? ` Created ${data.accomplishmentsCreated} accomplishments!` : '';
-            setSyncMessage(`✨ First-time sync complete! Found ${data.activitiesCount} DEFCON activities across ${data.yearsScanned.length} years (${data.newActivities} new, ${data.existingActivities} existing).${accomplishmentText} Future syncs will only check current year.`);
+            setSyncMessage(`✨ First-time sync complete! Found ${data.activitiesCount} DEFCON activities across ${data.yearsScanned.length} years (${data.newActivities} new, ${data.existingActivities} existing).${accomplishmentText} Future syncs will only check current year.${quotaText}`);
           } else {
-            setSyncMessage(`✨ First-time sync complete! No activities found across ${data.yearsScanned.length} years. Future syncs will only check current year.`);
+            setSyncMessage(`✨ First-time sync complete! No activities found across ${data.yearsScanned.length} years. Future syncs will only check current year.${quotaText}`);
           }
         } else {
           // Regular current year sync
           if (data.newActivities > 0) {
             const accomplishmentText = data.accomplishmentsCreated > 0 ? ` Created ${data.accomplishmentsCreated} accomplishments!` : '';
-            setSyncMessage(`Successfully synced ${data.activitiesCount} DC32 activities (${data.newActivities} new, ${data.existingActivities} existing).${accomplishmentText}`);
+            setSyncMessage(`Successfully synced ${data.activitiesCount} DC32 activities (${data.newActivities} new, ${data.existingActivities} existing).${accomplishmentText}${quotaText}`);
           } else {
-            setSyncMessage(`No new DC32 activities found (${data.activitiesCount} existing activities)`);
+            setSyncMessage(`No new DC32 activities found (${data.activitiesCount} existing activities)${quotaText}`);
           }
         }
       } else {
         if (response.status === 429) {
-          setSyncMessage(`Rate limit: ${data.message}`);
+          setSyncMessage(`❌ ${data.message}`);
         } else {
           setSyncMessage(`Error: ${data.message}`);
         }
@@ -80,8 +82,15 @@ export default function StravaConnection() {
   if (status === 'loading') {
     return (
       <Card className="w-full">
-        <CardBody className="flex justify-center items-center p-8">
-          <Spinner size="lg" />
+        <CardHeader className="flex gap-3">
+          <div className="flex flex-col">
+            <p className="text-lg">Strava Connection</p>
+            <p className="text-small text-default-500">Connecting allows automatic award of daily activity accomplishments.</p>
+          </div>
+        </CardHeader>
+        <Divider />
+        <CardBody className="p-0">
+          <CardMatrixLoader text="INITIALIZING STRAVA" height="200px" />
         </CardBody>
       </Card>
     );
@@ -118,7 +127,7 @@ export default function StravaConnection() {
                   Sync DEFCON activities
                 </p>
                 <p className="text-small text-default-500">
-                  Sync Strave DEFCON activities (4x daily limit)
+                  Sync Strava DEFCON activities (4x daily limit)
                 </p>
                 {syncMessage && (
                   <p className={`text-small mt-2 ${syncMessage.includes('Error') || syncMessage.includes('Failed') || syncMessage.includes('Rate limit') ? 'text-danger' : 'text-success'}`}>

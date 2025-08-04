@@ -1,6 +1,6 @@
 import { auth } from '@auth';
-import { getUser } from '@db/user';
-import { createAccomplishment, getAccomplishmentsByType, getAllAccomplishmentsForType, checkDuplicateAccomplishment } from '@db/accomplishment';
+import { getUser, updateUser } from '@db/user';
+import { createAccomplishment, getAccomplishmentsByType, getAllAccomplishmentsForType, checkDuplicateAccomplishment, getAccomplishmentsByUser } from '@db/accomplishment';
 import { NextRequest, NextResponse } from 'next/server';
 import { strapi } from '@components/cms/data';
 
@@ -27,6 +27,28 @@ export async function GET(
     const user = await getUser(session.user.email);
     if (!user) {
       return NextResponse.json({ message: 'User not found' }, { status: 404 });
+    }
+
+    // Check QR scan quota
+    const allUserAccomplishments = await getAccomplishmentsByUser(user.id);
+    const hasAccomplishments = allUserAccomplishments && allUserAccomplishments.length > 0;
+    
+    // Determine quota limit based on accomplishments
+    const quotaLimit = hasAccomplishments ? 100 : 5;
+    const currentQrScans = user.quota?.qrScans || 0;
+    
+    // Check if user has exceeded their quota
+    if (currentQrScans >= quotaLimit) {
+      const message = hasAccomplishments 
+        ? `You have reached your lifetime limit of ${quotaLimit} QR scans`
+        : `You have reached your limit of ${quotaLimit} QR scans. Complete some accomplishments to increase your limit to 100!`;
+      
+      return NextResponse.json({ 
+        message,
+        quotaExceeded: true,
+        currentUsage: currentQrScans,
+        quotaLimit 
+      }, { status: 429 });
     }
 
     // Fetch qrflags from Strapi
@@ -158,13 +180,25 @@ export async function GET(
       }
     );
 
+    // Update user's QR scan quota usage
+    await updateUser({
+      email: session.user.email,
+      quota: {
+        ...user.quota,
+        qrScans: currentQrScans + 1
+      }
+    });
+
     // Usage count is now calculated dynamically from DynamoDB accomplishments
 
     return NextResponse.json(
       { 
         message: qrflag.success_message || 'QR code successfully claimed!',
         accomplishment,
-        points: qrflag.points || 1
+        points: qrflag.points || 1,
+        quotaUsed: currentQrScans + 1,
+        quotaLimit,
+        quotaRemaining: quotaLimit - (currentQrScans + 1)
       },
       { status: 200 }
     );

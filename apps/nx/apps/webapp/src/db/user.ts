@@ -116,8 +116,18 @@ const User = new Entity(
         type: 'map',
         properties: {
           qrSheet: { type: 'number' },
+          displaynameChanges: { type: 'number' },
+          displaynameChangesResetDate: { type: 'string' },
+          stravaSync: { type: 'number' },
+          qrScans: { type: 'number' },
         },
-        default: () => ({ qrSheet: 10 }),
+        default: () => ({ 
+          qrSheet: 10,
+          displaynameChanges: 3,
+          displaynameChangesResetDate: new Date().toISOString().split('T')[0],
+          stravaSync: 16,
+          qrScans: 0
+        }),
       },
 
       createdAt: {

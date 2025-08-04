@@ -6,11 +6,11 @@ import {
   CardHeader,
   CardBody,
   Divider,
-  Spinner,
   Input,
   Button,
   Chip,
 } from '@heroui/react';
+import CardMatrixLoader from './CardMatrixLoader';
 
 type UserData = {
   email: string;
@@ -126,10 +126,8 @@ export default function UserDetails() {
           </div>
         </CardHeader>
         <Divider />
-        <CardBody>
-          <div className="flex justify-center items-center p-4">
-            <Spinner size="lg" />
-          </div>
+        <CardBody className="p-0">
+          <CardMatrixLoader text="LOADING USER DATA" height="200px" />
         </CardBody>
       </Card>
     );
@@ -180,7 +178,7 @@ export default function UserDetails() {
           
           {/* Display Name Section - 33% */}
           <div>
-            <p className="text-lg mb-2">👤 Leaderboard Display Name</p>
+            <p className="text-lg mb-2">🐰 Display Name</p>
             <div className="flex flex-col gap-2">
               <Input
                 value={displaynameInput}
@@ -206,19 +204,22 @@ export default function UserDetails() {
                   inputWrapper: (user?.totalPoints || 0) < 2 ? 'opacity-60' : ''
                 }}
               />
-              {/* Character counter */}
-              <div className="flex justify-between items-center">
-                <span className="text-tiny text-default-400">
-                  {displaynameInput.length}/16 characters
-                </span>
-                {displaynameInput.length > 12 && displaynameInput.length <= 16 && (
-                  <span className="text-tiny text-warning">
-                    {16 - displaynameInput.length} characters remaining
+              {/* Character counter - only show when unlocked */}
+              {(user?.totalPoints || 0) >= 2 && (
+                <div className="flex justify-between items-center">
+                  <span className="text-tiny text-default-400">
+                    {displaynameInput.length}/16 characters
                   </span>
-                )}
-              </div>
+                  {displaynameInput.length > 12 && displaynameInput.length <= 16 && (
+                    <span className="text-tiny text-warning">
+                      {16 - displaynameInput.length} characters remaining
+                    </span>
+                  )}
+                </div>
+              )}
               {(user?.totalPoints || 0) < 2 ? (
-                <p className="text-small text-default-500 text-center">
+                <div className="text-small text-default-500 text-center">
+                  🔐 Locked.
                   <Chip
                     color="warning"
                     variant="flat"
@@ -227,8 +228,8 @@ export default function UserDetails() {
                   >
                     2x 🥕
                   </Chip>
-                  social points needed to change name
-                </p>
+                  needed
+                </div>
               ) : (
                 <Button
                   onPress={updateDisplaynameHandler}

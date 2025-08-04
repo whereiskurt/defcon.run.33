@@ -9,9 +9,9 @@ import {
   Divider,
   Input,
   Button,
-  Spinner,
 } from '@heroui/react';
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
+import CardMatrixLoader from './CardMatrixLoader';
 
 type UserData = {
   email?: string;
@@ -69,8 +69,15 @@ export default function MqttCredentials() {
   if (loading) {
     return (
       <Card className="w-full">
-        <CardBody className="flex justify-center items-center p-8">
-          <Spinner size="lg" />
+        <CardHeader className="flex gap-3">
+          <div className="flex flex-col">
+            <p className="text-lg">MQTT Credentials</p>
+            <p className="text-small text-default-500">Your mesh network credentials</p>
+          </div>
+        </CardHeader>
+        <Divider />
+        <CardBody className="p-0">
+          <CardMatrixLoader text="DECRYPTING CREDENTIALS" height="200px" />
         </CardBody>
       </Card>
     );
