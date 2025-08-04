@@ -437,24 +437,29 @@ function QRModal(isOpen: boolean, onClose: () => void, userDetail: any) {
       <ModalContent>
         {() => (
           <>
-            <ModalHeader className="flex flex-col gap-1 text-center">
-              Unique QR Code
+            <ModalHeader className="flex flex-col gap-1 text-center pb-2">
+              <div className="text-2xl font-bold text-primary drop-shadow-lg">
+                🐰 Your Social QR 🥕
+              </div>
+              <div className="text-sm text-default-500">Share to connect with other rabbits!</div>
             </ModalHeader>
-            <ModalBody className="p-0">
+            <ModalBody className="p-0 pt-0">
               {hasQR ? (
-                <div className="p-4">
-                  <img src={userDetail.eqr} className="w-full" />
+                <div className="p-0 overflow-hidden">
+                  <img src={userDetail.eqr} className="w-full scale-110 -m-[0px]" />
                 </div>
               ) : (
                 <CardMatrixLoader text="PROCESSING QR CODE" height="300px" />
               )}
             </ModalBody>
-            <ModalFooter>
+            <ModalFooter className="flex justify-center -mt-[10px]">
               <Button
                 size="lg"
-                color="danger"
-                variant="light"
+                color="success"
+                variant="solid"
+                radius="full"
                 onPress={closeWindow}
+                className="px-8 py-3 text-lg font-semibold min-w-[150px]"
               >
                 Done
               </Button>

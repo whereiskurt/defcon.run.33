@@ -71,6 +71,12 @@ const Accomplishments = new Entity(
           flag_type: { type: 'string' },
           points: { type: 'number' },
           scanned_at: { type: 'string' },
+          // Social connection fields for rabbit QR codes
+          connected_with_hash: { type: 'string' },
+          connected_with_email: { type: 'string' },
+          connected_with_displayname: { type: 'string' },
+          scanned_by: { type: 'string' },
+          scanner_displayname: { type: 'string' },
           distance: { type: 'string' },
           time: { type: 'string' },
           rank: { type: 'number' },

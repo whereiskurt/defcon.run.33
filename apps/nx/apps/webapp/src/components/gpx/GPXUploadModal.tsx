@@ -335,7 +335,7 @@ export default function GPXUploadModal({ isOpen, onClose }: GPXUploadModalProps)
               />
               <div className="flex items-center gap-2 text-sm text-warning-600">
                 <QrCode className="h-4 w-4" />
-                <span>Scan QR codes at DEFCON or participate in social activities to unlock this feature!</span>
+                <span>Unlock this feature with exclusive QR codes!</span>
               </div>
             </div>
           )}

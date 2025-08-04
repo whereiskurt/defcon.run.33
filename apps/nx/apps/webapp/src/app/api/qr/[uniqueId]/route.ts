@@ -23,7 +23,6 @@ export async function GET(
       );
     }
 
-
     // Get user to extract userId
     const user = await getUser(session.user.email);
     if (!user) {

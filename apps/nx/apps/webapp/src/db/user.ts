@@ -557,6 +557,18 @@ export async function updateDisplayname(email: string, displayname: string) {
   return result.data;
 }
 
+export async function getUserByHash(hash: string) {
+  const result = await User.query
+    .byRsaPubSHA({ hash })
+    .go();
+
+  if (result.data.length === 0) {
+    return null;
+  }
+
+  return result.data[0];
+}
+
 export async function getAllUsersWithAccomplishmentCounts() {
   const result = await User.scan.go();
   

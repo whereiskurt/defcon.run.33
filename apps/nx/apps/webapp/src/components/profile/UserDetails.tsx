@@ -9,6 +9,7 @@ import {
   Spinner,
   Input,
   Button,
+  Chip,
 } from '@heroui/react';
 
 type UserData = {
@@ -186,15 +187,25 @@ export default function UserDetails() {
                 placeholder="Enter display name"
                 variant="bordered"
                 maxLength={50}
-                disabled={isUpdatingDisplayname}
+                disabled={isUpdatingDisplayname || (user?.totalPoints || 0) < 2}
+                isReadOnly={(user?.totalPoints || 0) < 2}
                 size="lg"
                 classNames={{
-                  input: "text-lg"
+                  input: `text-lg ${(user?.totalPoints || 0) < 2 ? 'text-default-400' : ''}`,
+                  inputWrapper: (user?.totalPoints || 0) < 2 ? 'opacity-60' : ''
                 }}
               />
               {(user?.totalPoints || 0) < 2 ? (
                 <p className="text-small text-default-500 text-center">
-                  You need 2 points to change your display name
+                  <Chip
+                    color="warning"
+                    variant="flat"
+                    size="sm"
+                    className="inline-flex mr-1"
+                  >
+                    2x 🥕
+                  </Chip>
+                  social points needed to change name
                 </p>
               ) : (
                 <Button
