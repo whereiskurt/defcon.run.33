@@ -208,6 +208,20 @@ resource "aws_wafv2_web_acl" "this" {
           }
           name = "EC2MetaDataSSRF"
         }
+
+        rule_action_override {
+          action_to_use {
+            count {}
+          }
+          name = "SizeRestrictions_BODY"
+        }
+
+        rule_action_override {
+          action_to_use {
+            count {}
+          }
+          name = "CrossSiteScripting_BODY"
+        }
       }
     }
 
