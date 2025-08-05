@@ -502,23 +502,27 @@ async function main() {
 
     // Interactive selection logic
     if (!awardType) {
-      // No award type specified - show both ghosts and qrflags
-      console.log('\n🎯 Select award type:');
-      const typeChoice = await askQuestion('Enter "1" for Ghost, "2" for QR Flag, or "q" to quit: ');
+      // No award type specified - show both tables and exit
+      console.log('\n📋 Available Awards:');
       
-      if (typeChoice.toLowerCase() === 'q') {
-        console.log('❌ Award cancelled.');
-        process.exit(0);
+      const ghosts = await fetchAllGhosts();
+      const qrflags = await fetchAllQRFlags();
+      
+      if (ghosts.length > 0) {
+        formatItemsInColumns(ghosts, 'ghost');
       }
       
-      if (typeChoice === '1') {
-        finalAwardType = 'ghost';
-      } else if (typeChoice === '2') {
-        finalAwardType = 'qrflag';
-      } else {
-        console.log('❌ Invalid selection');
-        process.exit(1);
+      if (qrflags.length > 0) {
+        formatItemsInColumns(qrflags, 'qrflag');
       }
+      
+      console.log('\n💡 Usage examples:');
+      console.log(`  npm run award-accomplishment ${identifier} ghost <handle>`);
+      console.log(`  npm run award-accomplishment ${identifier} qrflag <flag_id>`);
+      console.log(`  npm run award-accomplishment ${identifier} ghost`);
+      console.log(`  npm run award-accomplishment ${identifier} qrflag`);
+      
+      process.exit(0);
     }
 
     if (!finalAwardValue) {
