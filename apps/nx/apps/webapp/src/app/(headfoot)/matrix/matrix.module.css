@@ -161,6 +161,54 @@
   }
 }
 
+/* Redirect warning overlay */
+.redirectWarning {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10001;
+}
+
+.warningBox {
+  background: rgba(0, 0, 0, 0.9);
+  border: 2px solid #00ff00;
+  border-radius: 10px;
+  padding: 20px;
+  text-align: center;
+  color: #00ff00;
+  font-family: 'Courier New', monospace;
+  font-size: 18px;
+  text-shadow: 0 0 5px #00ff00;
+  animation: pulse 1s infinite;
+}
+
+.warningBox p {
+  margin: 10px 0;
+}
+
+.warningBox small {
+  color: #ffff00;
+  text-shadow: 0 0 3px #ffff00;
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 10px #00ff00;
+  }
+  50% {
+    box-shadow: 0 0 20px #00ff00, 0 0 30px #00ff00;
+  }
+  100% {
+    box-shadow: 0 0 10px #00ff00;
+  }
+}
+
 /* Instructions - hidden by default */
 .instructions {
   position: fixed;

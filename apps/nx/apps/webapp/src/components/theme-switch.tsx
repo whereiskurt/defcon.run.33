@@ -89,32 +89,36 @@ export const ThemeSwitch: FC<ThemeSwitchProps> = ({
         setFireMode(prev => !prev);
         clickCount.current = 0;
         
-        // Show fire mode activation feedback
+        // Show mode activation feedback
         const flash = document.createElement('div');
+        const newMode = !fireMode;
+        
         flash.style.cssText = `
           position: fixed;
           top: 50%;
           left: 50%;
           transform: translate(-50%, -50%);
-          background: linear-gradient(45deg, #ff2200, #ff6600, #ff8800);
+          background: ${newMode ? 'linear-gradient(45deg, #00ff00, #00ff00aa)' : 'linear-gradient(45deg, #333, #666)'};
           color: #fff;
           padding: 20px 30px;
           font-family: 'Courier New', monospace;
           font-size: 24px;
           font-weight: bold;
           z-index: 9999;
-          border: 2px solid #ff4400;
+          border: 2px solid ${newMode ? '#00ff00' : '#666'};
           border-radius: 8px;
-          box-shadow: 0 0 30px #ff4400, inset 0 0 20px rgba(255, 68, 0, 0.3);
+          box-shadow: 0 0 30px ${newMode ? '#00ff00' : '#666'}, inset 0 0 20px ${newMode ? '#00ff0050' : '#66650'};
           text-shadow: 0 0 10px #fff;
-          animation: fireFlash 1.5s ease-out;
+          animation: modeFlash 1.5s ease-out;
         `;
-        flash.innerHTML = `🔥 FIRE MODE ${fireMode ? 'DEACTIVATED' : 'ACTIVATED'} 🔥`;
+        flash.innerHTML = newMode ? 
+          `ACTIVATED!` : 
+          ``;
         
         // Add flash animation CSS
         const style = document.createElement('style');
         style.textContent = `
-          @keyframes fireFlash {
+          @keyframes modeFlash {
             0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
             20% { opacity: 1; transform: translate(-50%, -50%) scale(1.1); }
             80% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
@@ -125,8 +129,12 @@ export const ThemeSwitch: FC<ThemeSwitchProps> = ({
         document.body.appendChild(flash);
         
         setTimeout(() => {
-          document.body.removeChild(flash);
-          document.head.removeChild(style);
+          if (document.body.contains(flash)) {
+            document.body.removeChild(flash);
+          }
+          if (document.head.contains(style)) {
+            document.head.removeChild(style);
+          }
         }, 1500);
       } else {
         // Reset click count after 2 seconds
@@ -137,16 +145,16 @@ export const ThemeSwitch: FC<ThemeSwitchProps> = ({
     }
   };
   
-  // Apply fire mode class to body when activated
+  // Apply mode classes to body when activated
   useEffect(() => {
     if (isHeatmapPage && fireMode) {
-      document.body.classList.add('fireMode');
+      document.body.classList.add('fireMode', 'matrixMode');
     } else {
-      document.body.classList.remove('fireMode');
+      document.body.classList.remove('fireMode', 'matrixMode');
     }
     
     return () => {
-      document.body.classList.remove('fireMode');
+      document.body.classList.remove('fireMode', 'matrixMode');
     };
   }, [fireMode, isHeatmapPage]);
 

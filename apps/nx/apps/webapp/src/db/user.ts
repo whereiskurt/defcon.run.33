@@ -89,7 +89,7 @@ const User = new Entity(
         type: 'string',
       },
       mqtt_usertype: {
-        type: ['rabbit', 'admin', 'wildhare'] as const,
+        type: ['rabbit', 'admin', 'wildhare', 'og'] as const,
       },
 
       totalAccomplishmentType: {
@@ -120,13 +120,15 @@ const User = new Entity(
           displaynameChangesResetDate: { type: 'string' },
           stravaSync: { type: 'number' },
           qrScans: { type: 'number' },
+          flagChecks: { type: 'number' },
         },
         default: () => ({ 
           qrSheet: 10,
           displaynameChanges: 3,
           displaynameChangesResetDate: new Date().toISOString().split('T')[0],
           stravaSync: 16,
-          qrScans: 0
+          qrScans: 0,
+          flagChecks: 0
         }),
       },
 
@@ -579,18 +581,33 @@ export async function UpdateUserAccomplishmentCounts(
   return result.data;
 }
 
+// Function to strip trailing emojis and special characters from display names
+function stripTrailingEmojis(displayname: string): string {
+  // Remove common emojis and special characters that we use for system indicators
+  // Remove trailing emojis, stars, cowboy hats, and whitespace
+  return displayname
+    .trim()
+    .replace(/[⭐️🤠\s]+$/, '') // Remove our specific system emojis and trailing spaces
+    .replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]?[\s]*$/, '') // Remove other emoji sequences at the end
+    .replace(/[\u2600-\u27BF][\s]*$/, '') // Remove misc symbols at the end
+    .trim();
+}
+
 export async function updateDisplayname(email: string, displayname: string) {
   const user = await getUser(email);
   if (!user) {
     throw new Error('User not found for displayname update');
   }
 
+  // Strip trailing emojis and special characters
+  const sanitizedDisplayname = stripTrailingEmojis(displayname);
+
   const result = await User.update({
     email: email,
     id: user.id,
   })
     .set({
-      displayname: displayname.trim(),
+      displayname: sanitizedDisplayname,
     })
     .go({
       response: 'all_new',

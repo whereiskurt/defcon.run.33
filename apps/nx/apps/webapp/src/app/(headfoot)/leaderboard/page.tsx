@@ -15,11 +15,11 @@ export default async function Page() {
   const ghosts = await strapi('/ghosts?populate=*');
 
   return (
-    <>
-      <Heading className="mb-2 px-1 text-center">🥕 Leaderboard 🥕</Heading>
-      <div className="container mx-auto">
+    <div className="relative">
+      <Heading className="mb-2 px-1 text-center relative z-10">🥕 Leaderboard 🥕</Heading>
+      <div className="container mx-auto relative -mt-8">
         <LeaderboardTable ghosts={ghosts.data} />
       </div>
-    </>
+    </div>
   );
 }

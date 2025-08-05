@@ -355,3 +355,79 @@
   }
 }
 
+/* Matrix Mode - Digital Rain Effect */
+:global(body.fireMode.matrixMode[data-pathname="/heatmap"]) .mapWrapper :global(path[stroke]) {
+  animation: matrixRain 4s linear infinite, matrixGlow 2s ease-in-out infinite alternate;
+  stroke: #00ff00 !important;
+  stroke-width: 4px;
+  opacity: 0.9;
+  filter: blur(1.5px) drop-shadow(0 0 6px #00ff00) drop-shadow(0 0 15px #00ff00) drop-shadow(0 0 25px #00aa00);
+}
+
+:global(body.fireMode.matrixMode[data-pathname="/heatmap"]) .mapWrapper :global(path[stroke]):nth-child(2n) {
+  animation-delay: -1s;
+}
+
+:global(body.fireMode.matrixMode[data-pathname="/heatmap"]) .mapWrapper :global(path[stroke]):nth-child(3n) {
+  animation-delay: -2s;
+}
+
+:global(body.fireMode.matrixMode[data-pathname="/heatmap"]) .mapWrapper :global(path[stroke]):nth-child(4n) {
+  animation-delay: -3s;
+}
+
+@keyframes matrixRain {
+  0% { 
+    stroke-dasharray: 0 1000;
+    stroke-dashoffset: 0;
+    opacity: 0;
+    filter: blur(2px) drop-shadow(0 0 10px #00ff00) drop-shadow(0 0 20px #00ff00);
+  }
+  10% { 
+    opacity: 1;
+    filter: blur(1px) drop-shadow(0 0 15px #00ff00) drop-shadow(0 0 30px #00ff00);
+  }
+  50% { 
+    stroke-dasharray: 80 1000;
+    stroke-dashoffset: -100;
+    filter: blur(1.5px) drop-shadow(0 0 8px #00ff00) drop-shadow(0 0 18px #00ff00);
+  }
+  100% { 
+    stroke-dasharray: 0 1000;
+    stroke-dashoffset: -200;
+    opacity: 0;
+    filter: blur(3px) drop-shadow(0 0 5px #00ff00);
+  }
+}
+
+@keyframes matrixGlow {
+  0% { 
+    stroke: #00ff00;
+    filter: drop-shadow(0 0 3px #00ff00) drop-shadow(0 0 8px #00aa00);
+  }
+  50% { 
+    stroke: #00ff88;
+    filter: drop-shadow(0 0 5px #00ff88) drop-shadow(0 0 12px #00aa44);
+  }
+  100% { 
+    stroke: #00cc00;
+    filter: drop-shadow(0 0 3px #00cc00) drop-shadow(0 0 8px #008800);
+  }
+}
+
+
+/* Enhanced effects for routes with higher activity */
+:global(body.fireMode.matrixMode[data-pathname="/heatmap"]) .mapWrapper :global(path[stroke="#ff0000"]) {
+  animation: matrixRain 2s linear infinite, matrixGlow 1s ease-in-out infinite alternate;
+  stroke-width: 6px;
+  filter: blur(2px) drop-shadow(0 0 10px #00ff00) drop-shadow(0 0 25px #00ff00) drop-shadow(0 0 40px #00ff00);
+}
+
+/* Mobile optimizations for matrix mode */
+@media (max-width: 768px) {
+  :global(body.fireMode.matrixMode[data-pathname="/heatmap"]) .mapWrapper :global(path[stroke]) {
+    stroke-width: 2px;
+    filter: drop-shadow(0 0 2px #00ff00) drop-shadow(0 0 6px #00aa00);
+  }
+}
+

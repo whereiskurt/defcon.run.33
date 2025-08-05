@@ -69,12 +69,14 @@ export default function LeaderboardTable({ ghosts }: LeaderboardTableProps) {
   
   const [users, setUsers] = useState<LeaderboardUser[]>([]);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [currentUser, setCurrentUser] = useState<LeaderboardUser | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [pagination, setPagination] = useState<PaginationInfo | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const [filter, setFilter] = useState('');
-  const [searchInput, setSearchInput] = useState(''); // What user types
+  // Initialize filter and searchInput from URL params immediately
+  const [filter, setFilter] = useState(() => searchParams.get('filter') || '');
+  const [searchInput, setSearchInput] = useState(() => searchParams.get('filter') || ''); // What user types
   const [accomplishments, setAccomplishments] = useState<Record<string, Accomplishment[]>>({});
   const [loadingAccomplishments, setLoadingAccomplishments] = useState<Set<string>>(new Set());
   const [flagSubmissionExpanded, setFlagSubmissionExpanded] = useState(false);
@@ -82,12 +84,12 @@ export default function LeaderboardTable({ ghosts }: LeaderboardTableProps) {
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
-  // Initialize from URL params on mount
+  // Update state when URL params change (for navigation)
   useEffect(() => {
-    const initialFilter = searchParams.get('filter') || '';
-    if (initialFilter) {
-      setFilter(initialFilter);
-      setSearchInput(initialFilter);
+    const urlFilter = searchParams.get('filter') || '';
+    if (urlFilter !== filter) {
+      setFilter(urlFilter);
+      setSearchInput(urlFilter);
       // Clear any existing timeout since we want immediate filtering from URL params
       if (searchTimeoutRef.current) {
         clearTimeout(searchTimeoutRef.current);
@@ -128,6 +130,7 @@ export default function LeaderboardTable({ ghosts }: LeaderboardTableProps) {
         setUsers(data.users);
         setCurrentUserId(data.currentUserId);
         setPagination(data.pagination);
+        setCurrentUser(data.currentUser || null);
       } catch (err) {
         console.error('Error fetching leaderboard:', err);
         setError('Failed to load leaderboard');
@@ -141,46 +144,26 @@ export default function LeaderboardTable({ ghosts }: LeaderboardTableProps) {
 
   // Keep focus on search input after data loads
   useEffect(() => {
-    if (filter && searchInputRef.current && !loading) {
+    if (searchInputRef.current && !loading) {
       // Small delay to ensure the component is fully rendered
       setTimeout(() => {
         searchInputRef.current?.focus();
       }, 100);
     }
-  }, [loading, filter]);
+  }, [loading]);
 
-  // Debounced search effect
+  // Clear filter immediately when search input is completely empty (but not when both are empty)
   useEffect(() => {
-    // Clear existing timeout
-    if (searchTimeoutRef.current) {
-      clearTimeout(searchTimeoutRef.current);
-    }
-
-    // If search input is empty or less than 3 characters, clear filter immediately
-    if (searchInput.length === 0) {
+    if (searchInput.length === 0 && filter.length > 0) {
       setFilter('');
       setCurrentPage(1);
-      return;
+      // Also clear URL parameter
+      const url = new URL(window.location.href);
+      url.searchParams.delete('filter');
+      const newUrl = url.pathname + (url.search ? url.search : '');
+      router.replace(newUrl);
     }
-
-    // If less than 3 characters, don't search yet
-    if (searchInput.length < 3) {
-      return;
-    }
-
-    // Set timeout for search
-    searchTimeoutRef.current = setTimeout(() => {
-      setFilter(searchInput);
-      setCurrentPage(1);
-    }, 2000);
-
-    // Cleanup timeout on unmount
-    return () => {
-      if (searchTimeoutRef.current) {
-        clearTimeout(searchTimeoutRef.current);
-      }
-    };
-  }, [searchInput]);
+  }, [searchInput, filter, router]);
 
   const fetchUserAccomplishments = async (userId: string) => {
     if (accomplishments[userId]) {
@@ -208,37 +191,72 @@ export default function LeaderboardTable({ ghosts }: LeaderboardTableProps) {
 
   const handleSearchInputChange = (value: string) => {
     setSearchInput(value);
+    // No automatic searching - only on Enter or button click
+  };
+
+  const handleSearch = () => {
+    setFilter(searchInput);
+    setCurrentPage(1);
+    
+    // Update URL with filter parameter
+    const url = new URL(window.location.href);
+    if (searchInput.length > 0) {
+      url.searchParams.set('filter', searchInput);
+    } else {
+      url.searchParams.delete('filter');
+    }
+    const newUrl = url.pathname + (url.search ? url.search : '');
+    router.replace(newUrl);
+    
+    // Keep focus on search input after search
+    setTimeout(() => {
+      searchInputRef.current?.focus();
+    }, 100);
   };
 
   const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
-      // Clear any existing timeout
-      if (searchTimeoutRef.current) {
-        clearTimeout(searchTimeoutRef.current);
-      }
-      // Immediately apply filter
-      if (searchInput.length === 0) {
-        setFilter('');
-      } else {
-        setFilter(searchInput);
-      }
-      setCurrentPage(1);
+      handleSearch();
     }
   };
 
   const handleClearSearch = () => {
-    // Clear any existing timeout
-    if (searchTimeoutRef.current) {
-      clearTimeout(searchTimeoutRef.current);
-    }
     // Clear search input and filter
     setSearchInput('');
     setFilter('');
     setCurrentPage(1);
+    
     // Update URL to remove filter query param
     const url = new URL(window.location.href);
     url.searchParams.delete('filter');
-    router.replace(url.pathname + (url.search ? url.search : ''));
+    const newUrl = url.pathname + (url.search ? url.search : '');
+    router.replace(newUrl);
+    
+    // Keep focus on search input after clearing
+    setTimeout(() => {
+      searchInputRef.current?.focus();
+      // Force clear the input value as well
+      if (searchInputRef.current) {
+        searchInputRef.current.value = '';
+      }
+    }, 100);
+  };
+
+  const handleFastFilter = (filterValue: string) => {
+    setSearchInput(filterValue);
+    setFilter(filterValue);
+    setCurrentPage(1);
+    
+    // Update URL with filter parameter
+    const url = new URL(window.location.href);
+    url.searchParams.set('filter', filterValue);
+    const newUrl = url.pathname + (url.search ? url.search : '');
+    router.replace(newUrl);
+    
+    // Keep focus on search input after filter
+    setTimeout(() => {
+      searchInputRef.current?.focus();
+    }, 100);
   };
 
   const formatDate = (timestamp: number) => {
@@ -305,8 +323,8 @@ export default function LeaderboardTable({ ghosts }: LeaderboardTableProps) {
 
   return (
     <div className="w-full space-y-4">
-      {/* Flag Submission Card - Collapsible */}
-      <Card>
+      {/* Flag Submission Card - Collapsible with Overlay */}
+      <Card className="bg-background/80 backdrop-blur-sm border-2 border-primary/20 shadow-lg">
         <CardHeader className="pb-0">
           <div className="flex justify-between items-center w-full">
             <div className="flex flex-col">
@@ -326,7 +344,7 @@ export default function LeaderboardTable({ ghosts }: LeaderboardTableProps) {
         {flagSubmissionExpanded && (
           <>
             <Divider />
-            <CardBody className="pt-4">
+            <CardBody className="pt-4 bg-background/90 backdrop-blur-sm">
               <FlagSubmission ghosts={ghosts} onFlagSubmissionSuccess={handleFlagSubmissionSuccess} />
             </CardBody>
           </>
@@ -338,33 +356,75 @@ export default function LeaderboardTable({ ghosts }: LeaderboardTableProps) {
         <CardHeader>
           <div className="flex flex-col w-full">
             <div className="flex flex-col gap-4 mb-2">
-              <Input
-                ref={searchInputRef}
-                placeholder="Filter"
-                value={searchInput}
-                onChange={(e) => handleSearchInputChange(e.target.value)}
-                onKeyDown={handleSearchKeyDown}
-                startContent={<Search className="h-4 w-4" />}
-                endContent={
-                  searchInput.length > 0 && (
-                    <Button
-                      isIconOnly
-                      size="sm"
-                      variant="light"
-                      onClick={handleClearSearch}
-                      className="min-w-unit-6 w-6 h-6"
-                    >
-                      <X className="h-3 w-3" />
-                    </Button>
-                  )
-                }
-                className="w-full"
-                variant="bordered"
-                description={searchInput.length > 0 && searchInput.length < 3 ? 
-                  `Type ${3 - searchInput.length} more character${3 - searchInput.length === 1 ? '' : 's'} to search or press Enter` : 
-                  undefined
-                }
-              />
+              <div className="flex gap-2 items-center">
+                <Input
+                  ref={searchInputRef}
+                  placeholder="Keyword Search"
+                  value={searchInput}
+                  onChange={(e) => handleSearchInputChange(e.target.value)}
+                  onKeyDown={handleSearchKeyDown}
+                  startContent={<Search className="h-4 w-4" />}
+                  endContent={
+                    (searchInput.length > 0 || filter.length > 0) && (
+                      <Button
+                        isIconOnly
+                        size="sm"
+                        variant="light"
+                        onClick={handleClearSearch}
+                        className="min-w-unit-6 w-6 h-6"
+                        title="Clear search"
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    )
+                  }
+                  className="flex-1"
+                  variant="bordered"
+                />
+                <Button
+                  size="lg"
+                  variant="solid"
+                  color="primary"
+                  onClick={handleSearch}
+                  className="min-w-unit-32 px-8 py-6 text-lg shrink-0"
+                  disabled={searchInput.length === 0}
+                >
+                  Search
+                </Button>
+              </div>
+              
+              {/* Filter Chips */}
+              <div className="flex justify-start gap-2 mt-1">
+                {currentUser && (
+                  <Chip
+                    size="sm"
+                    variant="flat"
+                    color="primary"
+                    className="cursor-pointer hover:bg-primary-100 transition-colors"
+                    onClick={() => handleFastFilter(currentUser.displayname)}
+                  >
+                    {currentUser.displayname} (you!)
+                  </Chip>
+                )}
+                <Chip
+                  size="sm"
+                  variant="flat"
+                  color="warning"
+                  className="cursor-pointer hover:bg-warning-100 transition-colors"
+                  onClick={() => handleFastFilter('wildhare og')}
+                >
+                  ⭐️ Wild Hares
+                </Chip>
+                <Chip
+                  size="sm"
+                  variant="flat"
+                  color="secondary"
+                  className="cursor-pointer hover:bg-secondary-100 transition-colors"
+                  onClick={() => handleFastFilter('og')}
+                >
+                  🤠 OG
+                </Chip>
+              </div>
             </div>
           </div>
         </CardHeader>
@@ -384,14 +444,20 @@ export default function LeaderboardTable({ ghosts }: LeaderboardTableProps) {
       >
         {users.map((user, index) => {
           const isCurrentUser = user.id === currentUserId;
-          const displayName = user.displayname + (user.mqtt_usertype === 'wildhare' ? ' ⭐️' : '');
+          const getDisplayNameWithEmoji = (user: LeaderboardUser) => {
+            let emoji = '';
+            if (user.mqtt_usertype === 'wildhare') emoji = ' ⭐️';
+            else if (user.mqtt_usertype === 'og') emoji = ' 🤠';
+            return user.displayname + emoji;
+          };
+          const displayName = getDisplayNameWithEmoji(user);
           
           return (
             <AccordionItem
               key={user.id}
-              className={isCurrentUser ? 'bg-green-400/20 dark:bg-green-500/30 border-green-500/50' : ''}
+              className=""
               title={
-                <div className="flex items-center justify-between w-full">
+                <div className={`flex items-center justify-between w-full p-3 rounded-lg ${isCurrentUser ? 'bg-green-400/20 dark:bg-green-500/30 border border-green-500/50' : ''}`}>
                   <div className="flex items-center gap-2">
                     {getRankIcon(user.globalRank)}
                     {user.totalPoints > 0 && (
@@ -403,7 +469,7 @@ export default function LeaderboardTable({ ghosts }: LeaderboardTableProps) {
                         {user.totalPoints} 🥕
                       </Chip>
                     )}
-                    <span>{displayName}</span>
+                    <span className={isCurrentUser ? 'text-green-800 dark:text-green-200 font-medium' : ''}>{displayName}</span>
                   </div>
                   <div className="flex flex-wrap gap-1">
                     {(() => {

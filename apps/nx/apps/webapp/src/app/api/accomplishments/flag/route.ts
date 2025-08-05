@@ -1,5 +1,5 @@
 import { auth } from '@auth';
-import { getUser } from '@db/user';
+import { getUser, updateUser } from '@db/user';
 import { createAccomplishment, checkDuplicateAccomplishment } from '@db/accomplishment';
 import { NextRequest, NextResponse } from 'next/server';
 import { strapi } from '@components/cms/data';
@@ -44,6 +44,26 @@ export async function POST(req: NextRequest) {
         { status: 404 }
       );
     }
+
+    // Check rate limiting - 200 calls max
+    const currentFlagChecks = user.quota?.flagChecks || 0;
+    if (currentFlagChecks >= 200) {
+      return NextResponse.json(
+        { message: 'Rate limit exceeded. Maximum 200 flag checks allowed.' },
+        { status: 429 }
+      );
+    }
+
+    // Increment flag check counter
+    const updatedQuota = {
+      ...user.quota,
+      flagChecks: currentFlagChecks + 1
+    };
+    
+    await updateUser({
+      email: session.user.email,
+      quota: updatedQuota
+    });
 
     // Validate flag against Strapi data
     const validationResult = await validateFlag(ctfId, otpCode, flag.trim());

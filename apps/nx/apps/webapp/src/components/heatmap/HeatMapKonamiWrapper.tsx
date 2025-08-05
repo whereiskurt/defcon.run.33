@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState, useCallback } from 'react';
+import { MatrixRainBackground } from './MatrixRainBackground';
 
 interface HeatMapStats {
   totalRunners: number;
@@ -20,6 +21,7 @@ type DisplayMode = 'km' | 'miles' | 'steps';
 
 export function HeatMapKonamiWrapper({ children, stats, routes }: HeatMapKonamiWrapperProps) {
   const [displayMode, setDisplayMode] = useState<DisplayMode>('km');
+  const [isMatrixMode, setIsMatrixMode] = useState(false);
   const keySequence = useRef<string[]>([]);
   const sequenceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const KONAMI_SEQUENCE = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a'];
@@ -274,10 +276,31 @@ export function HeatMapKonamiWrapper({ children, stats, routes }: HeatMapKonamiW
     return () => clearInterval(interval);
   }, [calculateStatsFromVisibleLayers]);
 
+  // Listen for matrix mode changes from theme switch
+  useEffect(() => {
+    const checkMatrixMode = () => {
+      const hasMatrixMode = document.body.classList.contains('matrixMode');
+      setIsMatrixMode(hasMatrixMode);
+    };
+
+    // Initial check
+    checkMatrixMode();
+
+    // Monitor for class changes
+    const observer = new MutationObserver(checkMatrixMode);
+    observer.observe(document.body, {
+      attributes: true,
+      attributeFilter: ['class']
+    });
+
+    return () => observer.disconnect();
+  }, []);
+
   const distance = getDistanceDisplay();
 
   return (
     <>
+      <MatrixRainBackground isActive={isMatrixMode} />
       {children}
       {/* Stats Panel */}
       <div 

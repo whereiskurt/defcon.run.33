@@ -3,7 +3,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <meta name="description" content="A nearly live map of Meshtastic nodes seen by the official Meshtastic MQTT server">
-<title>🐇 Rabbit Watcher</title>
+<title>🥕 run.defcon.run</title>
 <link rel="preload" href="/map/nodes.json" as="fetch" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900">
 <link rel="stylesheet" href="https://unpkg.com/font-awesome@4.7.0/css/font-awesome.min.css">
@@ -31,15 +31,22 @@
   body:not(.dark) .dark-only {
     display: none;
   }
+  body.ghost-mode {
+    filter: hue-rotate(90deg) saturate(1.5);
+  }
+  body.ghost-mode.dark {
+    filter: invert(1) hue-rotate(270deg) brightness(1.25) saturate(1.5);
+  }
   #header {
     background-color: #fff;
     box-shadow: 0 0 4px 0 rgb(0 0 0 / 40%);
     color: #333;
     display: flex;
+    align-items: center;
     gap: 2ch;
     font-family: "Inter", sans-serif;
     padding: 0.75em;
-    position: absolute;
+    position: fixed;
     top: 0;
     left: 0;
     right: 0;
@@ -51,6 +58,12 @@
   }
   #header a:hover {
     opacity: 0.7;
+  }
+  body.dark #header {
+    background-color: #333;
+    color: #fff;
+    box-shadow: 0 0 4px 0 rgb(255 255 255 / 20%);
+    filter: invert(1) hue-rotate(180deg) brightness(1.25);
   }
   #header div:nth-child(2) {
     flex-grow: 1;
@@ -70,7 +83,7 @@
     word-break: break-all;
   }
   .leaflet-top {
-    top: 4em;
+    top: 80px;
   }
   .leaflet-tooltip, .leaflet-popup-content {
     font-family: "Inter", sans-serif;
@@ -98,17 +111,19 @@
 </style>
 <div id="header">
   <div>
-    <a href="https://mqtt.defcon.run/map" title="Real-time DefCon.run runners Map">🐇 DefCon 33 Rabbit MeshMap</a>
+    <a href="https://run.defcon.run" target="_blank" title="run.defcon.run" style="font-size: 1.5em; font-weight: bold;">🥕&nbsp;run.defcon.run</a>
   </div>
   <div>
     <a
       href="#"
-      onclick="window.localStorage.setItem('theme', document.body.classList.toggle('dark') ? 'dark' : 'light');return false"
+      onclick="const newTheme = document.body.classList.toggle('dark') ? 'dark' : 'light'; window.localStorage.setItem('theme', newTheme); if (previousTheme !== newTheme) { previousTheme = newTheme; if (themeToggleTimeout) clearTimeout(themeToggleTimeout); themeToggleCount++; if (themeToggleCount >= REQUIRED_TOGGLES) { toggleMobileMode('theme'); themeToggleCount = 0; } else { themeToggleTimeout = setTimeout(() => { themeToggleCount = 0; }, TOGGLE_TIMEOUT); } } return false"
       title="Toggle dark mode"
-    ><i class="fa fa-moon-o fa-lg dark-hidden"></i><i class="fa fa-sun-o fa-lg dark-only"></i></a>
+    ><i class="fa fa-moon-o dark-hidden" style="font-size: 36px;"></i><i class="fa fa-sun-o dark-only" style="font-size: 36px;"></i></a>
   </div>
-  <div><a href="https://defcon.meshtastic.org/">DefCon33 Meshtastic</a></div>
-  <div><a href="https://github.com/brianshea2/meshmap.net" title="Meshmap Source Code"><i class="fa fa-github fa-lg"></i></a></div>
+  <div><a href="https://defcon.meshtastic.org/" target="_blank" title="DefCon33 Meshtastic">
+    <img src="dc33-logo-transp.webp" alt="DefCon 33 Logo" style="height: 36px; vertical-align: middle;">
+  </a></div>
+  <div><a href="https://github.com/brianshea2/meshmap.net" title="Meshmap Source Code"><i class="fa fa-github" style="font-size: 36px;"></i></a></div>
 </div>
 <div id="map"></div>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -121,12 +136,30 @@
   const markersByNode = {}
   const neighborsByNode = {}
   const nodesBySearchString = {}
+  
+  // Special sequence and mode state
+  let mobileMode = false
+  const keySequence = []
+  let sequenceTimeout = null
+  const SPECIAL_SEQUENCE = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a']
+  
+  // Theme toggle tracking for mobile mode
+  let themeToggleCount = 0
+  let themeToggleTimeout = null
+  let previousTheme = window.localStorage.getItem('theme') || 'light'
+  const REQUIRED_TOGGLES = 10
+  const TOGGLE_TIMEOUT = 4000
     
   // Generate marker color based on shortName
   const getMarkerColorFromNodeName = (shortName, longName) => {
 
     if (!shortName || !longName) {
       return '#ff0000'; // Default to red if shortName or longName is invalid
+    }
+
+    // In mobile mode, always use Matrix green
+    if (mobileMode) {
+      return '#00ff00';
     }
 
     if (longName.includes('dc33.east')) {
@@ -169,6 +202,63 @@
     return s
   }
   const since = t => `${duration(Date.now() / 1000 - t)} ago`
+  // Function to toggle mobile mode
+  const toggleMobileMode = (triggerType) => {
+    mobileMode = !mobileMode
+    
+    // Toggle body class for visual effect
+    document.body.classList.toggle('ghost-mode', mobileMode)
+    
+    // Visual feedback flash
+    const flash = document.createElement('div')
+    flash.style.cssText = `
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: ${mobileMode ? '#00ff00' : '#ff0000'};
+      color: #000;
+      padding: 20px 40px;
+      border-radius: 10px;
+      font-size: 18px;
+      font-weight: bold;
+      z-index: 9999;
+      pointer-events: none;
+      opacity: 0.9;
+      box-shadow: 0 0 20px ${mobileMode ? '#00ff00' : '#ff0000'};
+      text-shadow: 0 0 5px ${mobileMode ? '#00ff00' : '#ff0000'};
+    `
+    flash.textContent = mobileMode ? atob('R0hPU1QgTU9ERSBBQ1RJVkFURUQ=') : atob('R0hPU1QgTU9ERSBERUFDVElWQVRFRA==')
+    document.body.appendChild(flash)
+    
+    setTimeout(() => {
+      if (document.body.contains(flash)) {
+        document.body.removeChild(flash)
+      }
+    }, 1500)
+    
+    if (mobileMode) {
+      const x = btoa('meshctf'), y = 'user', z = 'accomplishments';
+      fetch(`${location.protocol}//${location.hostname.replace('mqtt', 'run')}/api/${y}/${z}?type=${atob(x)}`, {
+        credentials: 'include'
+      }).then(r => r.json()).then(d => {
+        const h = 'bW9iaWxlbW9kZV9vbl9tZXNobWFw';
+        if (!d[z] || !d[z].some(a => a.name && a.name.includes(atob(h)))) {
+          setTimeout(() => window.open(`${location.protocol}//${location.hostname.replace('mqtt', 'run')}/qr/${atob(h)}`, '_blank'), 100);
+        }
+      }).catch(() => {
+        const h = 'bW9iaWxlbW9kZV9vbl9tZXNobWFw';
+        setTimeout(() => window.open(`${location.protocol}//${location.hostname.replace('mqtt', 'run')}/qr/${atob(h)}`, '_blank'), 100);
+      });
+    }
+    
+    // Clear existing markers and redraw the map with new filter
+    markers.clearLayers()
+    Object.keys(markersByNode).forEach(key => delete markersByNode[key])
+    Object.keys(nodesBySearchString).forEach(key => delete nodesBySearchString[key])
+    drawMap()
+  }
+  
   // set theme
   if (window.localStorage.getItem('theme') === 'dark') {
     document.body.classList.add('dark')
@@ -204,6 +294,34 @@
   }))
   // add zoom control
   L.control.zoom({position: 'topright'}).addTo(map)
+  
+  // Key sequence listener
+  window.addEventListener('keydown', (e) => {
+    if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+      return
+    }
+    
+    if (sequenceTimeout) {
+      clearTimeout(sequenceTimeout)
+    }
+    
+    const key = e.key === 'B' ? 'b' : e.key === 'A' ? 'a' : e.key
+    
+    keySequence.push(key)
+    if (keySequence.length > SPECIAL_SEQUENCE.length) {
+      keySequence.shift()
+    }
+    
+    if (keySequence.length === SPECIAL_SEQUENCE.length &&
+        keySequence.every((key, index) => key === SPECIAL_SEQUENCE[index])) {
+      toggleMobileMode('sequence')
+      keySequence.length = 0
+    }
+    
+    sequenceTimeout = setTimeout(() => {
+      keySequence.length = 0
+    }, 10000)
+  })
   // add geolocation control
   L.easyButton({
     position: 'topright',
@@ -243,10 +361,21 @@
       neighbors, seenBy
     } = node
     
-    // Filter: exclude nodes with 'ghost', 'contest', or 'operative' in longName
+    // Filter based on mobile mode
     const longNameLower = (longName || '').toLowerCase();
-    if (longNameLower.includes('ghost') || longNameLower.includes('contest') || longNameLower.includes('operative')) {
-      return; // Skip this node
+    const shortNameLower = (shortName || '').toLowerCase();
+    const isGhostNode = longNameLower.includes('ghost') || longNameLower.includes('contest') || longNameLower.includes('operative') || shortNameLower.startsWith('ghost');
+    
+    if (mobileMode) {
+      // In mobile mode, only show ghost nodes
+      if (!isGhostNode) {
+        return; // Skip non-ghost nodes
+      }
+    } else {
+      // In normal mode, exclude ghost nodes
+      if (isGhostNode) {
+        return; // Skip ghost nodes
+      }
     }
     const id = `!${Number(nodeNum).toString(16)}`
     neighborsByNode[nodeNum] ??= new Set()
@@ -350,7 +479,13 @@
       // Generate color based on shortName
       const markerColor = shortName ? getMarkerColorFromNodeName(shortName, longName) : '#ff0000'
       
-      const iconSettings = {
+      // Use ghost icon for ghost nodes when mobile mode is enabled
+      const useGhostIcon = mobileMode && isGhostNode;
+      
+      const iconSettings = useGhostIcon ? {
+        mapIconUrl: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 120"><path fill="{ghostColor}" stroke="#FFF" stroke-width="3" d="M50 10 C30 10 15 25 15 45 L15 80 C15 85 17 88 20 85 L25 80 C28 77 32 77 35 80 L40 85 C43 88 47 88 50 85 L55 80 C58 77 62 77 65 80 L70 85 C73 88 77 88 80 85 L85 80 C88 77 85 85 85 80 L85 45 C85 25 70 10 50 10 Z"/><circle fill="#000" cx="35" cy="40" r="5"/><circle fill="#000" cx="65" cy="40" r="5"/><ellipse fill="#000" cx="50" cy="60" rx="8" ry="10"/></svg>',
+        ghostColor: markerColor,
+      } : {
         mapIconUrl: '<svg version="1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 149 178"><path fill="{mapIconColor}" stroke="#FFF" stroke-width="6" stroke-miterlimit="10" d="M126 23l-6-6A69 69 0 0 0 74 1a69 69 0 0 0-51 22A70 70 0 0 0 1 74c0 21 7 38 22 52l43 47c6 6 11 6 16 0l48-51c12-13 18-29 18-48 0-20-8-37-22-51z"/><circle fill="{mapIconColorInnerCircle}" cx="74" cy="75" r="61"/><circle fill="#FFF" cx="74" cy="75" r="{pinInnerCircleRadius}"/></svg>',
         mapIconColor: markerColor,
         mapIconColorInnerCircle: markerColor,
@@ -360,9 +495,9 @@
       const startPin = L.divIcon({
         className: "leaflet-data-marker",
         html: L.Util.template(iconSettings.mapIconUrl, iconSettings),
-        iconAnchor: [12, 32],
-        iconSize: [25, 30],
-        popupAnchor: [0, -28]
+        iconAnchor: useGhostIcon ? [15, 36] : [12, 32],
+        iconSize: useGhostIcon ? [30, 36] : [25, 30],
+        popupAnchor: useGhostIcon ? [0, -36] : [0, -28]
       })
 
       const searchString = `${longName} (${shortName}) ${id}`
