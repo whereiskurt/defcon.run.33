@@ -70,6 +70,16 @@
     },
     "footer_subtitle_label": {
       "type": "string"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true
+    },
+    "show_rule": {
+      "type": "string"
+    },
+    "hide_rule": {
+      "type": "string"
     }
   }
 }

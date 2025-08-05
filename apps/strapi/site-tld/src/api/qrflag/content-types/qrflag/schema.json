@@ -52,6 +52,15 @@
         "meshctf"
       ],
       "default": "activity"
+    },
+    "requires_uid": {
+      "type": "string"
+    },
+    "points_func": {
+      "type": "string"
+    },
+    "expiry_func": {
+      "type": "string"
     }
   }
 }
