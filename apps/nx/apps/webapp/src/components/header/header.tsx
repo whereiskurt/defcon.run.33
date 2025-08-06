@@ -20,12 +20,33 @@ import { FaMoneyCheckDollar, FaRadio, FaFire } from 'react-icons/fa6';
 
 const UserDropDown = dynamic(() => import('./dropdown-user'), {
   ssr: false,
+  loading: () => (
+    <Avatar 
+      size="lg"
+      className="opacity-50 animate-pulse"
+      src=""
+    />
+  ),
 });
 const LoginDropDown = dynamic(() => import('./dropdown-login'), {
   ssr: false,
+  loading: () => (
+    <Button 
+      variant="ghost" 
+      className="opacity-50 animate-pulse"
+      disabled
+    >
+      Login
+    </Button>
+  ),
 });
 const MenuDropDown = dynamic(() => import('./dropdown-menu'), {
   ssr: false,
+  loading: () => (
+    <div className="opacity-50 animate-pulse">
+      <MenuIcon />
+    </div>
+  ),
 });
 
 import { ThemeSwitch } from '../theme-switch';

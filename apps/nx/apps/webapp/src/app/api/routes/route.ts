@@ -141,8 +141,12 @@ export async function GET(req: NextRequest) {
     
     console.log('Raw Strapi routes data:', JSON.stringify(routes.data?.[0], null, 2));
     
-    // Transform routes data to include just the info we need
-    const routeOptions = await Promise.all(routes.data.map(async (route: any) => {
+    // Filter and transform routes data - only include routes with GPX data
+    const routeOptions = await Promise.all(routes.data.filter((route: any) => {
+      const attributes = route.attributes || route;
+      const gpxUrl = attributes.gpxurl || attributes.gpxUrl || attributes.gpx_url || attributes.gpxFile?.url;
+      return gpxUrl; // Only include routes with GPX data
+    }).map(async (route: any) => {
       const attributes = route.attributes || route;
       let distanceDisplay = 'Unknown distance';
       

@@ -77,6 +77,14 @@ export default function RoutesListPage() {
     setDistanceUnits(prev => ({ ...prev, [routeId]: nextUnit }));
   };
 
+  // Truncate description to about 10 words
+  const truncateDescription = (text: string, maxWords: number = 10): string => {
+    if (!text) return '';
+    const words = text.split(' ');
+    if (words.length <= maxWords) return text;
+    return words.slice(0, maxWords).join(' ') + '...';
+  };
+
   useEffect(() => {
     const fetchRoutes = async () => {
       try {
@@ -184,23 +192,25 @@ export default function RoutesListPage() {
                     </div>
                     
                     {/* Mini polyline preview */}
-                    {route.polyline ? (
-                      <div className="flex-shrink-0 border border-default-200 rounded">
-                        <PolylineRenderer
-                          polyline={route.polyline}
-                          width={80}
-                          height={60}
-                          strokeColor="#3B82F6"
-                          strokeWidth={2}
-                          padding={5}
-                          showMapTile={true}
-                        />
-                      </div>
-                    ) : (
-                      <div className="flex-shrink-0 w-20 h-15 border border-dashed border-default-300 rounded flex items-center justify-center">
-                        <span className="text-xs text-default-400">No map</span>
-                      </div>
-                    )}
+                    <div className="flex-shrink-0 flex justify-start">
+                      {route.polyline ? (
+                        <div className="border border-default-200 rounded">
+                          <PolylineRenderer
+                            polyline={route.polyline}
+                            width={80}
+                            height={60}
+                            strokeColor="#3B82F6"
+                            strokeWidth={2}
+                            padding={5}
+                            showMapTile={true}
+                          />
+                        </div>
+                      ) : (
+                        <div className="w-20 h-15 border border-dashed border-default-300 rounded flex items-center justify-center">
+                          <span className="text-xs text-default-400">No map</span>
+                        </div>
+                      )}
+                    </div>
                     
                     <div className="flex flex-col gap-1">
                       <div className="flex items-center gap-2">
@@ -230,8 +240,8 @@ export default function RoutesListPage() {
                         )}
                       </div>
                       {route.description && (
-                        <p className="text-sm text-default-500 line-clamp-1">
-                          {route.description}
+                        <p className="text-sm text-default-500">
+                          {truncateDescription(route.description, 10)}
                         </p>
                       )}
                     </div>

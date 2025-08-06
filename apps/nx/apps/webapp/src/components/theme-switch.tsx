@@ -62,15 +62,20 @@ export const ThemeSwitch: FC<ThemeSwitchProps> = ({
   className,
   classNames,
 }) => {
-  const { theme, setTheme } = useTheme();
+  const { theme, setTheme, resolvedTheme } = useTheme();
   const isSSR = useIsSSR();
   const pathname = usePathname();
+  const [mounted, setMounted] = useState(false);
   
   // Fire mode state and rapid click detection
   const [fireMode, setFireMode] = useState(false);
   const clickCount = useRef(0);
   const clickTimeout = useRef<NodeJS.Timeout | null>(null);
   const isHeatmapPage = pathname === '/heatmap';
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const onChange = () => {
     theme === "light" ? setTheme("dark") : setTheme("light");
@@ -166,12 +171,38 @@ export const ThemeSwitch: FC<ThemeSwitchProps> = ({
     getInputProps,
     getWrapperProps,
   } = useSwitch({
-    isSelected: theme === "light" || isSSR,
-    "aria-label": `Switch to ${theme === "light" || isSSR ? "dark" : "light"} mode`,
+    isSelected: resolvedTheme === "light",
+    "aria-label": `Switch to ${resolvedTheme === "light" ? "dark" : "light"} mode`,
     onChange,
   });
 
-  if (isSSR) return null;
+  // Return consistent loading state during SSR and before mounting
+  if (!mounted || isSSR) {
+    return (
+      <div
+        className={clsx(
+          "px-px transition-opacity hover:opacity-80 cursor-pointer",
+          className,
+          classNames?.base,
+        )}
+      >
+        <div
+          className={clsx([
+            "w-auto h-auto",
+            "bg-transparent", 
+            "rounded-lg",
+            "flex items-center justify-center",
+            "!text-default-500",
+            "pt-px",
+            "px-0",
+            "mx-0",
+          ])}
+        >
+          <SunFilledIcon size={22} />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <Component
@@ -205,7 +236,7 @@ export const ThemeSwitch: FC<ThemeSwitchProps> = ({
           ),
         })}
       >
-        {!isSelected || isSSR ? (
+        {!isSelected ? (
           <SunFilledIcon size={22} />
         ) : (
           <MoonFilledIcon size={22} />
