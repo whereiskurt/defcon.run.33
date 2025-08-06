@@ -14,6 +14,7 @@ export default function RabbitQRPage() {
   const [message, setMessage] = useState('');
   const [success, setSuccess] = useState(false);
   const [userDisplayName, setUserDisplayName] = useState('');
+  const [remainingScans, setRemainingScans] = useState<number | null>(null);
   const claimAttemptRef = useRef(false);
 
   // Get the hash from query parameter
@@ -61,6 +62,9 @@ export default function RabbitQRPage() {
         if (response.ok) {
           setSuccess(true);
           setMessage(data.message);
+          if (data.remainingScans !== undefined) {
+            setRemainingScans(data.remainingScans);
+          }
           
           // Redirect to leaderboard after 6 seconds
           setTimeout(() => {
@@ -72,6 +76,9 @@ export default function RabbitQRPage() {
         } else {
           setSuccess(false);
           setMessage(data.message || 'Failed to connect with rabbit');
+          if (data.remainingScans !== undefined) {
+            setRemainingScans(data.remainingScans);
+          }
         }
       } catch (error) {
         console.error('Error processing rabbit QR code:', error);
@@ -123,6 +130,13 @@ export default function RabbitQRPage() {
                   <p className="text-xl font-semibold text-primary mb-2">
                     🐰🤝🐰
                   </p>
+                  {remainingScans !== null && (
+                    <p className="text-sm text-default-600 mt-2">
+                      {remainingScans > 0 
+                        ? `${remainingScans} QR scans remaining`
+                        : 'No QR scans remaining'}
+                    </p>
+                  )}
                   <p className="text-sm text-default-500 mt-4">
                     Redirecting to leaderboard...
                   </p>
@@ -134,11 +148,21 @@ export default function RabbitQRPage() {
                   {message.includes('cannot scan your own') && (
                     <p className="text-xl mb-2">🐰❌🐰</p>
                   )}
+                  {message.includes('quota exceeded') && (
+                    <p className="text-xl mb-2">🚫</p>
+                  )}
+                  {remainingScans !== null && message.includes('quota exceeded') && (
+                    <p className="text-sm text-warning mt-2">
+                      You've reached the maximum of 300 QR scans
+                    </p>
+                  )}
                   <p className="text-sm text-default-500 mt-4">
                     {message.includes('cannot scan your own') 
                       ? 'Share your QR code with others to connect!' 
-                      : message.includes('already connected')
+                      : message.includes('already')
                       ? 'Find new rabbits to connect with!'
+                      : message.includes('quota exceeded')
+                      ? 'You have connected with the maximum number of rabbits!'
                       : 'Please scan a valid rabbit QR code'}
                   </p>
                 </>

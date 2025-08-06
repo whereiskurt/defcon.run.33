@@ -493,6 +493,132 @@ export async function POST(
           maxHeightInRow = Math.max(maxHeightInRow, image.height);
         }
       }
+
+      // Add progressive data density test page
+      const progressivePage = pdfDoc.addPage([PAGE_WIDTH, PAGE_HEIGHT]);
+      
+      // Add header text to progressive test page
+      progressivePage.drawText('Progressive QR Data Density Test', {
+        x: 40,
+        y: headerY,
+        size: 12,
+        color: rgb(0.3, 0.3, 0.3),
+      });
+      
+      progressivePage.drawText(`Base URL: ${baseUrl}`, {
+        x: 40,
+        y: headerY - 15,
+        size: 8,
+        color: rgb(0.5, 0.5, 0.5),
+      });
+      
+      // Calculate total cells for the current template
+      const totalCells = imagesAcross * imagesDown;
+      
+      // Generate progressive URLs
+      const progressiveUrls: string[] = [];
+      const baseUrlParts = baseUrl.split('/');
+      const domain = baseUrlParts.slice(0, 3).join('/'); // https://run.defcon.run
+      const pathParts = baseUrlParts.slice(3); // ['qr', 'test1']
+      
+      // Start with just the domain
+      progressiveUrls.push(domain);
+      
+      // Build up the URL progressively
+      let currentUrl = domain;
+      const fullPath = '/' + pathParts.join('/');
+      
+      // Calculate how to distribute the URL building across available cells
+      const urlLength = fullPath.length;
+      const cellsNeeded = Math.min(totalCells - 1, urlLength); // -1 because we already have domain
+      const charsPerStep = Math.max(1, Math.ceil(urlLength / cellsNeeded));
+      
+      // Build URLs by adding characters progressively
+      for (let i = 0; i < cellsNeeded && currentUrl.length < baseUrl.length; i++) {
+        const startIdx = i * charsPerStep;
+        const endIdx = Math.min((i + 1) * charsPerStep, urlLength);
+        const nextChars = fullPath.substring(0, endIdx);
+        currentUrl = domain + nextChars;
+        progressiveUrls.push(currentUrl);
+      }
+      
+      // Ensure we have exactly the right number of URLs
+      while (progressiveUrls.length < totalCells) {
+        progressiveUrls.push(baseUrl); // Fill remaining with full URL
+      }
+      progressiveUrls.splice(totalCells); // Trim to exact size
+      
+      // Draw the progressive QR codes in the grid
+      let urlIndex = 0;
+      for (let dx = 0; dx < imagesAcross; dx++) {
+        for (let dy = 0; dy < imagesDown; dy++) {
+          if (urlIndex >= progressiveUrls.length) break;
+          
+          const progressiveUrl = progressiveUrls[urlIndex];
+          
+          try {
+            const qrBuffer = await generateQRCodeWithLogo(progressiveUrl, boxSize);
+            const pdfImage = await pdfDoc.embedPng(qrBuffer);
+            
+            // Calculate position for this QR code
+            let x, y;
+            
+            if (useAverySpacing && averyTemplate) {
+              x = startX + dx * (boxWidth + (averyTemplate.spacingX * DPI)) + (boxWidth - pdfImage.width) / 2;
+              y = startY - dy * (boxHeight + (averyTemplate.spacingY * DPI)) + (boxHeight - pdfImage.height) / 2;
+            } else {
+              x = startX + dx * boxSize + (boxSize - pdfImage.width) / 2;
+              y = startY - dy * boxSize + (boxSize - pdfImage.height) / 2;
+            }
+            
+            progressivePage.drawImage(pdfImage, {
+              x: x,
+              y: y,
+              width: pdfImage.width,
+              height: pdfImage.height,
+            });
+            
+            // Add small label below each QR with character count
+            const charCount = progressiveUrl.length - domain.length;
+            const labelText = charCount === 0 ? 'Base' : `+${charCount}`;
+            const labelSize = 6;
+            
+            progressivePage.drawText(labelText, {
+              x: x + (pdfImage.width / 2) - (labelText.length * labelSize * 0.3),
+              y: y - 10,
+              size: labelSize,
+              color: rgb(0.6, 0.6, 0.6),
+            });
+          } catch (error) {
+            console.error(`Failed to generate QR for URL: ${progressiveUrl}`, error);
+          }
+          
+          urlIndex++;
+        }
+      }
+      
+      // Add explanation text at the bottom
+      const explanationY = 60;
+      progressivePage.drawText('This page tests QR code readability as data density increases.', {
+        x: 40,
+        y: explanationY + 30,
+        size: 9,
+        color: rgb(0.4, 0.4, 0.4),
+      });
+      
+      progressivePage.drawText('Each QR code adds more characters from the full URL path.', {
+        x: 40,
+        y: explanationY + 15,
+        size: 9,
+        color: rgb(0.4, 0.4, 0.4),
+      });
+      
+      progressivePage.drawText(`Template: ${imagesAcross}×${imagesDown}, Cell size: ${(boxSize/DPI).toFixed(2)}"`, {
+        x: 40,
+        y: explanationY,
+        size: 9,
+        color: rgb(0.4, 0.4, 0.4),
+      });
     }
 
     // Update user quota

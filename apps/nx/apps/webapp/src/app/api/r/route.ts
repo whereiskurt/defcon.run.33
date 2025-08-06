@@ -1,5 +1,5 @@
 import { auth } from '@auth';
-import { getUser, getUserByHash } from '@db/user';
+import { getUser, getUserByHash, updateUser } from '@db/user';
 import { createAccomplishment, getAccomplishmentsByType } from '@db/accomplishment';
 import { NextRequest, NextResponse } from 'next/server';
 
@@ -23,6 +23,21 @@ export async function GET(req: NextRequest) {
     const scanningUser = await getUser(session.user.email);
     if (!scanningUser) {
       return NextResponse.json({ message: 'Scanner user not found' }, { status: 404 });
+    }
+    
+    // Check QR scan quota
+    const currentScans = scanningUser.quota?.qrScans ?? 0;
+    const maxScans = 300;
+    const remainingScans = maxScans - currentScans;
+    
+    if (remainingScans <= 0) {
+      return NextResponse.json(
+        { 
+          message: 'QR scan quota exceeded. You have reached the maximum of 300 QR scans.',
+          remainingScans: 0 
+        },
+        { status: 429 }
+      );
     }
     
     // Lookup QR code owner by hash
@@ -95,11 +110,21 @@ export async function GET(req: NextRequest) {
       }
     );
     
+    // Increment QR scan quota after successful scan
+    await updateUser({
+      email: session.user.email,
+      quota: {
+        ...scanningUser.quota,
+        qrScans: currentScans + 1
+      }
+    });
+    
     return NextResponse.json(
       { 
         message: `Successfully connected with ${qrOwner.displayname || qrOwner.email}!`,
         ownerAccomplishment,
         scannerAccomplishment,
+        remainingScans: remainingScans - 1,
       },
       { status: 200 }
     );

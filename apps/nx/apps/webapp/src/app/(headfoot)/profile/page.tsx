@@ -5,6 +5,7 @@ import MqttCredentials from "../../../components/profile/MqttCredentials";
 import StravaConnection from "../../../components/profile/StravaConnection";
 import UserDetails from "../../../components/profile/UserDetails";
 import LeaderboardRank from "../../../components/profile/LeaderboardRank";
+import QuotaDisplay from "../../../components/profile/QuotaDisplay";
 
 export default async function Page() {
   const session = await auth();
@@ -25,8 +26,11 @@ export default async function Page() {
         <LeaderboardRank />
       </div>
       
-      {/* Row 3: Strava Connection - full width */}
-      <StravaConnection />
+      {/* Row 3: Strava Connection + Quota Display */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <StravaConnection />
+        <QuotaDisplay />
+      </div>
       
     </div>
   );

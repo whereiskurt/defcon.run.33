@@ -178,7 +178,7 @@ export default function QRSheetClient({ id, remainingQuota, userEmail }: QRSheet
               </div>
               <p className="text-xs text-default-400 text-center">
                 {includeProofPages 
-                  ? "Includes pages 2-4 with large QR code and size comparison charts"
+                  ? "Includes pages 2-5: large QR, size comparison charts, and progressive data density test"
                   : "Only page 1 with the main QR grid will be generated"
                 }
               </p>

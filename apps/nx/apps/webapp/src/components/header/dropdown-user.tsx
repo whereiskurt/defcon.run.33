@@ -78,29 +78,26 @@ const UserDropDown = (params: any) => {
     }
   };
 
-  // Check if user can sync (hasn't exceeded daily limit)
+  // Check if user can sync (check total quota)
   const checkSyncQuota = (userData?: any) => {
     try {
       const user = userData || userDetail;
       console.log('Checking sync quota, user data:', user);
-      console.log('Strava account data:', user?.strava_account);
       
-      const syncHistory = user?.strava_account?.sync_history || [];
-      const today = new Date().setHours(0, 0, 0, 0);
-      const todaysSyncs = syncHistory.filter((syncTime: number) => syncTime >= today);
+      // Check the total sync quota (16 total syncs)
+      const totalQuota = user?.quota?.stravaSync ?? 16;
       
-      console.log('Sync history:', syncHistory);
-      console.log('Today\'s syncs:', todaysSyncs);
+      console.log('Total sync quota remaining:', totalQuota);
       
-      const remaining = Math.max(0, 4 - todaysSyncs.length);
-      setSyncsRemaining(remaining);
-      setCanSync(remaining > 0);
-      return remaining;
+      setSyncsRemaining(totalQuota);
+      setCanSync(totalQuota > 0);
+      return totalQuota;
     } catch (error) {
       console.error('Error checking sync quota:', error);
-      setCanSync(true); // Default to allowing sync if check fails
-      setSyncsRemaining(4);
-      return 4;
+      // Default to showing quota if check fails
+      setCanSync(true);
+      setSyncsRemaining(16);
+      return 16;
     }
   };
 
@@ -121,7 +118,17 @@ const UserDropDown = (params: any) => {
 
       if (response.ok) {
         setSyncSuccess(true);
-        // Refresh user details to get updated data with new sync history
+        // Parse the response to get the updated quota
+        const syncData = await response.json();
+        console.log('Sync response:', syncData);
+        
+        // Update remaining syncs from the API response
+        if (syncData.remainingQuota !== undefined) {
+          setSyncsRemaining(syncData.remainingQuota);
+          setCanSync(syncData.remainingQuota > 0);
+        }
+        
+        // Also refresh user details to sync all data
         const res = await fetch('/api/user', {
           method: 'GET',
           headers: {
@@ -132,12 +139,9 @@ const UserDropDown = (params: any) => {
           const record = await res.json();
           console.log('User data after sync:', record.user);
           setUserDetail(record.user);
-          // Update sync quota with fresh data
-          const newRemaining = checkSyncQuota(record.user);
-          // Make sure we actually decremented
-          if (syncsRemaining !== null && newRemaining === syncsRemaining) {
-            // Force decrement if server didn't update yet
-            setSyncsRemaining(prev => prev !== null ? Math.max(0, prev - 1) : 0);
+          // Double-check quota from user data if not in sync response
+          if (syncData.remainingQuota === undefined) {
+            checkSyncQuota(record.user);
           }
         }
         
@@ -156,13 +160,23 @@ const UserDropDown = (params: any) => {
         // Reset success state after 4 seconds (2x longer)
         setTimeout(() => setSyncSuccess(false), 4000);
       } else {
-        // If sync failed, restore the count
-        setSyncsRemaining(prev => prev !== null ? Math.min(4, prev + 1) : 4);
+        // If sync failed due to quota, parse the response
+        const errorData = await response.json();
+        console.error('Sync failed:', errorData);
+        
+        // If it's a quota error, update the remaining count from the response
+        if (response.status === 429 && errorData.remainingQuota !== undefined) {
+          setSyncsRemaining(errorData.remainingQuota);
+          setCanSync(errorData.remainingQuota > 0);
+        } else {
+          // Otherwise restore the count
+          setSyncsRemaining(prev => prev !== null ? Math.min(16, prev + 1) : 16);
+        }
       }
     } catch (error) {
       console.error('Error syncing Strava:', error);
       // If sync failed, restore the count
-      setSyncsRemaining(prev => prev !== null ? Math.min(4, prev + 1) : 4);
+      setSyncsRemaining(prev => prev !== null ? Math.min(16, prev + 1) : 16);
     } finally {
       setSyncing(false);
     }
@@ -343,7 +357,7 @@ const UserDropDown = (params: any) => {
                 isDisabled={syncing || !canSync || syncsRemaining === null}
                 closeOnSelect={false}
               >
-                {syncing ? 'Syncing...' : syncSuccess ? 'Sync success' : syncsRemaining !== null ? `Sync Strava (${syncsRemaining} left)` : 'Sync Strava (...)'}
+                {syncing ? 'Syncing...' : syncSuccess ? 'Sync success' : syncsRemaining !== null ? `Sync Strava (${syncsRemaining} remain)` : 'Sync Strava (...)'}
               </DropdownItem>
             </DropdownSection>
           )}
