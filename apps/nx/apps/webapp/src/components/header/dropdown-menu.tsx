@@ -95,6 +95,16 @@ const MenuDropDown = (params: any) => {
 
           <DropdownItem
             className="pb-2"
+            textValue="routes-list"
+            startContent={<GrMapLocation size={24} className={iconClasses} />}
+            key="routes-list"
+            onClick={() => handleNavigation('/routes-list')}
+          >
+            <span className="text-2xl">Routes List</span>
+          </DropdownItem>
+
+          <DropdownItem
+            className="pb-2"
             textValue="heatmap"
             startContent={<FaFire size={24} className={iconClasses} />}
             key="heatmap"
