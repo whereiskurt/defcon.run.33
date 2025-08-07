@@ -142,55 +142,8 @@ export default function PolylineRenderer({
 
         const bounds = { minLat, maxLat, minLng, maxLng };
 
-        // Load map tile as background if enabled
-        if (showMapTile) {
-          try {
-            const zoom = calculateZoomLevel(bounds, width, height);
-            const centerLat = (minLat + maxLat) / 2;
-            const centerLng = (minLng + maxLng) / 2;
-            const centerTile = latLngToTile(centerLat, centerLng, zoom);
-            
-            const tileUrl = `https://tile.openstreetmap.org/${zoom}/${centerTile.x}/${centerTile.y}.png`;
-            console.log('Loading tile:', tileUrl);
-            
-            const tileImage = new Image();
-            tileImage.crossOrigin = 'anonymous';
-            
-            tileImage.onload = () => {
-              console.log('Tile loaded successfully');
-              
-              // Calculate tile bounds in lat/lng
-              const tileBounds = {
-                topLeft: tileToLatLng(centerTile.x, centerTile.y, zoom),
-                bottomRight: tileToLatLng(centerTile.x + 1, centerTile.y + 1, zoom)
-              };
-              
-              // Draw tile as background
-              ctx.drawImage(tileImage, 0, 0, width, height);
-              
-              // Draw semi-transparent overlay to make polyline more visible
-              ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
-              ctx.fillRect(0, 0, width, height);
-              
-              // Now draw the polyline on top
-              drawPolyline();
-            };
-            
-            tileImage.onerror = () => {
-              console.log('Tile failed to load, drawing polyline without background');
-              drawPolyline();
-            };
-            
-            tileImage.src = tileUrl;
-          } catch (error) {
-            console.error('Error loading map tile:', error);
-            drawPolyline();
-          }
-        } else {
-          drawPolyline();
-        }
-
-        function drawPolyline() {
+        // Define drawPolyline function before using it
+        const drawPolyline = () => {
           // Calculate scale to fit the route in the canvas
           const latRange = maxLat - minLat || 0.001;
           const lngRange = maxLng - minLng || 0.001;
@@ -277,6 +230,54 @@ export default function PolylineRenderer({
           ctx.beginPath();
           ctx.arc(lastX, lastY, markerRadius, 0, 2 * Math.PI);
           ctx.fill();
+        };
+
+        // Load map tile as background if enabled
+        if (showMapTile) {
+          try {
+            const zoom = calculateZoomLevel(bounds, width, height);
+            const centerLat = (minLat + maxLat) / 2;
+            const centerLng = (minLng + maxLng) / 2;
+            const centerTile = latLngToTile(centerLat, centerLng, zoom);
+            
+            const tileUrl = `https://tile.openstreetmap.org/${zoom}/${centerTile.x}/${centerTile.y}.png`;
+            console.log('Loading tile:', tileUrl);
+            
+            const tileImage = new Image();
+            tileImage.crossOrigin = 'anonymous';
+            
+            tileImage.onload = () => {
+              console.log('Tile loaded successfully');
+              
+              // Calculate tile bounds in lat/lng
+              const tileBounds = {
+                topLeft: tileToLatLng(centerTile.x, centerTile.y, zoom),
+                bottomRight: tileToLatLng(centerTile.x + 1, centerTile.y + 1, zoom)
+              };
+              
+              // Draw tile as background
+              ctx.drawImage(tileImage, 0, 0, width, height);
+              
+              // Draw semi-transparent overlay to make polyline more visible
+              ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
+              ctx.fillRect(0, 0, width, height);
+              
+              // Now draw the polyline on top
+              drawPolyline();
+            };
+            
+            tileImage.onerror = () => {
+              console.log('Tile failed to load, drawing polyline without background');
+              drawPolyline();
+            };
+            
+            tileImage.src = tileUrl;
+          } catch (error) {
+            console.error('Error loading map tile:', error);
+            drawPolyline();
+          }
+        } else {
+          drawPolyline();
         }
 
       } catch (error) {
