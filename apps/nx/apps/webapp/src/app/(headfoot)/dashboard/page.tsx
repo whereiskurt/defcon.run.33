@@ -154,9 +154,9 @@ const elky = (
       </Card>
     );  
 
-    const shouldShowByDefault = ['elk', 'el.', 'taro'].some(sub =>
+    const shouldShowByDefault = !['elk', 'el.', 'taro'].some(sub =>
       session?.user?.email?.toLowerCase().includes(sub)
-    ) && [4, 5, 6].includes(new Date().getDay());
+    );
 
     return (<>
       <div className={dashboard_class}>{cardComponents}</div>

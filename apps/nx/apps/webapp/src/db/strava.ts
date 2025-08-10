@@ -22,29 +22,28 @@ export const DEFCON_DATES = [
   { year: 2018, start: new Date("2018-08-06T00:00:00-07:00"), end: new Date("2018-08-13T23:59:59-07:00") },
 ];
 
-// Use DC32 (2024) as default since DC33 (2025) is in the future
-export const DC33_UNIX_START = Math.floor(DEFCON_DATES[1].start.getTime() / 1000); // DC32 2024
-export const DC33_UNIX_END = Math.floor(DEFCON_DATES[1].end.getTime() / 1000);     // DC32 2024
+// Use DC33 (2025) as default for current year
+export const DC33_UNIX_START = Math.floor(DEFCON_DATES[0].start.getTime() / 1000); // DC33 2025
+export const DC33_UNIX_END = Math.floor(DEFCON_DATES[0].end.getTime() / 1000);     // DC33 2025
 
-// Las Vegas metro area geographic bounds (expanded bounding box)
-const LAS_VEGAS_BOUNDS = {
-  // Expanded to cover more areas people might visit during DEFCON
-  // Including Valley of Fire, Lake Mead, Mt Charleston, etc.
-  north: 36.7,   // Mt Charleston / Aliante area  
-  south: 35.6,   // Henderson / Boulder City / Lake Las Vegas
-  east: -114.4,  // Lake Mead / Boulder City / Hoover Dam area
-  west: -115.8   // Red Rock / Spring Mountains area
+// Nevada state geographic bounds (entire state)
+const NEVADA_BOUNDS = {
+  // Entire state of Nevada boundaries
+  north: 42.0,   // Northern border with Idaho/Oregon
+  south: 35.0,   // Southern border with Arizona/California  
+  east: -114.0,  // Eastern border with Utah/Arizona
+  west: -120.01  // Western border with California (slightly extended for Lake Tahoe)
 };
 
 /**
- * Checks if coordinates are within the Las Vegas metro area
+ * Checks if coordinates are within Nevada state boundaries
  */
-function isInLasVegasArea(lat: number, lng: number): boolean {
+function isInNevadaArea(lat: number, lng: number): boolean {
   return (
-    lat >= LAS_VEGAS_BOUNDS.south &&
-    lat <= LAS_VEGAS_BOUNDS.north &&
-    lng >= LAS_VEGAS_BOUNDS.west &&
-    lng <= LAS_VEGAS_BOUNDS.east
+    lat >= NEVADA_BOUNDS.south &&
+    lat <= NEVADA_BOUNDS.north &&
+    lng >= NEVADA_BOUNDS.west &&
+    lng <= NEVADA_BOUNDS.east
   );
 }
 
@@ -65,13 +64,13 @@ function hasDefconInName(activityName: string): boolean {
 }
 
 /**
- * Filters activities to only those in Las Vegas area during DEFCON dates
+ * Filters activities to only those in Nevada during DEFCON dates
  */
 function filterDefconRelevantActivities(activities: StravaActivity[]): StravaActivity[] {
   console.log(`Starting filter: ${activities.length} total activities`);
   
   let noLocationCount = 0;
-  let outsideLasVegasCount = 0;
+  let outsideNevadaCount = 0;
   let outsideDefconDatesCount = 0;
   let textMatchCount = 0;
   let passedFilterCount = 0;
@@ -92,7 +91,7 @@ function filterDefconRelevantActivities(activities: StravaActivity[]): StravaAct
       }
     }
     
-    // For all other years, require Las Vegas location
+    // For all other years, require Nevada location
     const hasStartLocation = activity.start_latlng && activity.start_latlng.length === 2;
     const hasEndLocation = activity.end_latlng && activity.end_latlng.length === 2;
     
@@ -102,33 +101,33 @@ function filterDefconRelevantActivities(activities: StravaActivity[]): StravaAct
       return false;
     }
 
-    // Check if either start or end location is in Las Vegas area
-    let inLasVegas = false;
+    // Check if either start or end location is in Nevada
+    let inNevada = false;
     let locationDetails = '';
     
     if (hasStartLocation && activity.start_latlng && activity.start_latlng.length === 2) {
       const [startLat, startLng] = activity.start_latlng;
       if (startLat !== undefined && startLng !== undefined) {
         locationDetails += `start: ${startLat.toFixed(4)}, ${startLng.toFixed(4)}`;
-        if (isInLasVegasArea(startLat, startLng)) {
-          inLasVegas = true;
+        if (isInNevadaArea(startLat, startLng)) {
+          inNevada = true;
         }
       }
     }
     
-    if (!inLasVegas && hasEndLocation && activity.end_latlng && activity.end_latlng.length === 2) {
+    if (!inNevada && hasEndLocation && activity.end_latlng && activity.end_latlng.length === 2) {
       const [endLat, endLng] = activity.end_latlng;
       if (endLat !== undefined && endLng !== undefined) {
         locationDetails += `${locationDetails ? ' ' : ''}end: ${endLat.toFixed(4)}, ${endLng.toFixed(4)}`;
-        if (isInLasVegasArea(endLat, endLng)) {
-          inLasVegas = true;
+        if (isInNevadaArea(endLat, endLng)) {
+          inNevada = true;
         }
       }
     }
 
-    if (!inLasVegas) {
-      outsideLasVegasCount++;
-      console.log(`❌ ${activityInfo} - Outside Las Vegas area (${locationDetails})`);
+    if (!inNevada) {
+      outsideNevadaCount++;
+      console.log(`❌ ${activityInfo} - Outside Nevada (${locationDetails})`);
       return false;
     }
 
@@ -160,11 +159,11 @@ function filterDefconRelevantActivities(activities: StravaActivity[]): StravaAct
 
   console.log(`\n📊 Filter results:`);
   console.log(`  - ❌ No location data: ${noLocationCount}`);
-  console.log(`  - ❌ Outside Las Vegas area: ${outsideLasVegasCount}`);
+  console.log(`  - ❌ Outside Nevada: ${outsideNevadaCount}`);
   console.log(`  - ❌ Outside DEFCON dates: ${outsideDefconDatesCount}`);
   console.log(`  - ✅ 2020 DEFCON text matches: ${textMatchCount}`);
   console.log(`  - ✅ Passed filter: ${passedFilterCount}`);
-  console.log(`\n🗺️  Las Vegas bounds: N:${LAS_VEGAS_BOUNDS.north}° S:${LAS_VEGAS_BOUNDS.south}° E:${LAS_VEGAS_BOUNDS.east}° W:${LAS_VEGAS_BOUNDS.west}°`);
+  console.log(`\n🗺️  Nevada bounds: N:${NEVADA_BOUNDS.north}° S:${NEVADA_BOUNDS.south}° E:${NEVADA_BOUNDS.east}° W:${NEVADA_BOUNDS.west}°`);
 
   return filtered;
 }
@@ -319,10 +318,10 @@ export async function getAllDefconActivitiesForUser(email: string): Promise<Stra
     }
   }
 
-  // Filter to only Las Vegas area activities during DEFCON dates
+  // Filter to only Nevada activities during DEFCON dates
   const defconRelevantActivities = filterDefconRelevantActivities(allActivities);
   
-  console.log(`Found ${allActivities.length} total activities, ${defconRelevantActivities.length} DEFCON-relevant activities in Las Vegas area`);
+  console.log(`Found ${allActivities.length} total activities, ${defconRelevantActivities.length} DEFCON-relevant activities in Nevada`);
   
   return defconRelevantActivities;
 }
@@ -554,7 +553,7 @@ export async function syncStravaActivitiesSmartForUser(
       
     } else {
       // Subsequent syncs: only current year
-      console.log(`Current year sync: fetching DC32 activities for ${email}`);
+      console.log(`Current year sync: fetching DC33 activities for ${email}`);
       activities = await getStravaActivitiesForUser(email, DC33_UNIX_END, DC33_UNIX_START);
     }
     
@@ -571,7 +570,7 @@ export async function syncStravaActivitiesSmartForUser(
     
     const logMessage = syncCheck.syncType === 'first-time' 
       ? `First-time sync: ${activities.length} DEFCON activities across ${yearsScanned?.length} years`
-      : `Current sync: ${activities.length} DC32 activities`;
+      : `Current sync: ${activities.length} DC33 activities`;
     
     console.log(`${logMessage} for ${email} (${newActivities} new, ${activities.length - newActivities} existing, ${accomplishmentsCreated} accomplishments created)`);
     
@@ -748,6 +747,13 @@ async function fetchAllActivitiesInRange({ strava_account, beforeUnix, afterUnix
       
       const pageData = await response.json();
       console.log(`Page ${page}: Got ${pageData.length} activities`);
+      
+      // Log details of each activity for debugging
+      if (pageData.length > 0) {
+        pageData.forEach((activity: any, index: number) => {
+          console.log(`  Activity ${index + 1}: "${activity.name}" on ${activity.start_date} (${activity.start_latlng?.join(', ') || 'no GPS'})`);
+        });
+      }
       
       if (pageData.length === 0) {
         console.log(`No more activities, stopping at page ${page}`);

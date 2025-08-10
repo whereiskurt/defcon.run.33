@@ -292,34 +292,72 @@ export async function deleteAccomplishment(
 }
 
 export async function getAllAccomplishmentsForLeaderboard() {
-  const result = await Accomplishments.scan.go();
+  // Use cursor pagination to handle large datasets
+  const allAccomplishments: any[] = [];
+  let cursor: string | undefined = undefined;
   
-  return result.data.map(accomplishment => ({
-    userId: accomplishment.userId,
-    type: accomplishment.type,
-    name: accomplishment.name,
-    description: accomplishment.description,
-    completedAt: accomplishment.completedAt,
-    year: accomplishment.year,
-    metadata: accomplishment.metadata
-  }));
+  do {
+    const result: any = await Accomplishments.scan.go({ 
+      cursor,
+      limit: 1000 // Process in batches of 1000
+    });
+    
+    // Add the current batch to our results
+    allAccomplishments.push(...result.data.map((accomplishment: any) => ({
+      userId: accomplishment.userId,
+      type: accomplishment.type,
+      name: accomplishment.name,
+      description: accomplishment.description,
+      completedAt: accomplishment.completedAt,
+      year: accomplishment.year,
+      metadata: accomplishment.metadata
+    })));
+    
+    // Update cursor for next iteration
+    cursor = result.cursor;
+    
+    console.log(`Fetched ${result.data.length} leaderboard accomplishments (total so far: ${allAccomplishments.length})`);
+    
+  } while (cursor); // Continue while there are more pages
+  
+  console.log(`Total leaderboard accomplishments fetched: ${allAccomplishments.length}`);
+  return allAccomplishments;
 }
 
 export async function getAllAccomplishmentsForType(type: 'activity' | 'social' | 'meshctf') {
   // Use scan with filter for type since we need to check across all users
-  const result = await Accomplishments.scan
-    .where(({ type: typeAttr }, { eq }) => eq(typeAttr, type))
-    .go();
+  // Use cursor pagination to handle large datasets
+  const allAccomplishments: any[] = [];
+  let cursor: string | undefined = undefined;
   
-  return result.data.map(accomplishment => ({
-    userId: accomplishment.userId,
-    type: accomplishment.type,
-    name: accomplishment.name,
-    description: accomplishment.description,
-    completedAt: accomplishment.completedAt,
-    year: accomplishment.year,
-    metadata: accomplishment.metadata
-  }));
+  do {
+    const result: any = await Accomplishments.scan
+      .where(({ type: typeAttr }, { eq }) => eq(typeAttr, type))
+      .go({ 
+        cursor,
+        limit: 1000 // Process in batches of 1000
+      });
+    
+    // Add the current batch to our results
+    allAccomplishments.push(...result.data.map((accomplishment: any) => ({
+      userId: accomplishment.userId,
+      type: accomplishment.type,
+      name: accomplishment.name,
+      description: accomplishment.description,
+      completedAt: accomplishment.completedAt,
+      year: accomplishment.year,
+      metadata: accomplishment.metadata
+    })));
+    
+    // Update cursor for next iteration
+    cursor = result.cursor;
+    
+    console.log(`Fetched ${result.data.length} ${type} accomplishments (total so far: ${allAccomplishments.length})`);
+    
+  } while (cursor); // Continue while there are more pages
+  
+  console.log(`Total ${type} accomplishments fetched: ${allAccomplishments.length}`);
+  return allAccomplishments;
 }
 
 /**
@@ -425,7 +463,7 @@ export async function createStravaAccomplishment(
     max_speed: activity.max_speed,
     start_latlng: activity.start_latlng,
     end_latlng: activity.end_latlng,
-    location: activity.location_city || activity.location_state || 'Las Vegas, NV'
+    location: activity.location_city || activity.location_state || 'Nevada, USA'
   };
 
   return await createAccomplishment(userId, userEmail, {

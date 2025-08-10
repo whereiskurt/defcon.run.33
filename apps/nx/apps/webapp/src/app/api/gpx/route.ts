@@ -1,6 +1,6 @@
 import { auth } from '@auth';
 import { NextRequest, NextResponse } from 'next/server';
-import { createAccomplishment, Accomplishments, getAccomplishmentsByType } from '@db/accomplishment';
+import { createAccomplishment, Accomplishments, getAccomplishmentsByUser } from '@db/accomplishment';
 import { UpdateUserAccomplishmentCounts, getUser, User } from '@db/user';
 import { MAX_UPLOADS_PER_DAY } from './constants';
 
@@ -23,12 +23,12 @@ const dc33Days = [
   { key: 'day4', label: 'Day 4 (Sunday)' },
 ];
 
-// Las Vegas bounds (same as used in Strava integration)
-const LAS_VEGAS_BOUNDS = {
-  north: 36.7,
-  south: 35.6,
-  east: -114.4,
-  west: -115.8,
+// Nevada state bounds (same as used in Strava integration)
+const NEVADA_BOUNDS = {
+  north: 42.0,   // Northern border with Idaho/Oregon
+  south: 35.0,   // Southern border with Arizona/California  
+  east: -114.0,  // Eastern border with Utah/Arizona
+  west: -120.01  // Western border with California (slightly extended for Lake Tahoe)
 };
 
 interface GPXTrackPoint {
@@ -184,15 +184,15 @@ export async function POST(req: NextRequest) {
         }
       }
 
-      // Check if activity is in Las Vegas area
+      // Check if activity is in Nevada
       const track = tracks[0]; // Use the first track
-      const isInLasVegas = checkLocationBounds(track.points);
+      const isInNevada = checkLocationBounds(track.points);
 
-      if (!isInLasVegas) {
+      if (!isInNevada) {
         return NextResponse.json(
           {
             message:
-              'Activity must be located in the Las Vegas area to qualify for DEFCON accomplishments',
+              'Activity must be located in Nevada to qualify for DEFCON accomplishments',
           },
           { status: 400 }
         );
@@ -338,13 +338,13 @@ export async function POST(req: NextRequest) {
                   }
                   console.log(`Start: ${startLocation}, End: ${endLocation}`);
 
-                  // Verify route is in Las Vegas
-                  const isInLasVegas = checkLocationBounds(track.points);
-                  if (!isInLasVegas) {
+                  // Verify route is in Nevada
+                  const isInNevada = checkLocationBounds(track.points);
+                  if (!isInNevada) {
                     return NextResponse.json(
                       {
                         message:
-                          'Selected route is not in the Las Vegas area and cannot be used for DEFCON accomplishments',
+                          'Selected route is not in Nevada and cannot be used for DEFCON accomplishments',
                       },
                       { status: 400 }
                     );
@@ -391,14 +391,14 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ message: 'User not found' }, { status: 404 });
     }
 
-    // Check if user has at least 2 social accomplishments
-    const socialAccomplishments = await getAccomplishmentsByType(user.id, 'social');
-    if (socialAccomplishments.length < 2) {
+    // Check if user has at least 1 accomplishment of any type
+    const allAccomplishments = await getAccomplishmentsByUser(user.id);
+    if (allAccomplishments.length < 1) {
       return NextResponse.json(
         { 
-          message: 'You need at least 2 social accomplishments to upload GPX files. Scan QR codes or participate in social activities to unlock this feature.',
-          socialCount: socialAccomplishments.length,
-          requiredCount: 2
+          message: 'You need at least 1 accomplishment to upload GPX files. Complete any activity, social interaction, or meshctf challenge to unlock this feature.',
+          accomplishmentCount: allAccomplishments.length,
+          requiredCount: 1
         },
         { status: 403 }
       );
@@ -632,15 +632,15 @@ function parseGPX(gpxContent: string): GPXTrack[] {
 }
 
 function checkLocationBounds(points: GPXTrackPoint[]): boolean {
-  // Check first 10 points to see if they're in Las Vegas bounds
+  // Check first 10 points to see if they're in Nevada bounds
   const pointsToCheck = points.slice(0, Math.min(10, points.length));
 
   for (const point of pointsToCheck) {
     if (
-      point.lat >= LAS_VEGAS_BOUNDS.south &&
-      point.lat <= LAS_VEGAS_BOUNDS.north &&
-      point.lon >= LAS_VEGAS_BOUNDS.west &&
-      point.lon <= LAS_VEGAS_BOUNDS.east
+      point.lat >= NEVADA_BOUNDS.south &&
+      point.lat <= NEVADA_BOUNDS.north &&
+      point.lon >= NEVADA_BOUNDS.west &&
+      point.lon <= NEVADA_BOUNDS.east
     ) {
       return true; // If any point is in bounds, consider it valid
     }

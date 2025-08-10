@@ -267,13 +267,13 @@ const UserDropDown = (params: any) => {
           }}
           topContent={
             <User
-              name={session.user.name}
+              name={userDetail?.displayname ? `🐰 ${userDetail.displayname}` : session.user.name}
               description={
                 <div className="flex flex-col">
-                  <span>{session.user.email}</span>
                   {userDetail?.displayname && (
-                    <span className="text-xs text-default-400 mt-1">🐰 {userDetail.displayname}</span>
+                    <span className="text-sm text-default-600">{session.user.name}</span>
                   )}
+                  <span className="text-xs text-default-400">{session.user.email}</span>
                 </div>
               }
               avatarProps={{

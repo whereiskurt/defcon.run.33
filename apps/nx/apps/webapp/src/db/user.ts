@@ -629,11 +629,45 @@ export async function getUserByHash(hash: string) {
   return result.data[0];
 }
 
+export async function getTotalUserCount() {
+  // ElectroDB v3 doesn't have built-in pagination - must handle manually
+  let count = 0;
+  let lastKey: any = null;
+  
+  do {
+    const result: any = await User.scan
+      .go({ cursor: lastKey });
+    
+    count += result.data.length;
+    lastKey = result.cursor;
+    
+    console.log(`[Count] Batch: ${result.data.length}, Total: ${count}, HasMore: ${!!lastKey}`);
+  } while (lastKey);
+  
+  return count;
+}
+
 export async function getAllUsersWithAccomplishmentCounts() {
-  const result = await User.scan.go();
+  // Paginate through ALL users - DynamoDB scan has 1MB limit per request
+  const allUsers: any[] = [];
+  let lastKey: any = null;
+  let pageNum = 0;
+  
+  do {
+    pageNum++;
+    const result: any = await User.scan
+      .go({ cursor: lastKey });
+    
+    allUsers.push(...result.data);
+    lastKey = result.cursor;
+    
+    console.log(`[Leaderboard] Page ${pageNum}: ${result.data.length} users, Total: ${allUsers.length}, HasMore: ${!!lastKey}`);
+  } while (lastKey);
+  
+  console.log(`[Leaderboard] Total users fetched from DynamoDB: ${allUsers.length}`);
   
   // Get all users with their latest accomplishment
-  const usersWithLatest = await Promise.all(result.data.map(async (user) => {
+  const usersWithLatest = await Promise.all(allUsers.map(async (user) => {
     // Get user's latest accomplishment
     let latestAccomplishment = null;
     try {

@@ -15,9 +15,10 @@ import {
   Button,
   Pagination,
 } from '@heroui/react';
-import { Search, X, ChevronDown, ChevronUp } from 'lucide-react';
+import { Search, X, ChevronDown, ChevronUp, Activity } from 'lucide-react';
 import CardMatrixLoader from '../profile/CardMatrixLoader';
 import FlagSubmission from '../profile/FlagSubmission';
+import PolylineRenderer from '../routes/PolylineRenderer';
 
 type LeaderboardUser = {
   id: string;
@@ -63,7 +64,7 @@ type LeaderboardTableProps = {
 };
 
 export default function LeaderboardTable({ ghosts }: LeaderboardTableProps) {
-  const PAGE_SIZE = 15; // Production page size
+  const PAGE_SIZE = 25; // Production page size
   const searchParams = useSearchParams();
   const router = useRouter();
   
@@ -293,6 +294,56 @@ export default function LeaderboardTable({ ghosts }: LeaderboardTableProps) {
     return <span className="text-lg font-bold text-default-500">#{rank}</span>;
   };
 
+  const getPolylineData = (metadata: any): string | null => {
+    if (!metadata) return null;
+    
+    // Debug log to see what metadata we're getting
+    console.log('Checking polyline data for metadata:', metadata);
+    
+    // First try summary_polyline (Strava data)
+    if (metadata.summary_polyline && typeof metadata.summary_polyline === 'string') {
+      console.log('Found summary_polyline:', metadata.summary_polyline.substring(0, 50) + '...');
+      
+      // Check if it's a JSON coordinate array first
+      try {
+        const coordArray = JSON.parse(metadata.summary_polyline);
+        if (Array.isArray(coordArray) && coordArray.length > 0 && Array.isArray(coordArray[0])) {
+          // This is a coordinate array, not a polyline string - skip for now
+          console.log('Found coordinate array instead of polyline string');
+          return null;
+        }
+      } catch {
+        // If JSON parsing fails, it's likely a proper polyline string
+        console.log('Using polyline string from summary_polyline');
+        return metadata.summary_polyline;
+      }
+      
+      // If JSON parsing succeeded but it's not a coordinate array, it might still be a valid polyline
+      if (metadata.summary_polyline.length > 10) {
+        console.log('Using polyline string (not JSON)');
+        return metadata.summary_polyline;
+      }
+    }
+    
+    // Try other potential polyline fields
+    const polylineFields = [
+      'polyline',
+      'encoded_polyline',
+      'route_polyline',
+      'track_polyline'
+    ];
+    
+    for (const field of polylineFields) {
+      if (metadata[field] && typeof metadata[field] === 'string' && metadata[field].length > 10) {
+        console.log(`Found polyline in field: ${field}`);
+        return metadata[field];
+      }
+    }
+    
+    console.log('No polyline data found');
+    return null;
+  };
+
   if (loading) {
     return (
       <Card className="w-full">
@@ -322,17 +373,18 @@ export default function LeaderboardTable({ ghosts }: LeaderboardTableProps) {
   };
 
   return (
-    <div className="w-full space-y-4">
+    <div className="w-full space-y-2 px-2">
       {/* Flag Submission Card - Collapsible with Overlay */}
       <Card className="bg-background/80 backdrop-blur-sm border-2 border-primary/20 shadow-lg">
-        <CardHeader className="pb-0">
+        <CardHeader className="pb-0 py-2">
           <div className="flex justify-between items-center w-full">
             <div className="flex flex-col">
-              <p className="text-lg">🚩 Submit Flag</p>
-              <p className="text-small text-default-500 pb-2">Submit CTF flags to earn points</p>
+              <p className="text-base">🚩 Submit Flag</p>
+              <p className="text-small text-default-500">Submit CTF flags to earn points</p>
             </div>
             <Button
               isIconOnly
+              size="sm"
               variant="light"
               onClick={() => setFlagSubmissionExpanded(!flagSubmissionExpanded)}
               className="shrink-0"
@@ -344,7 +396,7 @@ export default function LeaderboardTable({ ghosts }: LeaderboardTableProps) {
         {flagSubmissionExpanded && (
           <>
             <Divider />
-            <CardBody className="pt-4 bg-background/90 backdrop-blur-sm">
+            <CardBody className="pt-2 bg-background/90 backdrop-blur-sm">
               <FlagSubmission ghosts={ghosts} onFlagSubmissionSuccess={handleFlagSubmissionSuccess} />
             </CardBody>
           </>
@@ -353,9 +405,9 @@ export default function LeaderboardTable({ ghosts }: LeaderboardTableProps) {
 
       {/* Search and Info Card */}
       <Card>
-        <CardHeader>
+        <CardHeader className="py-2">
           <div className="flex flex-col w-full">
-            <div className="flex flex-col gap-4 mb-2">
+            <div className="flex flex-col gap-2">
               <div className="flex gap-2 items-center">
                 <Input
                   ref={searchInputRef}
@@ -382,19 +434,19 @@ export default function LeaderboardTable({ ghosts }: LeaderboardTableProps) {
                   variant="bordered"
                 />
                 <Button
-                  size="lg"
+                  size="md"
                   variant="solid"
                   color="primary"
                   onClick={handleSearch}
-                  className="min-w-unit-32 px-8 py-6 text-lg shrink-0"
+                  className="px-4 shrink-0"
                   disabled={searchInput.length === 0}
                 >
                   Search
                 </Button>
               </div>
               
-              {/* Filter Chips */}
-              <div className="flex justify-start gap-2 mt-1">
+              {/* Filter Chips - Hidden on mobile */}
+              <div className="hidden sm:flex justify-start gap-2">
                 {currentUser && (
                   <Chip
                     size="sm"
@@ -435,6 +487,7 @@ export default function LeaderboardTable({ ghosts }: LeaderboardTableProps) {
         variant="bordered"
         isCompact
         itemClasses={itemClasses}
+        className="gap-0"
         onSelectionChange={(keys) => {
           // Fetch accomplishments for expanded items
           Array.from(keys).forEach(key => {
@@ -455,93 +508,226 @@ export default function LeaderboardTable({ ghosts }: LeaderboardTableProps) {
           return (
             <AccordionItem
               key={user.id}
-              className=""
+              className={isCurrentUser ? 'bg-green-400/20 dark:bg-green-500/30 border border-green-500/50 rounded-lg' : ''}
               title={
-                <div className={`flex items-center justify-between w-full p-3 rounded-lg ${isCurrentUser ? 'bg-green-400/20 dark:bg-green-500/30 border border-green-500/50' : ''}`}>
-                  <div className="flex items-center gap-2">
-                    {getRankIcon(user.globalRank)}
-                    {user.totalPoints > 0 && (
-                      <Chip 
-                        className="bg-foreground text-background border-foreground" 
-                        variant="bordered" 
-                        size="sm"
-                      >
-                        {user.totalPoints} 🥕
-                      </Chip>
-                    )}
-                    <span className={isCurrentUser ? 'text-green-800 dark:text-green-200 font-medium' : ''}>{displayName}</span>
+                <div className="flex flex-col w-full py-0.5 px-1">
+                  {/* Mobile: 2-line layout */}
+                  <div className="flex sm:hidden flex-col w-full -mt-0.5">
+                    {/* Line 1: Rank + Points on left, Chips on right */}
+                    <div className="flex items-center justify-between w-full">
+                      <div className="flex items-center gap-1">
+                        <span className="text-lg font-bold text-default-500 shrink-0">#{user.globalRank}</span>
+                        {user.totalPoints > 0 ? (
+                          <Chip 
+                            className="bg-foreground text-background border-foreground shrink-0" 
+                            variant="bordered" 
+                            size="sm"
+                          >
+                            {user.totalPoints} 🥕
+                          </Chip>
+                        ) : null}
+                      </div>
+                      <div className="flex items-center gap-1 pt-4">
+                        {(() => {
+                          const types = [
+                            { type: 'activity', count: user.totalAccomplishmentType.activity, color: 'success' as const },
+                            { type: 'social', count: user.totalAccomplishmentType.social, color: 'primary' as const },
+                            { type: 'meshctf', count: user.totalAccomplishmentType.meshctf, color: 'warning' as const }
+                          ];
+                          
+                          // Sort by count (highest first), but maintain original order if all are zero
+                          const allZero = types.every(t => t.count === 0);
+                          const sortedTypes = allZero ? types : types.sort((a, b) => b.count - a.count);
+                          
+                          return sortedTypes.map(({ type, count, color }) => (
+                            <Chip key={type} color={color} variant="flat" size="sm">
+                              {count}
+                            </Chip>
+                          ));
+                        })()}
+                      </div>
+                    </div>
+                    {/* Line 2: Name */}
+                    <div>
+                      <span className={`${isCurrentUser ? 'text-green-800 dark:text-green-200 font-medium' : ''} text-sm`}>{displayName}</span>
+                    </div>
                   </div>
-                  <div className="flex flex-wrap gap-1">
-                    {(() => {
-                      const types = [
-                        { type: 'activity', count: user.totalAccomplishmentType.activity, color: 'success' as const },
-                        { type: 'social', count: user.totalAccomplishmentType.social, color: 'primary' as const },
-                        { type: 'meshctf', count: user.totalAccomplishmentType.meshctf, color: 'warning' as const }
-                      ];
-                      
-                      // Sort by count (highest first), but maintain original order if all are zero
-                      const allZero = types.every(t => t.count === 0);
-                      const sortedTypes = allZero ? types : types.sort((a, b) => b.count - a.count);
-                      
-                      return sortedTypes.map(({ type, count, color }) => (
-                        <Chip key={type} color={color} variant="flat" size="sm">
-                          {count}
+                  {/* Desktop: 1-line layout */}
+                  <div className="hidden sm:flex items-center justify-between w-full">
+                    <div className="flex items-center gap-2">
+                      {getRankIcon(user.globalRank)}
+                      {user.totalPoints > 0 && (
+                        <Chip 
+                          className="bg-foreground text-background border-foreground" 
+                          variant="bordered" 
+                          size="sm"
+                        >
+                          {user.totalPoints} 🥕
                         </Chip>
-                      ));
-                    })()}
+                      )}
+                      <span className={`${isCurrentUser ? 'text-green-800 dark:text-green-200 font-medium' : ''} break-all text-base`}>{displayName}</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      {(() => {
+                        const types = [
+                          { type: 'activity', count: user.totalAccomplishmentType.activity, color: 'success' as const },
+                          { type: 'social', count: user.totalAccomplishmentType.social, color: 'primary' as const },
+                          { type: 'meshctf', count: user.totalAccomplishmentType.meshctf, color: 'warning' as const }
+                        ];
+                        
+                        // Sort by count (highest first), but maintain original order if all are zero
+                        const allZero = types.every(t => t.count === 0);
+                        const sortedTypes = allZero ? types : types.sort((a, b) => b.count - a.count);
+                        
+                        return sortedTypes.map(({ type, count, color }) => (
+                          <Chip key={type} color={color} variant="flat" size="sm">
+                            {count}
+                          </Chip>
+                        ));
+                      })()}
+                    </div>
                   </div>
                 </div>
               }
               subtitle=""
               textValue={`${displayName} accomplishments`}
             >
-              <div className="space-y-4">
+              <div className="space-y-2 px-2 pb-2">
                 {/* Dynamic accomplishments loading */}
                 {loadingAccomplishments.has(user.id) ? (
-                  <div className="flex justify-center p-4">
+                  <div className="flex justify-center p-2">
                     <Spinner size="sm" />
                     <span className="ml-2 text-sm text-default-500">Loading accomplishments...</span>
                   </div>
                 ) : accomplishments[user.id] && accomplishments[user.id].length > 0 ? (
                   <div>
-                    <div className="space-y-1">
+                    <div className="space-y-2">
                       {accomplishments[user.id]
                         .sort((a, b) => b.completedAt - a.completedAt)
-                        .map((accomplishment, idx) => (
-                          <div key={idx} className="border-l-4 border-l-gray-300 pl-4 py-1">
-                            <h4 className="font-semibold text-base mb-1">{accomplishment.name}</h4>
-                            <div className="flex items-center gap-2 mb-1">
-                              <Chip
-                                color={getTypeColor(accomplishment.type)}
-                                variant="flat"
-                                size="sm"
-                              >
-                                {accomplishment.type.toUpperCase()}
-                              </Chip>
-                              <span className="font-medium text-base">{accomplishment.description || accomplishment.name}</span>
-                            </div>
-                            <div className="flex items-center gap-3 mt-1">
-                              {accomplishment.metadata?.points !== undefined && (
-                                <Chip 
-                                  className={accomplishment.metadata.points > 0 ? "bg-foreground text-background border-foreground" : accomplishment.metadata.points === 0 ? "bg-default text-default-foreground border-default" : "bg-danger text-danger-foreground border-danger"} 
-                                  variant="bordered" 
-                                  size="sm"
-                                >
-                                  {accomplishment.metadata.points >= 0 ? '+' : ''}{accomplishment.metadata.points} 🥕
-                                </Chip>
+                        .map((accomplishment, idx) => {
+                          const polylineData = getPolylineData(accomplishment.metadata);
+                          console.log(`Accomplishment "${accomplishment.name}": has polyline = ${!!polylineData}`);
+                          
+                          return (
+                            <div key={idx} className="border-l-2 border-l-gray-300 pl-3 py-1">
+                              {polylineData ? (
+                                // Two-column layout when polyline is available
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                  {/* Left column: Text content */}
+                                  <div className="space-y-2">
+                                    <div className="flex items-center gap-2 mb-1">
+                                      <h4 className="font-semibold text-sm">{accomplishment.name}</h4>
+                                      {accomplishment.metadata?.stravaActivityId && (
+                                        <div className="flex items-center gap-1 px-2 py-1 bg-orange-100 dark:bg-orange-900/30 rounded-md">
+                                          <Activity className="h-3 w-3 text-orange-600 dark:text-orange-400" />
+                                          <span className="text-xs text-orange-700 dark:text-orange-300 font-medium">STRAVA</span>
+                                        </div>
+                                      )}
+                                    </div>
+                                    <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 mb-1">
+                                      <div className="flex items-center gap-2">
+                                        <Chip
+                                          color={getTypeColor(accomplishment.type)}
+                                          variant="flat"
+                                          size="sm"
+                                        >
+                                          {accomplishment.type.toUpperCase()}
+                                        </Chip>
+                                        {accomplishment.metadata?.points !== undefined && (
+                                          <Chip 
+                                            className={accomplishment.metadata.points > 0 ? "bg-foreground text-background border-foreground" : accomplishment.metadata.points === 0 ? "bg-default text-default-foreground border-default" : "bg-danger text-danger-foreground border-danger"} 
+                                            variant="bordered" 
+                                            size="sm"
+                                          >
+                                            {accomplishment.metadata.points >= 0 ? '+' : ''}{accomplishment.metadata.points} 🥕
+                                          </Chip>
+                                        )}
+                                      </div>
+                                      <span className="text-sm text-default-500">
+                                        {formatDate(accomplishment.completedAt)}
+                                      </span>
+                                    </div>
+                                    <p className="text-sm text-default-600">{accomplishment.description || accomplishment.name}</p>
+                                  </div>
+                                  
+                                  {/* Right column: Polyline visualization */}
+                                  <div className="flex justify-start items-center">
+                                    {accomplishment.metadata?.stravaActivityId ? (
+                                      <a
+                                        href={`https://www.strava.com/activities/${accomplishment.metadata.stravaActivityId}`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="block hover:opacity-80 transition-opacity cursor-pointer"
+                                        title="Open in Strava"
+                                      >
+                                        <PolylineRenderer
+                                          polyline={polylineData}
+                                          width={200}
+                                          height={120}
+                                          strokeColor="#3B82F6"
+                                          strokeWidth={2}
+                                          showMapTile={true}
+                                        />
+                                      </a>
+                                    ) : (
+                                      <PolylineRenderer
+                                        polyline={polylineData}
+                                        width={200}
+                                        height={120}
+                                        strokeColor="#3B82F6"
+                                        strokeWidth={2}
+                                        showMapTile={true}
+                                      />
+                                    )}
+                                  </div>
+                                </div>
+                              ) : (
+                                // Single-column layout when no polyline
+                                <div>
+                                  <div className="flex items-center gap-2 mb-1">
+                                    <h4 className="font-semibold text-sm">{accomplishment.name}</h4>
+                                    {accomplishment.metadata?.stravaActivityId && (
+                                      <div className="flex items-center gap-1 px-2 py-1 bg-orange-100 dark:bg-orange-900/30 rounded-md">
+                                        <Activity className="h-3 w-3 text-orange-600 dark:text-orange-400" />
+                                        <span className="text-xs text-orange-700 dark:text-orange-300 font-medium">STRAVA</span>
+                                      </div>
+                                    )}
+                                  </div>
+                                  <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 mb-1">
+                                    <div className="flex items-center gap-2">
+                                      <Chip
+                                        color={getTypeColor(accomplishment.type)}
+                                        variant="flat"
+                                        size="sm"
+                                      >
+                                        {accomplishment.type.toUpperCase()}
+                                      </Chip>
+                                      {accomplishment.metadata?.points !== undefined && (
+                                        <Chip 
+                                          className={accomplishment.metadata.points > 0 ? "bg-foreground text-background border-foreground" : accomplishment.metadata.points === 0 ? "bg-default text-default-foreground border-default" : "bg-danger text-danger-foreground border-danger"} 
+                                          variant="bordered" 
+                                          size="sm"
+                                        >
+                                          {accomplishment.metadata.points >= 0 ? '+' : ''}{accomplishment.metadata.points} 🥕
+                                        </Chip>
+                                      )}
+                                    </div>
+                                    <span className="text-sm text-default-500">
+                                      {formatDate(accomplishment.completedAt)}
+                                    </span>
+                                  </div>
+                                  <p className="text-sm text-default-600">{accomplishment.description || accomplishment.name}</p>
+                                </div>
                               )}
-                              <span className="text-sm text-default-500">
-                                {formatDate(accomplishment.completedAt)}
-                              </span>
                             </div>
-                          </div>
-                        ))}
+                          );
+                        })}
                     </div>
                   </div>
                 ) : accomplishments[user.id] ? (
-                  <p className="text-default-500">No individual accomplishments to display.</p>
+                  <p className="text-default-500 text-sm p-2">No individual accomplishments to display.</p>
                 ) : (
-                  <p className="text-default-500 text-sm">Expand to load accomplishments...</p>
+                  <p className="text-default-500 text-sm p-2">Expand to load accomplishments...</p>
                 )}
               </div>
             </AccordionItem>
@@ -551,7 +737,7 @@ export default function LeaderboardTable({ ghosts }: LeaderboardTableProps) {
 
       {/* Pagination */}
       {pagination && pagination.totalPages > 1 && (
-        <div className="flex justify-center mt-6">
+        <div className="flex justify-center mt-2">
           <Pagination
             total={pagination.totalPages}
             page={pagination.page}

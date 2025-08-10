@@ -25,7 +25,17 @@ const sharedConfig = {
       },
       {
         source: '/q',
-        destination: 'https://mqq.defcon.run/qr',
+        destination: '/qr',
+        permanent: true,
+      },
+      {
+        source: '/photos',
+        destination: '/photo',
+        permanent: true,
+      },
+      {
+        source: '/route-list',
+        destination: '/routes-list',
         permanent: true,
       },
     ];

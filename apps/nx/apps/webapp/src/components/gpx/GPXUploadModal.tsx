@@ -80,7 +80,7 @@ export default function GPXUploadModal({ isOpen, onClose }: GPXUploadModalProps)
   const [showMatrixEffect, setShowMatrixEffect] = useState(false);
   const [remainingUploads, setRemainingUploads] = useState<Record<string, number>>({});
   const [maxUploadsPerDay, setMaxUploadsPerDay] = useState<number>(2);
-  const [socialAccomplishmentCount, setSocialAccomplishmentCount] = useState<number>(0);
+  const [accomplishmentCount, setAccomplishmentCount] = useState<number>(0);
   const [hasAccess, setHasAccess] = useState<boolean>(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const descriptionRef = useRef<HTMLInputElement>(null);
@@ -92,7 +92,7 @@ export default function GPXUploadModal({ isOpen, onClose }: GPXUploadModalProps)
         fetchRoutes();
       }
       fetchUploadCounts();
-      checkSocialAccomplishments();
+      checkAccomplishments();
     }
   }, [isOpen]);
 
@@ -141,17 +141,17 @@ export default function GPXUploadModal({ isOpen, onClose }: GPXUploadModalProps)
     }
   };
 
-  const checkSocialAccomplishments = async () => {
+  const checkAccomplishments = async () => {
     try {
-      const response = await fetch('/api/user/accomplishments?type=social');
+      const response = await fetch('/api/user/accomplishments');
       if (response.ok) {
         const data = await response.json();
         const count = data.accomplishments?.length || 0;
-        setSocialAccomplishmentCount(count);
-        setHasAccess(count >= 2);
+        setAccomplishmentCount(count);
+        setHasAccess(count >= 1);
       }
     } catch (error) {
-      console.error('Error checking social accomplishments:', error);
+      console.error('Error checking accomplishments:', error);
     }
   };
 
@@ -208,10 +208,10 @@ export default function GPXUploadModal({ isOpen, onClose }: GPXUploadModalProps)
       const result = await response.json();
 
       if (response.status === 403) {
-        // User doesn't have enough social accomplishments
-        setSocialAccomplishmentCount(result.socialCount || 0);
+        // User doesn't have enough accomplishments
+        setAccomplishmentCount(result.accomplishmentCount || 0);
         setHasAccess(false);
-        setError(result.message || 'You need at least 2 social accomplishments to upload GPX files.');
+        setError(result.message || 'You need at least 1 accomplishment to upload GPX files.');
       } else if (response.ok) {
         setSuccess(true);
         setHasEverSucceeded(true);
@@ -324,18 +324,18 @@ export default function GPXUploadModal({ isOpen, onClose }: GPXUploadModalProps)
                 <span className="font-medium">Unlock Required</span>
               </div>
               <p className="text-warning-700 text-sm">
-                You need at least 2 social accomplishments to upload GPX files.
+                You need at least 1 accomplishment to upload GPX files.
               </p>
               <Progress 
-                value={(socialAccomplishmentCount / 2) * 100} 
+                value={(accomplishmentCount / 1) * 100} 
                 color="warning" 
                 className="max-w-md"
-                label={`${socialAccomplishmentCount} / 2 social accomplishments`}
+                label={`${accomplishmentCount} / 1 accomplishment`}
                 showValueLabel
               />
               <div className="flex items-center gap-2 text-sm text-warning-600">
                 <QrCode className="h-4 w-4" />
-                <span>Unlock this feature with exclusive QR codes!</span>
+                <span>Unlock this feature with any accomplishment (activities, social, or meshctf)!</span>
               </div>
             </div>
           )}

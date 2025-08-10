@@ -114,7 +114,7 @@ export default function StravaConnection() {
             <div className="flex items-center gap-3">
               <FaCheckCircle className="text-green-500 text-xl" />
               <div>
-                <p className="font-medium">Connected to Strava</p>
+                <p className="font-medium">You are Connected to Strava</p>
                 <p className="text-small text-default-500">
                   Your Strava account is linked to your profile
                 </p>
