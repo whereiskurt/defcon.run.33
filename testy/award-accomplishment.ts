@@ -152,8 +152,17 @@ async function findUser(identifier: string) {
     const users = await User.query.primary({ email: identifier }).go();
     return users.data.length > 0 ? users.data[0] : null;
   } else {
-    const allUsers = await User.scan.go();
-    return allUsers.data.find(user => user.displayname === identifier) || null;
+    // Paginate through ALL users - DynamoDB scan has 1MB limit per request
+    const allUsers: any[] = [];
+    let lastKey: any = null;
+    
+    do {
+      const result: any = await User.scan.go({ cursor: lastKey });
+      allUsers.push(...result.data);
+      lastKey = result.cursor;
+    } while (lastKey);
+    
+    return allUsers.find(user => user.displayname === identifier) || null;
   }
 }
 

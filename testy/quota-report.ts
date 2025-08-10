@@ -88,10 +88,24 @@ interface QuotaReport {
 async function getAllUsers(): Promise<QuotaReport[]> {
   console.log('📊 Fetching all users and their quotas...');
   
-  const users = await User.scan.go();
+  // Paginate through ALL users - DynamoDB scan has 1MB limit per request
+  const allUsers: any[] = [];
+  let lastKey: any = null;
+  let pageNum = 0;
+  
+  do {
+    pageNum++;
+    const result: any = await User.scan.go({ cursor: lastKey });
+    allUsers.push(...result.data);
+    lastKey = result.cursor;
+    console.log(`  Page ${pageNum}: ${result.data.length} users, Total: ${allUsers.length}, HasMore: ${!!lastKey}`);
+  } while (lastKey);
+  
+  console.log(`  Total users fetched: ${allUsers.length}`);
+  
   const quotaReports: QuotaReport[] = [];
 
-  for (const user of users.data) {
+  for (const user of allUsers) {
     const quota = user.quota || {
       qrSheet: 10,
       displaynameChanges: 3,

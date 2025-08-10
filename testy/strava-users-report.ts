@@ -120,10 +120,24 @@ interface StravaUserReport {
 async function getAllStravaUsers(): Promise<StravaUserReport[]> {
   console.log('📊 Fetching all users and filtering for Strava connections...');
   
-  const users = await User.scan.go();
+  // Paginate through ALL users - DynamoDB scan has 1MB limit per request
+  const allUsers: any[] = [];
+  let lastKey: any = null;
+  let pageNum = 0;
+  
+  do {
+    pageNum++;
+    const result: any = await User.scan.go({ cursor: lastKey });
+    allUsers.push(...result.data);
+    lastKey = result.cursor;
+    console.log(`  Page ${pageNum}: ${result.data.length} users, Total: ${allUsers.length}, HasMore: ${!!lastKey}`);
+  } while (lastKey);
+  
+  console.log(`  Total users fetched: ${allUsers.length}`);
+  
   const stravaUsers: StravaUserReport[] = [];
 
-  for (const user of users.data) {
+  for (const user of allUsers) {
     // Only include users with Strava accounts
     if (!user.strava_account || !user.strava_account.access_token) {
       continue;

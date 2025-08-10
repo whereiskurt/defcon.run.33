@@ -130,8 +130,17 @@ async function findUser(identifier: string) {
     return users.data.length > 0 ? users.data[0] : null;
   } else {
     // Search by displayname - need to scan all users
-    const allUsers = await User.scan.go();
-    return allUsers.data.find(user => user.displayname === identifier) || null;
+    // Paginate through ALL users - DynamoDB scan has 1MB limit per request
+    const allUsers: any[] = [];
+    let lastKey: any = null;
+    
+    do {
+      const result: any = await User.scan.go({ cursor: lastKey });
+      allUsers.push(...result.data);
+      lastKey = result.cursor;
+    } while (lastKey);
+    
+    return allUsers.find(user => user.displayname === identifier) || null;
   }
 }
 
