@@ -121,6 +121,7 @@ const User = new Entity(
           stravaSync: { type: 'number' },
           qrScans: { type: 'number' },
           flagChecks: { type: 'number' },
+          checkIns: { type: 'number' },
         },
         default: () => ({ 
           qrSheet: 10,
@@ -128,7 +129,8 @@ const User = new Entity(
           displaynameChangesResetDate: new Date().toISOString().split('T')[0],
           stravaSync: 16,
           qrScans: 0,
-          flagChecks: 0
+          flagChecks: 0,
+          checkIns: 50
         }),
       },
 
@@ -246,6 +248,29 @@ const User = new Entity(
           weight: { type: 'any' },
         },
       },
+      checkIns: {
+        type: 'list',
+        items: {
+          type: 'map',
+          properties: {
+            date: { type: 'string' },
+            timestamp: { type: 'number' },
+            source: { type: 'string' },
+            samples: { type: 'any' },
+            averageCoordinates: {
+              type: 'map',
+              properties: {
+                latitude: { type: 'number' },
+                longitude: { type: 'number' },
+              },
+            },
+            bestAccuracy: { type: 'number' },
+            userAgent: { type: 'string' },
+          },
+        },
+        default: () => [],
+      },
+      
       strava_account: {
         type: 'map',
         properties: {

@@ -18,8 +18,8 @@ let heatMapCache: HeatMapCache = {
 
 const CACHE_DURATION = 2 * 60 * 1000; // 2 minutes in milliseconds (reduced from 5)
 
-// Export function to clear cache (can be called from other modules)
-export function clearHeatmapCache() {
+// Function to clear cache (internal use only)
+function clearHeatmapCache() {
   console.log('[Heatmap] Cache cleared manually');
   heatMapCache.generatedAt = 0;
 }
