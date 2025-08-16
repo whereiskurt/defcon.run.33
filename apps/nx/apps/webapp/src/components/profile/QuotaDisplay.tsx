@@ -17,6 +17,7 @@ type QuotaData = {
   stravaSync?: number;
   qrScans?: number;
   flagChecks?: number;
+  checkIns?: number;
 };
 
 export default function QuotaDisplay() {
@@ -99,6 +100,7 @@ export default function QuotaDisplay() {
   const qrScansUsed = quota.qrScans ?? 0;  // qrScans stores used count
   const qrScansRemaining = Math.max(0, 300 - qrScansUsed);
   const qrSheetRemaining = quota.qrSheet ?? 10;  // qrSheet stores remaining count
+  const checkInsRemaining = quota.checkIns ?? 50;  // checkIns stores remaining count
 
   return (
     <Card className="w-full">
@@ -180,6 +182,30 @@ export default function QuotaDisplay() {
             />
             <p className="text-tiny text-default-500">
               Generate QR code sheets for flag distribution
+            </p>
+          </div>
+
+          {/* Location Check-Ins */}
+          <div>
+            <div className="flex justify-between items-center mb-2">
+              <span className="text-sm font-medium">📍 Location Check-Ins</span>
+              <Chip 
+                size="sm" 
+                color={checkInsRemaining > 10 ? "success" : checkInsRemaining > 0 ? "warning" : "danger"}
+                variant="flat"
+              >
+                {checkInsRemaining} / 50 remaining
+              </Chip>
+            </div>
+            <Progress 
+              value={50 - checkInsRemaining} 
+              maxValue={50}
+              color={checkInsRemaining > 10 ? "success" : checkInsRemaining > 0 ? "warning" : "danger"}
+              size="sm"
+              className="mb-1"
+            />
+            <p className="text-tiny text-default-500">
+              Verify your presence with GPS coordinates
             </p>
           </div>
         </div>

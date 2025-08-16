@@ -20,11 +20,13 @@ import { signIn, signOut, useSession } from 'next-auth/react';
 
 import { useRouter } from 'next/navigation';
 import { FaPlus, FaStrava, FaTrophy, FaUserAlt, FaSync } from 'react-icons/fa';
+import { Target } from 'lucide-react';
 import { LogoutIcon } from './icon/logout';
 import { QRIcon } from './icon/qr';
 import { useEffect, useState } from 'react';
 import CardMatrixLoader from '../profile/CardMatrixLoader';
 import GPXUploadModal from '../gpx/GPXUploadModal';
+import CheckInModal from '../check-in/CheckInModal';
 
 import DCJackIcon from '@/public/header/dcjack.svg';
 
@@ -46,6 +48,11 @@ const UserDropDown = (params: any) => {
     isOpen: isGPXOpen,
     onOpen: openGPX,
     onClose: closeGPX,
+  } = useDisclosure();
+  const {
+    isOpen: isCheckInOpen,
+    onOpen: openCheckIn,
+    onClose: closeCheckIn,
   } = useDisclosure();
   const [userDetail, setUserDetail] = useState<any>(null);
   const [syncing, setSyncing] = useState<boolean>(false);
@@ -233,6 +240,12 @@ const UserDropDown = (params: any) => {
       {LogoutModal(isLogoutOpen, closeLogout)}
       {QRModal(isQROpen, closeQR, userDetail)}
       <GPXUploadModal isOpen={isGPXOpen} onClose={closeGPX} />
+      <CheckInModal 
+        isOpen={isCheckInOpen} 
+        onClose={closeCheckIn}
+        userEmail={session.user.email || ''}
+        remainingQuota={userDetail?.quota?.checkIns ?? 50}
+      />
       <Dropdown
         backdrop="blur"
         showArrow
@@ -263,6 +276,10 @@ const UserDropDown = (params: any) => {
             // Handle manual add action
             if (key === 'add-activity') {
               openGPX();
+            }
+            // Handle check-in action
+            if (key === 'check-in') {
+              openCheckIn();
             }
           }}
           topContent={
@@ -313,6 +330,17 @@ const UserDropDown = (params: any) => {
           </DropdownSection>
           
           <DropdownSection aria-label="Activity Management" showDivider>
+            <DropdownItem
+              startContent={
+                <Target color="blue" size={16} className={iconClasses} />
+              }
+              className="py-2 text-base"
+              textValue="Checkin!"
+              key="check-in"
+              closeOnSelect={true}
+            >
+              Checkin!
+            </DropdownItem>
             <DropdownItem
               startContent={
                 <FaPlus color="green" size={16} className={iconClasses} />
