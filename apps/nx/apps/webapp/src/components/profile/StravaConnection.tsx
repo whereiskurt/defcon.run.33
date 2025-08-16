@@ -8,11 +8,11 @@ import {
   CardFooter,
   Divider,
   Button,
+  Skeleton,
 } from '@heroui/react';
 import { FaStrava, FaSync } from 'react-icons/fa';
 import { FaCheckCircle } from 'react-icons/fa';
 import { signIn, useSession } from 'next-auth/react';
-import CardMatrixLoader from './CardMatrixLoader';
 
 export default function StravaConnection() {
   const { data: session, status } = useSession();
@@ -89,8 +89,18 @@ export default function StravaConnection() {
           </div>
         </CardHeader>
         <Divider />
-        <CardBody className="p-0">
-          <CardMatrixLoader text="INITIALIZING STRAVA" height="200px" />
+        <CardBody className="p-4">
+          <div className="space-y-3">
+            <Skeleton className="rounded-lg">
+              <div className="h-10 rounded-lg bg-default-300"></div>
+            </Skeleton>
+            <Skeleton className="rounded-lg">
+              <div className="h-8 rounded-lg bg-default-200"></div>
+            </Skeleton>
+            <Skeleton className="rounded-lg">
+              <div className="h-10 rounded-lg bg-default-300"></div>
+            </Skeleton>
+          </div>
         </CardBody>
       </Card>
     );

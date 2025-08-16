@@ -9,8 +9,8 @@ import {
   Input,
   Button,
   Chip,
+  Skeleton,
 } from '@heroui/react';
-import CardMatrixLoader from './CardMatrixLoader';
 
 type UserData = {
   email: string;
@@ -130,8 +130,18 @@ export default function UserDetails() {
           </div>
         </CardHeader>
         <Divider />
-        <CardBody className="p-0">
-          <CardMatrixLoader text="LOADING USER DATA" height="200px" />
+        <CardBody className="p-4">
+          <div className="space-y-4">
+            <Skeleton className="rounded-lg">
+              <div className="h-12 rounded-lg bg-default-300"></div>
+            </Skeleton>
+            <Skeleton className="rounded-lg">
+              <div className="h-8 rounded-lg bg-default-200"></div>
+            </Skeleton>
+            <Skeleton className="rounded-lg">
+              <div className="h-20 rounded-lg bg-default-300"></div>
+            </Skeleton>
+          </div>
         </CardBody>
       </Card>
     );

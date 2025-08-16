@@ -7,8 +7,8 @@ import {
   CardBody,
   Divider,
   CardFooter,
+  Skeleton,
 } from '@heroui/react';
-import CardMatrixLoader from './CardMatrixLoader';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 
@@ -85,8 +85,18 @@ export default function LeaderboardRank() {
           </div>
         </CardHeader>
         <Divider />
-        <CardBody className="p-0">
-          <CardMatrixLoader text="CALCULATING RANK" height="200px" />
+        <CardBody className="p-4">
+          <div className="space-y-3">
+            <Skeleton className="rounded-lg">
+              <div className="h-12 rounded-lg bg-default-300"></div>
+            </Skeleton>
+            <Skeleton className="rounded-lg">
+              <div className="h-8 rounded-lg bg-default-200"></div>
+            </Skeleton>
+            <Skeleton className="rounded-lg">
+              <div className="h-10 rounded-lg bg-default-300"></div>
+            </Skeleton>
+          </div>
         </CardBody>
       </Card>
     );

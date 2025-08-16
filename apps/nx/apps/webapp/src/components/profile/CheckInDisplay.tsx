@@ -1,16 +1,17 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Card, CardBody, CardHeader, Divider, Chip, Button } from '@heroui/react';
+import { Card, CardBody, CardHeader, Divider, Chip, Button, Spinner } from '@heroui/react';
 import dynamic from 'next/dynamic';
-import { MapPin, Clock, Target, Smartphone, Activity, AlertTriangle, CheckCircle, Zap, Map, Plus } from 'lucide-react';
+import { MapPin, Clock, Target, Smartphone, Activity, AlertTriangle, CheckCircle, Zap, Map, Plus, RefreshCw } from 'lucide-react';
 
 // Dynamically import the map component to avoid SSR issues
 const CheckInMap = dynamic(() => import('./CheckInMap'), {
   ssr: false,
   loading: () => (
-    <div className="h-64 bg-default-100 rounded-lg flex items-center justify-center">
-      <div className="text-default-500">Loading map...</div>
+    <div className="h-64 bg-default-100 rounded-lg flex flex-col items-center justify-center gap-3">
+      <Spinner size="lg" color="primary" />
+      <div className="text-default-500 text-sm">Loading map...</div>
     </div>
   )
 });
@@ -284,6 +285,17 @@ export default function CheckInDisplay({ checkIns = [], remainingQuota = 50, onO
           <div className="flex gap-2 items-center">
             <Button
               size="sm"
+              variant="flat"
+              color="default"
+              isIconOnly
+              onPress={refreshCheckIns}
+              isLoading={isRefreshing}
+              aria-label="Refresh Check-Ins"
+            >
+              {!isRefreshing && <RefreshCw className="w-4 h-4" />}
+            </Button>
+            <Button
+              size="sm"
               variant={showMap ? "solid" : "flat"}
               color="primary"
               isIconOnly
@@ -307,7 +319,16 @@ export default function CheckInDisplay({ checkIns = [], remainingQuota = 50, onO
         </div>
       </CardHeader>
       <Divider />
-      <CardBody className="gap-4">
+      <CardBody className="gap-4 relative">
+        {isRefreshing && (
+          <div className="absolute inset-0 bg-background/50 backdrop-blur-sm z-10 flex items-center justify-center rounded-lg">
+            <div className="flex flex-col items-center gap-2">
+              <Spinner size="lg" color="primary" />
+              <span className="text-sm text-default-500">Refreshing check-ins...</span>
+            </div>
+          </div>
+        )}
+        
         {showMap && (
           <div className="h-64 rounded-lg overflow-hidden">
             <CheckInMap 

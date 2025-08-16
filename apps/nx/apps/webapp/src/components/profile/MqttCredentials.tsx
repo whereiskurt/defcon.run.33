@@ -9,9 +9,9 @@ import {
   Divider,
   Input,
   Button,
+  Skeleton,
 } from '@heroui/react';
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
-import CardMatrixLoader from './CardMatrixLoader';
 
 type UserData = {
   email?: string;
@@ -76,8 +76,18 @@ export default function MqttCredentials() {
           </div>
         </CardHeader>
         <Divider />
-        <CardBody className="p-0">
-          <CardMatrixLoader text="DECRYPTING CREDENTIALS" height="200px" />
+        <CardBody className="p-4">
+          <div className="space-y-3">
+            <Skeleton className="rounded-lg">
+              <div className="h-10 rounded-lg bg-default-300"></div>
+            </Skeleton>
+            <Skeleton className="rounded-lg">
+              <div className="h-10 rounded-lg bg-default-200"></div>
+            </Skeleton>
+            <Skeleton className="rounded-lg">
+              <div className="h-10 rounded-lg bg-default-300"></div>
+            </Skeleton>
+          </div>
         </CardBody>
       </Card>
     );

@@ -8,8 +8,8 @@ import {
   Divider,
   Progress,
   Chip,
+  Skeleton,
 } from '@heroui/react';
-import CardMatrixLoader from './CardMatrixLoader';
 
 type QuotaData = {
   qrSheet?: number;
@@ -72,8 +72,21 @@ export default function QuotaDisplay() {
           </div>
         </CardHeader>
         <Divider />
-        <CardBody className="p-0">
-          <CardMatrixLoader text="LOADING QUOTA DATA" height="200px" />
+        <CardBody className="p-4">
+          <div className="space-y-3">
+            <Skeleton className="rounded-lg">
+              <div className="h-8 rounded-lg bg-default-300"></div>
+            </Skeleton>
+            <Skeleton className="rounded-lg">
+              <div className="h-8 rounded-lg bg-default-200"></div>
+            </Skeleton>
+            <Skeleton className="rounded-lg">
+              <div className="h-8 rounded-lg bg-default-300"></div>
+            </Skeleton>
+            <Skeleton className="rounded-lg">
+              <div className="h-8 rounded-lg bg-default-200"></div>
+            </Skeleton>
+          </div>
         </CardBody>
       </Card>
     );
