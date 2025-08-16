@@ -147,8 +147,8 @@ export async function POST(
   }
 
   try {
-    // Parse request body to get template and noProof (userEmail from session)
-    const { template, noProof } = await request.json();
+    // Parse request body to get template, noProof, and baseUrl (userEmail from session)
+    const { template, noProof, baseUrl: customBaseUrl } = await request.json();
     const userEmail = session.user.email;
 
     // Get user and check quota
@@ -213,7 +213,12 @@ export async function POST(
 
     // Generate the PDF
     const { id } = await params;
-    const baseUrl = `https://run.defcon.run/qr/${id}`;
+    // Use custom base URL if provided, otherwise default to https://run.defcon.run/qr/
+    const defaultBaseUrl = 'https://run.defcon.run/qr/';
+    const baseUrlPrefix = customBaseUrl || defaultBaseUrl;
+    // Ensure base URL ends with / if it doesn't already
+    const normalizedBaseUrl = baseUrlPrefix.endsWith('/') ? baseUrlPrefix : `${baseUrlPrefix}/`;
+    const baseUrl = `${normalizedBaseUrl}${id}`;
     
     const pdfDoc = await PDFDocument.create();
     const page = pdfDoc.addPage([PAGE_WIDTH, PAGE_HEIGHT]);

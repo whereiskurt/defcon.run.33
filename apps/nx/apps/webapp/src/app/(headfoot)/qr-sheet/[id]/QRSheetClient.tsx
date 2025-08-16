@@ -24,6 +24,10 @@ export default function QRSheetClient({ id, remainingQuota, userEmail }: QRSheet
   // Get current template from URL params and set up manual template input
   const currentTemplate = searchParams.get('template') || '7x9'; // Default to 7x9 if no template
   const [manualTemplate, setManualTemplate] = useState(currentTemplate);
+  
+  // Base URL configuration - defaults to https://run.defcon.run/qr/ but can be overridden
+  const defaultBaseUrl = 'https://run.defcon.run/qr/';
+  const [baseUrl, setBaseUrl] = useState(searchParams.get('baseUrl') || defaultBaseUrl);
 
   // Helper function to generate quick links with current ID but different template
   const generateQuickLink = (newTemplate: string) => {
@@ -45,6 +49,9 @@ export default function QRSheetClient({ id, remainingQuota, userEmail }: QRSheet
         }
         if (!includeProofPages) {
           requestBody.noProof = true;
+        }
+        if (baseUrl && baseUrl !== defaultBaseUrl) {
+          requestBody.baseUrl = baseUrl;
         }
         
         const response = await fetch(`/api/qr/sheet/${id}`, {
@@ -147,6 +154,25 @@ export default function QRSheetClient({ id, remainingQuota, userEmail }: QRSheet
 
           {!isDownloading && (
             <div className="space-y-4">
+              {/* Base URL Input */}
+              <div className="flex flex-col gap-2">
+                <label className="text-sm font-medium text-center">Base URL</label>
+                <Input
+                  value={baseUrl}
+                  onChange={(e) => setBaseUrl(e.target.value)}
+                  placeholder={defaultBaseUrl}
+                  size="sm"
+                  className="mx-auto"
+                  classNames={{
+                    input: "text-sm font-mono",
+                    inputWrapper: "min-h-8"
+                  }}
+                />
+                <p className="text-xs text-default-400 text-center">
+                  QR codes will link to: {baseUrl}{id}
+                </p>
+              </div>
+              
               {/* Manual Template Input */}
               <div className="flex flex-col gap-2">
                 <label className="text-sm font-medium text-center">Template</label>
