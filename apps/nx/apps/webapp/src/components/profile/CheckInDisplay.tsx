@@ -275,10 +275,10 @@ export default function CheckInDisplay({ checkIns = [], remainingQuota = 50, onO
       <CardHeader>
         <div className="flex items-center justify-between w-full">
           <div className="flex items-center gap-2">
-            <MapPin className="w-5 h-5" />
             <Chip size="sm" variant="flat" color="primary">
               {currentCheckIns.length}
             </Chip>
+            <MapPin className="w-5 h-5" />
             <h3 className="text-lg font-semibold">Check-Ins</h3>
           </div>
           <div className="flex gap-2 items-center">

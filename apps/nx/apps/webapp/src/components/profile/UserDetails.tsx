@@ -31,6 +31,10 @@ export default function UserDetails() {
   const [displaynameError, setDisplaynameError] = useState('');
   const [displaynameSuccess, setDisplaynameSuccess] = useState('');
 
+  // Email display state
+  const [showFullEmail, setShowFullEmail] = useState(false);
+
+
   useEffect(() => {
     const fetchUserData = async () => {
       try {
@@ -152,32 +156,8 @@ export default function UserDetails() {
   return (
     <Card className="w-full mx-auto">
       <CardBody>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
-          {/* Email + User Type Section - 66% */}
-          <div className="space-y-4 md:col-span-2">
-            <div>
-              <p className="text-lg mb-2">📧 Email</p>
-              <div 
-                className="font-medium break-all leading-tight w-full"
-                style={{
-                  fontSize: `clamp(0.875rem, 4vw, 2.0rem)`,
-                  wordBreak: 'break-all'
-                }}
-              >
-                {user.email}
-              </div>
-            </div>
-            
-            <div>
-              <p className="text-small text-default-500 mb-2">User Type</p>
-              <p className="font-medium text-sm">
-                {user.mqtt_usertype || 'Not specified'}
-                {user.mqtt_usertype === 'wildhare' ? ' ⭐️' : user.mqtt_usertype === 'og' ? ' 🤠' : ''}
-              </p>
-            </div>
-          </div>
-          
-          {/* Display Name Section - 33% */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
+          {/* Display Name Section - 50% */}
           <div>
             <p className="text-lg mb-2">🐰 Display Name</p>
             <div className="flex flex-col gap-2">
@@ -257,6 +237,46 @@ export default function UserDetails() {
                   {displaynameSuccess}
                 </p>
               )}
+            </div>
+          </div>
+          
+          {/* Email + User Type Section - 50% */}
+          <div className="space-y-4">
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-lg">📧 Registered Email</p>
+                <Button
+                  size="sm"
+                  variant="light"
+                  onPress={() => setShowFullEmail(!showFullEmail)}
+                  className="text-tiny"
+                >
+                  {showFullEmail ? '👁️‍🗨️ Hide' : '👁️ Show'}
+                </Button>
+              </div>
+              <div 
+                className={`font-medium break-all leading-tight w-full transition-all duration-300 ${!showFullEmail ? 'blur-sm' : ''}`}
+                style={{
+                  fontSize: `clamp(0.875rem, 3vw, 1.5rem)`,
+                  wordBreak: 'break-all'
+                }}
+              >
+                {user.email}
+              </div>
+            </div>
+            
+            <div>
+              <p className="text-lg mb-2">User Type</p>
+              <div 
+                className="font-medium break-all leading-tight w-full"
+                style={{
+                  fontSize: `clamp(0.875rem, 3vw, 1.5rem)`,
+                  wordBreak: 'break-all'
+                }}
+              >
+                {user.mqtt_usertype || 'Not specified'}
+                {user.mqtt_usertype === 'wildhare' ? ' ⭐️' : user.mqtt_usertype === 'og' ? ' 🤠' : ''}
+              </div>
             </div>
           </div>
         </div>
