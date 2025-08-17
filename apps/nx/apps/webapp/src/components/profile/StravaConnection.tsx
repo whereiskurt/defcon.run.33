@@ -13,12 +13,14 @@ import {
 import { FaStrava, FaSync } from 'react-icons/fa';
 import { FaCheckCircle } from 'react-icons/fa';
 import { signIn, useSession } from 'next-auth/react';
+import { ChevronDown, ChevronUp } from 'lucide-react';
 
 export default function StravaConnection() {
   const { data: session, status } = useSession();
   const [loading, setLoading] = useState<boolean>(false);
   const [syncing, setSyncing] = useState<boolean>(false);
   const [syncMessage, setSyncMessage] = useState<string>('');
+  const [isExpanded, setIsExpanded] = useState<boolean>(false);
 
   // Handle connecting to Strava
   const handleStravaConnect = async () => {
@@ -82,26 +84,24 @@ export default function StravaConnection() {
   if (status === 'loading') {
     return (
       <Card className="w-full">
-        <CardHeader className="flex gap-3">
-          <div className="flex flex-col">
-            <p className="text-lg">Strava Connection</p>
-            <p className="text-small text-default-500">Automatically contribute to heatmap.</p>
+        <CardHeader className="flex justify-between items-center pb-2">
+          <div className="flex items-center gap-2">
+            <FaStrava className="w-5 h-5 text-orange-600" />
+            <div className="flex flex-col">
+              <h3 className="text-lg font-semibold">Strava Connection</h3>
+              <p className="text-sm text-default-500">Automatically contribute to heatmap</p>
+            </div>
           </div>
+          <Button 
+            isIconOnly 
+            variant="light" 
+            size="sm"
+            disabled
+          >
+            <ChevronDown className="w-4 h-4" />
+          </Button>
         </CardHeader>
         <Divider />
-        <CardBody className="p-4">
-          <div className="space-y-3">
-            <Skeleton className="rounded-lg">
-              <div className="h-10 rounded-lg bg-default-300"></div>
-            </Skeleton>
-            <Skeleton className="rounded-lg">
-              <div className="h-8 rounded-lg bg-default-200"></div>
-            </Skeleton>
-            <Skeleton className="rounded-lg">
-              <div className="h-10 rounded-lg bg-default-300"></div>
-            </Skeleton>
-          </div>
-        </CardBody>
       </Card>
     );
   }
@@ -111,50 +111,65 @@ export default function StravaConnection() {
 
   return (
     <Card className="w-full">
-      <CardHeader className="flex gap-3">
-        <div className="flex flex-col">
-          <p className="text-lg">Strava Connection</p>
-          <p className="text-small text-default-500">Automatically contribute to heatmap.</p>
+      <CardHeader className="flex justify-between items-center pb-2 cursor-pointer" onClick={() => setIsExpanded(!isExpanded)}>
+        <div className="flex items-center gap-2">
+          <FaStrava className="w-5 h-5 text-orange-600" />
+          <div className="flex flex-col">
+            <h3 className="text-lg font-semibold">Strava Connection</h3>
+            <p className="text-sm text-default-500">Automatically contribute to heatmap</p>
+          </div>
         </div>
+        <Button 
+          isIconOnly 
+          variant="light" 
+          size="sm"
+          onClick={(e) => {
+            e.stopPropagation();
+            setIsExpanded(!isExpanded);
+          }}
+        >
+          {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+        </Button>
       </CardHeader>
       <Divider />
-      <CardBody>
+      {isExpanded && (
+        <>
+          <CardBody>
         {isStravaConnected ? (
           <div className="space-y-4">
             <div className="flex items-center gap-3">
               <FaCheckCircle className="text-green-500 text-xl" />
               <div>
-                <p className="font-medium">Connected</p>
-                <p className="text-small text-default-500">
-                  Your profile is linked.
-                </p>
+                <p className="font-medium">Already Connected</p>
               </div>
             </div>
             
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-              <div className="flex-grow">
-                <p className="font-medium mb-1">
-                  Sync DEFCON activities
-                </p>
+            <div className="space-y-4">
+              <div className="flex justify-center">
+                <Button
+                  color="primary"
+                  variant="flat"
+                  startContent={<FaSync size={16} />}
+                  onClick={handleStravaSync}
+                  isLoading={syncing}
+                  size="lg"
+                  className="px-8"
+                >
+                  {syncing ? 'Syncing...' : 'Sync Strava'}
+                </Button>
+              </div>
+              
+              <div className="text-center">
                 <p className="text-small text-default-500">
                   Sync Strava DEFCON activities (4x daily limit)
                 </p>
-                {syncMessage && (
-                  <p className={`text-small mt-2 ${syncMessage.includes('Error') || syncMessage.includes('Failed') || syncMessage.includes('Rate limit') ? 'text-danger' : 'text-success'}`}>
-                    {syncMessage}
-                  </p>
-                )}
               </div>
-              <Button
-                color="primary"
-                variant="flat"
-                startContent={<FaSync size={16} />}
-                onClick={handleStravaSync}
-                isLoading={syncing}
-                size="sm"
-              >
-                {syncing ? 'Syncing...' : 'Sync Strava'}
-              </Button>
+              
+              {syncMessage && (
+                <p className={`text-small text-center ${syncMessage.includes('Error') || syncMessage.includes('Failed') || syncMessage.includes('Rate limit') ? 'text-danger' : 'text-success'}`}>
+                  {syncMessage}
+                </p>
+              )}
             </div>
           </div>
         ) : (
@@ -179,15 +194,17 @@ export default function StravaConnection() {
             </Button>
           </div>
         )}
-      </CardBody>
-      <Divider />
-      <CardFooter>
-        <p className="text-small text-default-500">
-          {isStravaConnected
-            ? "You can disconnect your Strava account from your Strava settings."
-            : "You can disconnect your Strava account from your Strava settings."}
-        </p>
-      </CardFooter>
+          </CardBody>
+          <Divider />
+          <CardFooter>
+            <p className="text-small text-default-500">
+              {isStravaConnected
+                ? "You can disconnect your Strava account from your Strava settings."
+                : "You can disconnect your Strava account from your Strava settings."}
+            </p>
+          </CardFooter>
+        </>
+      )}
     </Card>
   );
 }

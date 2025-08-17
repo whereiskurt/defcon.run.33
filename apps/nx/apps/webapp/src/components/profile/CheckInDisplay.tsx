@@ -1,9 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Card, CardBody, CardHeader, Divider, Chip, Button, Spinner } from '@heroui/react';
+import { Card, CardBody, CardHeader, Divider, Chip, Button, Spinner, Skeleton } from '@heroui/react';
 import dynamic from 'next/dynamic';
-import { MapPin, Clock, Target, Smartphone, Activity, AlertTriangle, CheckCircle, Zap, Map, Plus, RefreshCw } from 'lucide-react';
+import { MapPin, Clock, Target, Smartphone, Activity, AlertTriangle, CheckCircle, Zap, Map, Plus, RefreshCw, ChevronDown, ChevronUp, ExternalLink } from 'lucide-react';
 
 // Dynamically import the map component to avoid SSR issues
 const CheckInMap = dynamic(() => import('./CheckInMap'), {
@@ -41,7 +41,6 @@ interface CheckIn {
 }
 
 interface CheckInDisplayProps {
-  checkIns?: CheckIn[];
   remainingQuota?: number;
   onOpenCheckInModal: () => void;
 }
@@ -161,14 +160,18 @@ function analyzeMovement(samples: GPSSample[]): MovementAnalysis {
   };
 }
 
-export default function CheckInDisplay({ checkIns = [], remainingQuota = 50, onOpenCheckInModal }: CheckInDisplayProps) {
+export default function CheckInDisplay({ remainingQuota = 50, onOpenCheckInModal }: CheckInDisplayProps) {
   const [selectedCheckIn, setSelectedCheckIn] = useState<CheckIn | null>(null);
   const [showMap, setShowMap] = useState(true);
   const [mapEnabled, setMapEnabled] = useState(true);
-  const [currentCheckIns, setCurrentCheckIns] = useState<CheckIn[]>(checkIns);
+  const [currentCheckIns, setCurrentCheckIns] = useState<CheckIn[]>([]);
   const [currentQuota, setCurrentQuota] = useState(remainingQuota);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [visibleCount, setVisibleCount] = useState(10);
+  const [hasMore, setHasMore] = useState(false);
+  const [cursor, setCursor] = useState<string | undefined>(undefined);
+  const [isExpanded, setIsExpanded] = useState<boolean>(false);
 
   // Sort check-ins by timestamp (most recent first)
   const sortedCheckIns = currentCheckIns.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
@@ -200,41 +203,66 @@ export default function CheckInDisplay({ checkIns = [], remainingQuota = 50, onO
     return `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
   };
 
-  // Function to refresh check-ins data
-  const refreshCheckIns = async () => {
-    setIsRefreshing(true);
+  // Function to fetch check-ins data
+  const fetchCheckIns = async (refresh = false) => {
+    if (refresh) {
+      setIsRefreshing(true);
+      setCursor(undefined);
+    }
+    
     try {
-      const response = await fetch('/api/user', {
+      // Fetch check-ins from new endpoint
+      const checkInsResponse = await fetch('/api/user/checkins?limit=100', {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
         },
       });
       
-      if (response.ok) {
-        const data = await response.json();
-        setCurrentCheckIns(data.user?.checkIns || []);
-        setCurrentQuota(data.user?.quota?.checkIns ?? 50);
+      if (checkInsResponse.ok) {
+        const checkInsData = await checkInsResponse.json();
+        setCurrentCheckIns(checkInsData.checkIns || []);
+        setHasMore(checkInsData.hasMore || false);
+        setCursor(checkInsData.cursor);
+      }
+      
+      // Fetch user quota
+      const userResponse = await fetch('/api/user', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      if (userResponse.ok) {
+        const userData = await userResponse.json();
+        setCurrentQuota(userData.user?.quota?.checkIns ?? 50);
       }
     } catch (error) {
-      console.error('Error refreshing check-ins:', error);
+      console.error('Error fetching check-ins:', error);
     } finally {
       setIsRefreshing(false);
+      setIsLoading(false);
     }
   };
 
-  // Update state when props change
+  // Function to refresh check-ins (wrapper for backward compatibility)
+  const refreshCheckIns = () => fetchCheckIns(true);
+
+  // Initial fetch of check-ins
   useEffect(() => {
-    setCurrentCheckIns(checkIns);
+    fetchCheckIns();
+  }, []);
+
+  // Update quota when prop changes
+  useEffect(() => {
     setCurrentQuota(remainingQuota);
-    // Reset visible count when new check-ins come in
-    setVisibleCount(10);
-  }, [checkIns, remainingQuota]);
+  }, [remainingQuota]);
 
   // Listen for check-in updates
   useEffect(() => {
     const handleCheckInUpdate = () => {
-      refreshCheckIns();
+      fetchCheckIns(true);
     };
 
     window.addEventListener('checkInUpdated', handleCheckInUpdate);
@@ -244,13 +272,63 @@ export default function CheckInDisplay({ checkIns = [], remainingQuota = 50, onO
     };
   }, []);
 
+  if (isLoading) {
+    return (
+      <Card>
+        <CardHeader className="flex justify-between items-center pb-2">
+          <div className="flex items-center gap-2">
+            <MapPin className="w-5 h-5" />
+            <div className="flex flex-col">
+              <div className="flex items-center gap-2">
+                <h3 className="text-lg font-semibold">CheckIn</h3>
+                <Skeleton className="w-6 h-4 rounded">
+                  <div className="h-4 w-6 bg-default-300"></div>
+                </Skeleton>
+              </div>
+              <p className="text-sm text-default-500">Location history</p>
+            </div>
+          </div>
+          <div className="flex gap-2 items-center">
+            <Button
+              size="lg"
+              variant="flat"
+              color="primary"
+              isIconOnly
+              disabled
+            >
+              <Map className="w-6 h-6" />
+            </Button>
+            <Button
+              size="lg"
+              color="success"
+              variant="flat"
+              isIconOnly
+              disabled
+            >
+              <Plus className="w-6 h-6" />
+            </Button>
+            <Button 
+              isIconOnly 
+              variant="light" 
+              size="sm"
+              disabled
+            >
+              <ChevronDown className="w-4 h-4" />
+            </Button>
+          </div>
+        </CardHeader>
+        <Divider />
+      </Card>
+    );
+  }
+
   if (currentCheckIns.length === 0) {
     return (
       <Card>
         <CardHeader>
           <div className="flex items-center gap-2">
             <MapPin className="w-5 h-5" />
-            <h3 className="text-lg font-semibold">Check-Ins</h3>
+            <h3 className="text-lg font-semibold">CheckIn</h3>
           </div>
         </CardHeader>
         <Divider />
@@ -277,63 +355,67 @@ export default function CheckInDisplay({ checkIns = [], remainingQuota = 50, onO
 
   return (
     <Card>
-      <CardHeader>
-        <div className="flex items-center justify-between w-full">
-          <div className="flex items-center gap-2">
-            <Chip size="sm" variant="flat" color="primary">
-              {currentCheckIns.length}
-            </Chip>
-            <MapPin className="w-5 h-5" />
-            <h3 className="text-lg font-semibold">Check-Ins</h3>
+      <CardHeader className="flex justify-between items-center pb-2 cursor-pointer" onClick={() => setIsExpanded(!isExpanded)}>
+        <div className="flex items-center gap-2">
+          <MapPin className="w-5 h-5" />
+          <div className="flex flex-col">
+            <div className="flex items-center gap-2">
+              <h3 className="text-lg font-semibold">CheckIn</h3>
+              <Chip size="sm" variant="flat" color="primary">
+                {currentCheckIns.length}
+              </Chip>
+            </div>
+            <p className="text-sm text-default-500">Location history</p>
           </div>
-          <div className="flex gap-2 items-center">
-            <Button
-              size="lg"
-              variant="flat"
-              color="default"
-              isIconOnly
-              onPress={refreshCheckIns}
-              isLoading={isRefreshing}
-              aria-label="Refresh Check-Ins"
-            >
-              {!isRefreshing && <RefreshCw className="w-6 h-6" />}
-            </Button>
-            <Button
-              size="lg"
-              variant={mapEnabled ? "solid" : "flat"}
-              color="primary"
-              isIconOnly
-              onPress={() => {
-                if (mapEnabled) {
-                  // Disable map
-                  setMapEnabled(false);
-                  setShowMap(false);
-                } else {
-                  // Enable map and show it (reset)
-                  setMapEnabled(true);
-                  setShowMap(true);
-                }
-              }}
-              aria-label={mapEnabled ? 'Disable Map' : 'Enable Map'}
-            >
-              <Map className="w-6 h-6" />
-            </Button>
-            <Button
-              size="lg"
-              color="success"
-              variant="flat"
-              isIconOnly
-              isDisabled={currentQuota <= 0}
-              aria-label={currentQuota <= 0 ? 'Quota Exceeded' : 'New Check-In'}
-              onPress={onOpenCheckInModal}
-            >
-              <Plus className="w-6 h-6" />
-            </Button>
-          </div>
+        </div>
+        <div className="flex gap-2 items-center">
+          <Button
+            size="lg"
+            variant={mapEnabled ? "solid" : "flat"}
+            color="primary"
+            isIconOnly
+            onPress={() => {
+              if (mapEnabled) {
+                // Disable map
+                setMapEnabled(false);
+                setShowMap(false);
+              } else {
+                // Enable map and show it (reset)
+                setMapEnabled(true);
+                setShowMap(true);
+              }
+            }}
+            aria-label={mapEnabled ? 'Disable Map' : 'Enable Map'}
+          >
+            <Map className="w-6 h-6" />
+          </Button>
+          <Button
+            size="lg"
+            color="success"
+            variant="flat"
+            isIconOnly
+            isDisabled={currentQuota <= 0}
+            aria-label={currentQuota <= 0 ? 'Quota Exceeded' : 'New Check-In'}
+            onPress={onOpenCheckInModal}
+          >
+            <Plus className="w-6 h-6" />
+          </Button>
+          <Button 
+            isIconOnly 
+            variant="light" 
+            size="sm"
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsExpanded(!isExpanded);
+            }}
+          >
+            {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+          </Button>
         </div>
       </CardHeader>
       <Divider />
-      <CardBody className="gap-4 relative">
+      {isExpanded && (
+        <CardBody className="gap-4 relative">
         {isRefreshing && (
           <div className="absolute inset-0 bg-background/50 backdrop-blur-sm z-10 flex items-center justify-center rounded-lg">
             <div className="flex flex-col items-center gap-2">
@@ -354,12 +436,11 @@ export default function CheckInDisplay({ checkIns = [], remainingQuota = 50, onO
         )}
 
         <div className="space-y-3">
-          <h4 className="font-medium text-sm text-default-600">Recent Check-Ins</h4>
           <div className="space-y-2 max-h-96 overflow-y-auto">
             {sortedCheckIns.slice(0, visibleCount).map((checkIn, index) => (
               <div
                 key={index}
-                className={`p-3 rounded-lg border transition-colors cursor-pointer ${
+                className={`p-2 rounded-lg border transition-colors cursor-pointer ${
                   selectedCheckIn === checkIn
                     ? 'border-primary bg-primary-50'
                     : 'border-default-200 hover:border-default-300'
@@ -375,24 +456,42 @@ export default function CheckInDisplay({ checkIns = [], remainingQuota = 50, onO
                 }}
               >
                 <div className="flex items-start justify-between">
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/20 text-primary font-bold text-sm border border-primary/30">
+                      {index + 1}
+                    </div>
+                    <div className="space-y-0.5">
+                      <div className="flex items-center gap-2">
                       <Clock className="w-3 h-3 text-default-400" />
-                      <span className="text-sm sm:text-sm text-xs font-medium">
+                      <span className="text-sm font-medium">
                         {formatRelativeTime(checkIn.timestamp || 0)}
                       </span>
                       <Chip size="sm" variant="flat" color="success">
                         {checkIn.source === 'Web GPS' ? 'Web' : checkIn.source}
                       </Chip>
                     </div>
-                    <div className="flex items-center gap-2 text-xs text-default-500">
-                      <MapPin className="w-3 h-3" />
+                    <div className="flex items-center gap-1 text-xs text-default-500">
+                      <MapPin className="w-3 h-3 mr-1" />
                       <span>
                         {formatCoordinates(
                           checkIn.averageCoordinates?.latitude || 0,
                           checkIn.averageCoordinates?.longitude || 0
                         )}
                       </span>
+                      <Button
+                        size="sm"
+                        variant="light"
+                        isIconOnly
+                        as="a"
+                        href={`https://www.openstreetmap.org/?mlat=${checkIn.averageCoordinates?.latitude}&mlon=${checkIn.averageCoordinates?.longitude}#map=17/${checkIn.averageCoordinates?.latitude}/${checkIn.averageCoordinates?.longitude}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        title="View on OpenStreetMap"
+                        className="min-w-unit-6 w-6 h-6"
+                      >
+                        <ExternalLink className="w-3 h-3" />
+                      </Button>
+                    </div>
                     </div>
                   </div>
                   <div className="text-right">
@@ -416,11 +515,11 @@ export default function CheckInDisplay({ checkIns = [], remainingQuota = 50, onO
                           <span className={movement.isMoving ? 'text-success' : 'text-default-500'}>
                             {(() => {
                               switch (movement.movementType) {
-                                case 'stationary': return 'no move';
-                                case 'walking': return 'avg.';
-                                case 'vehicle': return 'fast';
-                                case 'running': return 'running';
-                                default: return 'no move';
+                                case 'stationary': return 'Stationary';
+                                case 'walking': return 'Walking';
+                                case 'vehicle': return 'Vehicle';
+                                case 'running': return 'Running';
+                                default: return 'Stationary';
                               }
                             })()}
                           </span>
@@ -433,134 +532,104 @@ export default function CheckInDisplay({ checkIns = [], remainingQuota = 50, onO
                 {selectedCheckIn === checkIn && (() => {
                   const movement = analyzeMovement(checkIn.samples || []);
                   return (
-                    <div className="mt-3 pt-3 border-t border-default-200 space-y-3">
-                      {/* Exact timestamp */}
-                      <div className="text-xs text-default-500">
-                        <Clock className="w-3 h-3 inline mr-1" />
-                        Exact time: {new Date(checkIn.timestamp || 0).toLocaleString('en-US', {
-                          weekday: 'short',
-                          year: 'numeric',
-                          month: 'short',
-                          day: 'numeric',
-                          hour: '2-digit',
-                          minute: '2-digit',
-                          second: '2-digit'
-                        })}
-                      </div>
-
-                      {/* Movement Analysis Header */}
-                      <div className="flex items-center gap-2">
-                        <Activity className="w-4 h-4 text-primary" />
-                        <span className="font-medium text-sm">Movement Analysis</span>
-                        {movement.suspiciousPatterns.length > 0 && (
-                          <AlertTriangle className="w-4 h-4 text-warning" />
-                        )}
-                      </div>
-
-                      {/* Movement Stats Grid */}
-                      <div className="grid grid-cols-2 gap-4 text-xs">
-                        <div>
-                          <span className="text-default-400">Movement Type:</span>
-                          <div className="flex items-center gap-1 font-medium">
-                            {(() => {
-                              switch (movement.movementType) {
-                                case 'running': return <><Zap className="w-3 h-3 text-success" /> Running</>;
-                                case 'walking': return <><Activity className="w-3 h-3 text-primary" /> Avg. Speed</>;
-                                case 'vehicle': return <><Target className="w-3 h-3 text-warning" /> Fast</>;
-                                default: return <><AlertTriangle className="w-3 h-3 text-default-500" /> No Move</>;
-                              }
-                            })()}
-                          </div>
+                    <div className="mt-2 pt-2 border-t border-default-200 space-y-1">
+                      {/* Compact timestamp and movement stats in one line */}
+                      <div className="flex items-center justify-between text-xs">
+                        <div className="text-default-500">
+                          <Clock className="w-3 h-3 inline mr-1" />
+                          {new Date(checkIn.timestamp || 0).toLocaleString('en-US', {
+                            month: 'short',
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            second: '2-digit'
+                          })}
                         </div>
-                        <div>
-                          <span className="text-default-400">Total Distance:</span>
-                          <div className="font-medium">{movement.totalDistance.toFixed(1)}m</div>
-                        </div>
-                        <div>
-                          <span className="text-default-400">Max Jump:</span>
-                          <div className="font-medium">{movement.maxDistance.toFixed(1)}m</div>
-                        </div>
-                        <div>
-                          <span className="text-default-400">Avg Distance:</span>
-                          <div className="font-medium">{movement.avgDistance.toFixed(1)}m</div>
-                        </div>
-                      </div>
-
-                      {/* Movement Validation */}
-                      <div>
-                        <span className="text-default-400 text-xs">Movement Validation:</span>
-                        <div className="flex items-center gap-2 mt-1">
-                          {movement.isMoving ? (
-                            <Chip size="sm" variant="flat" color="success" startContent={<CheckCircle className="w-3 h-3" />}>
-                              Active Movement Detected
+                        <div className="flex items-center gap-3 text-xs">
+                          {movement.movementType === 'stationary' ? (
+                            <Chip size="sm" variant="flat" color="default">
+                              Stationary
                             </Chip>
                           ) : (
-                            <Chip size="sm" variant="flat" color="default" startContent={<AlertTriangle className="w-3 h-3" />}>
-                              No Movement
-                            </Chip>
+                            <>
+                              {(() => {
+                                const icon = movement.movementType === 'running' ? <Zap className="w-3 h-3 text-success" /> :
+                                           movement.movementType === 'walking' ? <Activity className="w-3 h-3 text-primary" /> :
+                                           <Target className="w-3 h-3 text-warning" />;
+                                return icon;
+                              })()}
+                              <span className="font-medium">
+                                {movement.totalDistance.toFixed(0)}m total
+                              </span>
+                              <span className="text-default-400">•</span>
+                              <span>
+                                {movement.maxDistance.toFixed(0)}m max
+                              </span>
+                              <span className="text-default-400">•</span>
+                              <span>
+                                {movement.avgDistance.toFixed(0)}m avg
+                              </span>
+                            </>
                           )}
                         </div>
                       </div>
 
-                      {/* Suspicious Patterns */}
+                      {/* Attributes - replacing suspicious patterns with descriptive terms */}
                       {movement.suspiciousPatterns.length > 0 && (
-                        <div>
-                          <span className="text-default-400 text-xs">Anomalies Detected:</span>
-                          <div className="space-y-1 mt-1">
-                            {movement.suspiciousPatterns.map((pattern, idx) => (
+                        <div className="flex flex-wrap gap-1">
+                          {movement.suspiciousPatterns.map((pattern, idx) => {
+                            // Transform suspicious language to descriptive attributes
+                            let attribute = pattern;
+                            let color: "default" | "primary" | "success" | "warning" = "default";
+                            
+                            if (pattern.includes('Little or no movement')) {
+                              return null; // Skip stationary chip
+                            }
+                            if (pattern.includes('Consistent positioning')) {
+                              attribute = 'Stable position';
+                              color = 'primary';
+                            } else if (pattern.includes('linear movement')) {
+                              attribute = 'Direct path';
+                              color = 'primary';
+                            } else if (pattern.includes('Consistent GPS')) {
+                              attribute = 'Steady signal';
+                              color = 'success';
+                            } else if (pattern.includes('high speed')) {
+                              attribute = 'High velocity';
+                              color = 'warning';
+                            } else if (pattern.includes('Insufficient samples')) {
+                              attribute = 'Limited data';
+                              color = 'default';
+                            }
+                            
+                            return (
                               <Chip
                                 key={idx}
                                 size="sm"
                                 variant="flat"
-                                color="warning"
-                                startContent={<AlertTriangle className="w-3 h-3" />}
+                                color={color}
                               >
-                                {pattern}
+                                {attribute}
                               </Chip>
-                            ))}
-                          </div>
+                            );
+                          }).filter(Boolean)}
                         </div>
                       )}
 
-                      {/* GPS Sample Details */}
-                      <div>
-                        <span className="text-default-400 text-xs">GPS Sample Details ({(checkIn.samples || []).length} points):</span>
-                        <div className="space-y-1 mt-1">
-                          {(checkIn.samples || []).map((sample: any, idx: number) => {
-                            const prevSample = idx > 0 ? (checkIn.samples || [])[idx - 1] : null;
-                            const distance = prevSample ? calculateDistance(
-                              prevSample.latitude, prevSample.longitude,
-                              sample.latitude, sample.longitude
-                            ) : 0;
-                            
-                            return (
-                              <div key={idx} className="flex items-center gap-2 text-xs">
-                                <span className="text-default-500 min-w-16">
-                                  Sample {idx + 1}:
-                                </span>
-                                <Chip
-                                  size="sm"
-                                  variant="flat"
-                                  color={sample.accuracy < 10 ? "success" : sample.accuracy < 20 ? "warning" : "default"}
-                                >
-                                  ±{sample.accuracy.toFixed(1)}m
-                                </Chip>
-                                {idx > 0 && (
-                                  <Chip
-                                    size="sm"
-                                    variant="flat"
-                                    color={distance > 5 ? "success" : distance > 2 ? "warning" : "danger"}
-                                  >
-                                    {distance.toFixed(1)}m moved
-                                  </Chip>
-                                )}
-                                <span className="text-default-400 text-xs">
-                                  {new Date(sample.timestamp).toLocaleTimeString()}
-                                </span>
-                              </div>
-                            );
-                          })}
-                        </div>
+                      {/* Compact GPS Sample Summary */}
+                      <div className="text-xs text-default-500">
+                        <span className="font-medium">{(checkIn.samples || []).length} GPS points</span>
+                        {(checkIn.samples || []).length > 0 && (() => {
+                          const accuracies = (checkIn.samples || []).map((s: any) => s.accuracy);
+                          const bestAccuracy = Math.min(...accuracies);
+                          const avgAccuracy = accuracies.reduce((a: number, b: number) => a + b, 0) / accuracies.length;
+                          return (
+                            <span className="ml-2">
+                              • Best ±{bestAccuracy.toFixed(0)}m
+                              • Avg ±{avgAccuracy.toFixed(0)}m
+                            </span>
+                          );
+                        })()}
                       </div>
                       
                       {checkIn.userAgent && (
@@ -590,7 +659,8 @@ export default function CheckInDisplay({ checkIns = [], remainingQuota = 50, onO
             </div>
           )}
         </div>
-      </CardBody>
+        </CardBody>
+      )}
     </Card>
   );
 }

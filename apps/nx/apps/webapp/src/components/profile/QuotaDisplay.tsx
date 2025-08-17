@@ -9,7 +9,9 @@ import {
   Progress,
   Chip,
   Skeleton,
+  Button,
 } from '@heroui/react';
+import { ChevronDown, ChevronUp } from 'lucide-react';
 
 type QuotaData = {
   qrSheet?: number;
@@ -24,6 +26,7 @@ export default function QuotaDisplay() {
   const [quota, setQuota] = useState<QuotaData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [isExpanded, setIsExpanded] = useState(false);
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -65,29 +68,24 @@ export default function QuotaDisplay() {
   if (loading) {
     return (
       <Card className="w-full">
-        <CardHeader className="flex gap-3">
-          <div className="flex flex-col">
-            <p className="text-lg">Usage Quotas</p>
-            <p className="text-small text-default-500">Your remaining quotas and limits</p>
+        <CardHeader className="flex justify-between items-center pb-2">
+          <div className="flex items-center gap-2">
+            <div className="text-2xl">📊</div>
+            <div className="flex flex-col">
+              <h3 className="text-lg font-semibold">Usage Quotas</h3>
+              <p className="text-sm text-default-500">Your remaining quotas and limits</p>
+            </div>
           </div>
+          <Button 
+            isIconOnly 
+            variant="light" 
+            size="sm"
+            disabled
+          >
+            <ChevronDown className="w-4 h-4" />
+          </Button>
         </CardHeader>
         <Divider />
-        <CardBody className="p-4">
-          <div className="space-y-3">
-            <Skeleton className="rounded-lg">
-              <div className="h-8 rounded-lg bg-default-300"></div>
-            </Skeleton>
-            <Skeleton className="rounded-lg">
-              <div className="h-8 rounded-lg bg-default-200"></div>
-            </Skeleton>
-            <Skeleton className="rounded-lg">
-              <div className="h-8 rounded-lg bg-default-300"></div>
-            </Skeleton>
-            <Skeleton className="rounded-lg">
-              <div className="h-8 rounded-lg bg-default-200"></div>
-            </Skeleton>
-          </div>
-        </CardBody>
       </Card>
     );
   }
@@ -117,14 +115,29 @@ export default function QuotaDisplay() {
 
   return (
     <Card className="w-full">
-      <CardHeader className="flex gap-3">
-        <div className="flex flex-col">
-          <p className="text-lg">Usage Quotas</p>
-          <p className="text-small text-default-500">Your remaining quotas and limits</p>
+      <CardHeader className="flex justify-between items-center pb-2 cursor-pointer" onClick={() => setIsExpanded(!isExpanded)}>
+        <div className="flex items-center gap-2">
+          <div className="text-2xl">📊</div>
+          <div className="flex flex-col">
+            <h3 className="text-lg font-semibold">Usage Quotas</h3>
+            <p className="text-sm text-default-500">Your remaining quotas and limits</p>
+          </div>
         </div>
+        <Button 
+          isIconOnly 
+          variant="light" 
+          size="sm"
+          onClick={(e) => {
+            e.stopPropagation();
+            setIsExpanded(!isExpanded);
+          }}
+        >
+          {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+        </Button>
       </CardHeader>
       <Divider />
-      <CardBody>
+      {isExpanded && (
+        <CardBody>
         <div className="space-y-4">
           {/* QR Scans */}
           <div>
@@ -222,7 +235,8 @@ export default function QuotaDisplay() {
             </p>
           </div>
         </div>
-      </CardBody>
+        </CardBody>
+      )}
     </Card>
   );
 }

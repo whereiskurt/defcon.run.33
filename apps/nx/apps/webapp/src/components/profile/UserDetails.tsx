@@ -11,6 +11,7 @@ import {
   Chip,
   Skeleton,
 } from '@heroui/react';
+import { ChevronDown, ChevronUp } from 'lucide-react';
 
 type UserData = {
   email: string;
@@ -30,9 +31,13 @@ export default function UserDetails() {
   const [isUpdatingDisplayname, setIsUpdatingDisplayname] = useState(false);
   const [displaynameError, setDisplaynameError] = useState('');
   const [displaynameSuccess, setDisplaynameSuccess] = useState('');
+  const [hasDisplaynameChanged, setHasDisplaynameChanged] = useState(false);
 
   // Email display state
   const [showFullEmail, setShowFullEmail] = useState(false);
+  
+  // Collapse/expand state
+  const [isExpanded, setIsExpanded] = useState(false);
 
 
   useEffect(() => {
@@ -46,6 +51,7 @@ export default function UserDetails() {
         if (data.user) {
           setUser(data.user);
           setDisplaynameInput(data.user.displayname || '');
+          setHasDisplaynameChanged(false);
         } else {
           throw new Error('User data not found in response');
         }
@@ -102,6 +108,7 @@ export default function UserDetails() {
 
       setUser(data.user);
       setDisplaynameSuccess('Display name updated successfully!');
+      setHasDisplaynameChanged(false);
 
       // Dispatch event to notify other components
       window.dispatchEvent(new CustomEvent('displaynameUpdated', { 
@@ -123,26 +130,24 @@ export default function UserDetails() {
   if (loading) {
     return (
       <Card className="w-full mx-auto">
-        <CardHeader className="flex gap-3">
-          <div className="flex flex-col">
-            <p className="text-lg">User Details</p>
-            <p className="text-small text-default-500">Your account information</p>
+        <CardHeader className="flex justify-between items-center pb-2">
+          <div className="flex items-center gap-2">
+            <div className="text-2xl">🐰</div>
+            <div className="flex flex-col">
+              <h3 className="text-lg font-semibold">User Details</h3>
+              <p className="text-sm text-default-500">Your account information</p>
+            </div>
           </div>
+          <Button 
+            isIconOnly 
+            variant="light" 
+            size="sm"
+            disabled
+          >
+            <ChevronDown className="w-4 h-4" />
+          </Button>
         </CardHeader>
         <Divider />
-        <CardBody className="p-4">
-          <div className="space-y-4">
-            <Skeleton className="rounded-lg">
-              <div className="h-12 rounded-lg bg-default-300"></div>
-            </Skeleton>
-            <Skeleton className="rounded-lg">
-              <div className="h-8 rounded-lg bg-default-200"></div>
-            </Skeleton>
-            <Skeleton className="rounded-lg">
-              <div className="h-20 rounded-lg bg-default-300"></div>
-            </Skeleton>
-          </div>
-        </CardBody>
       </Card>
     );
   }
@@ -165,7 +170,29 @@ export default function UserDetails() {
 
   return (
     <Card className="w-full mx-auto">
-      <CardBody>
+      <CardHeader className="flex justify-between items-center pb-2 cursor-pointer" onClick={() => setIsExpanded(!isExpanded)}>
+        <div className="flex items-center gap-2">
+          <div className="text-2xl">🐰</div>
+          <div className="flex flex-col">
+            <h3 className="text-lg font-semibold">User Details</h3>
+            <p className="text-sm text-default-500">Display name, email, and account info</p>
+          </div>
+        </div>
+        <Button 
+          isIconOnly 
+          variant="light" 
+          size="sm"
+          onClick={(e) => {
+            e.stopPropagation();
+            setIsExpanded(!isExpanded);
+          }}
+        >
+          {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+        </Button>
+      </CardHeader>
+      <Divider />
+      {isExpanded && (
+        <CardBody>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
           {/* Display Name Section - 50% */}
           <div>
@@ -178,6 +205,9 @@ export default function UserDetails() {
                   setDisplaynameInput(value);
                   setDisplaynameError('');
                   setDisplaynameSuccess('');
+                  
+                  // Check if value has changed from original
+                  setHasDisplaynameChanged(value.trim() !== (user?.displayname || '').trim());
                   
                   // Real-time validation feedback
                   if (value.trim().length > 16) {
@@ -232,7 +262,8 @@ export default function UserDetails() {
                     className="px-8"
                     disabled={
                       !displaynameInput.trim() ||
-                      displaynameInput.trim() === user?.displayname
+                      !hasDisplaynameChanged ||
+                      displaynameInput.trim().length > 16
                     }
                   >
                     Save Display Name
@@ -267,11 +298,13 @@ export default function UserDetails() {
                 </Button>
               </div>
               <div 
-                className={`font-medium break-all leading-tight w-full transition-all duration-300 ${!showFullEmail ? 'blur-sm' : ''}`}
+                className={`font-medium break-all leading-tight w-full transition-all duration-300 cursor-pointer hover:bg-default-100 rounded-md p-2 -m-2 ${!showFullEmail ? 'blur-sm' : ''}`}
                 style={{
                   fontSize: `clamp(0.875rem, 3vw, 1.5rem)`,
                   wordBreak: 'break-all'
                 }}
+                onClick={() => setShowFullEmail(!showFullEmail)}
+                title="Click to toggle visibility"
               >
                 {user.email}
               </div>
@@ -292,7 +325,8 @@ export default function UserDetails() {
             </div>
           </div>
         </div>
-      </CardBody>
+        </CardBody>
+      )}
     </Card>
   );
 }

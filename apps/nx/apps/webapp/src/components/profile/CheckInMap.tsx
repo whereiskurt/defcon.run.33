@@ -91,8 +91,9 @@ export default function CheckInMap({ checkIns, selectedCheckIn, onCheckInSelect 
       
       const isSelected = selectedCheckIn === checkIn;
       
-      // Create custom icon based on selection and accuracy
-      const color = isSelected ? '#006FEE' : (checkIn.bestAccuracy || 0) < 10 ? '#17C964' : (checkIn.bestAccuracy || 0) < 20 ? '#F5A524' : '#F31260';
+      // Create custom icon based on source type
+      const isWeb = checkIn.source === 'Web GPS' || checkIn.source === 'Web';
+      const color = isWeb ? '#006FEE' : '#17C964'; // Blue for Web, Green for Meshtastic
       const iconSize = isSelected ? 35 : 25;
       
       const customIcon = L.divIcon({
@@ -210,41 +211,39 @@ export default function CheckInMap({ checkIns, selectedCheckIn, onCheckInSelect 
       
       {/* Check-in Source Summary */}
       <div 
-        className="absolute top-2 right-2 rounded-lg p-3 shadow-lg text-sm"
+        className="absolute top-2 right-2 rounded-lg p-3 shadow-lg text-sm bg-content1 border border-divider"
         style={{
-          backgroundColor: 'rgba(255, 255, 255, 0.95)',
-          backdropFilter: 'blur(4px)',
+          backdropFilter: 'blur(8px)',
           zIndex: 400,
-          border: '1px solid rgba(0, 0, 0, 0.1)'
         }}
       >
         <div className="space-y-2">
-          <div className="font-semibold text-base">Check-ins</div>
+          <div className="font-semibold text-base text-foreground">CheckIn</div>
           <div className="space-y-1">
             <div className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-1">
                 <div 
-                  className="w-3 h-3 rounded-full"
+                  className="w-3 h-3 rounded-full border border-content3"
                   style={{ backgroundColor: '#17C964' }}
                 ></div>
-                <span>Web GPS</span>
+                <span className="text-foreground">Web GPS</span>
               </div>
-              <span className="font-semibold">{sourceCounts['Web'] || 0}</span>
+              <span className="font-semibold text-foreground">{sourceCounts['Web'] || 0}</span>
             </div>
             <div className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-1">
                 <div 
-                  className="w-3 h-3 rounded-full"
+                  className="w-3 h-3 rounded-full border border-content3"
                   style={{ backgroundColor: '#006FEE' }}
                 ></div>
-                <span>Meshtastic</span>
+                <span className="text-foreground">Meshtastic</span>
               </div>
-              <span className="font-semibold">{sourceCounts['Meshtastic'] || 0}</span>
+              <span className="font-semibold text-foreground">{sourceCounts['Meshtastic'] || 0}</span>
             </div>
-            <div className="border-t pt-1 mt-1">
+            <div className="border-t border-divider pt-1 mt-1">
               <div className="flex items-center justify-between gap-3">
-                <span className="font-medium">Total</span>
-                <span className="font-bold">{checkIns.length}</span>
+                <span className="font-medium text-foreground">Total</span>
+                <span className="font-bold text-foreground">{checkIns.length}</span>
               </div>
             </div>
           </div>

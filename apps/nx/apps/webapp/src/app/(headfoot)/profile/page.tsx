@@ -36,7 +36,6 @@ export default async function Page() {
 
       {/* Row 4: Check-Ins Display - Full width */}
       <CheckInDisplayClient 
-        checkIns={user?.checkIns || []} 
         remainingQuota={user?.quota?.checkIns ?? 50}
         userEmail={session.user.email!}
       />

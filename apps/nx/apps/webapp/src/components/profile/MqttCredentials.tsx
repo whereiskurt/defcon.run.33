@@ -12,6 +12,7 @@ import {
   Skeleton,
 } from '@heroui/react';
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
+import { ChevronDown, ChevronUp } from 'lucide-react';
 
 type UserData = {
   email?: string;
@@ -29,6 +30,7 @@ export default function MqttCredentials() {
     password: false,
   });
   const [showPassword, setShowPassword] = useState<boolean>(false);
+  const [isExpanded, setIsExpanded] = useState<boolean>(false);
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -69,26 +71,24 @@ export default function MqttCredentials() {
   if (loading) {
     return (
       <Card className="w-full">
-        <CardHeader className="flex gap-3">
-          <div className="flex flex-col">
-            <p className="text-lg">MQTT Credentials</p>
-            <p className="text-small text-default-500">Your mesh network credentials</p>
+        <CardHeader className="flex justify-between items-center pb-2">
+          <div className="flex items-center gap-2">
+            <div className="text-2xl">🔐</div>
+            <div className="flex flex-col">
+              <h3 className="text-lg font-semibold">MQTT Credentials</h3>
+              <p className="text-sm text-default-500">Your unique credentials</p>
+            </div>
           </div>
+          <Button 
+            isIconOnly 
+            variant="light" 
+            size="sm"
+            disabled
+          >
+            <ChevronDown className="w-4 h-4" />
+          </Button>
         </CardHeader>
         <Divider />
-        <CardBody className="p-4">
-          <div className="space-y-3">
-            <Skeleton className="rounded-lg">
-              <div className="h-10 rounded-lg bg-default-300"></div>
-            </Skeleton>
-            <Skeleton className="rounded-lg">
-              <div className="h-10 rounded-lg bg-default-200"></div>
-            </Skeleton>
-            <Skeleton className="rounded-lg">
-              <div className="h-10 rounded-lg bg-default-300"></div>
-            </Skeleton>
-          </div>
-        </CardBody>
       </Card>
     );
   }
@@ -127,30 +127,46 @@ export default function MqttCredentials() {
 
   return (
     <Card className="w-full">
-      <CardHeader className="flex gap-3">
-        <div className="flex flex-col">
-          <p className="text-lg">🔐 MQTT Credentials</p>
-          <p className="text-small text-default-500">Your mesh network credentials</p>
+      <CardHeader className="flex justify-between items-center pb-2 cursor-pointer" onClick={() => setIsExpanded(!isExpanded)}>
+        <div className="flex items-center gap-2">
+          <div className="text-2xl">🔐</div>
+          <div className="flex flex-col">
+            <h3 className="text-lg font-semibold">MQTT Credentials</h3>
+            <p className="text-sm text-default-500">Your unique credentials</p>
+          </div>
         </div>
+        <Button 
+          isIconOnly 
+          variant="light" 
+          size="sm"
+          onClick={(e) => {
+            e.stopPropagation();
+            setIsExpanded(!isExpanded);
+          }}
+        >
+          {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+        </Button>
       </CardHeader>
       <Divider />
-      <CardBody>
-        <div className="space-y-6">
-          <div>
-            <label className="block text-medium font-medium mb-2">Username</label>
-            <div className="flex gap-3">
-              <Input
-                readOnly
-                value={userData.mqtt_username}
-                className="flex-grow"
-                variant="bordered"
-                size="md"
-              />
-              <Button
-                onClick={() => copyToClipboard(userData.mqtt_username || '', 'username')}
-                variant="flat"
-                color={copying.username ? "success" : "primary"}
-                size="lg"
+      {isExpanded && (
+        <>
+          <CardBody>
+            <div className="space-y-6">
+              <div>
+                <label className="block text-medium font-medium mb-2">Username</label>
+                <div className="flex gap-3">
+                  <Input
+                    readOnly
+                    value={userData.mqtt_username}
+                    className="flex-grow"
+                    variant="bordered"
+                    size="md"
+                  />
+                  <Button
+                    onClick={() => copyToClipboard(userData.mqtt_username || '', 'username')}
+                    variant="flat"
+                    color={copying.username ? "success" : "primary"}
+                    size="lg"
                 className="min-w-40"
               >
                 {copying.username ? "Copied!" : "Copy"}
@@ -192,16 +208,17 @@ export default function MqttCredentials() {
                 {copying.password ? "Copied!" : "Copy"}
               </Button>
             </div>
-          </div>
-        </div>
-      </CardBody>
-      <Divider />
-      <Divider />
-      <CardFooter>
-        <p className="text-small text-default-500">
-          These are your credentials for connecting to the MQTT broker. Use them to participate in the Meshtastic CTF.
-        </p>
-      </CardFooter>
+              </div>
+            </div>
+          </CardBody>
+          <Divider />
+          <CardFooter>
+            <p className="text-small text-default-500">
+              These are your credentials for connecting to the MQTT broker. Use them to participate in the Meshtastic CTF.
+            </p>
+          </CardFooter>
+        </>
+      )}
     </Card>
   );
 }

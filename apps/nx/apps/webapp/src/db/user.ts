@@ -295,6 +295,15 @@ const User = new Entity(
         default: () => [],
       },
       
+      // Denormalized check-in fields
+      lastCheckInAt: {
+        type: 'number',
+      },
+      checkInCount: {
+        type: 'number',
+        default: () => 0,
+      },
+      
       strava_account: {
         type: 'map',
         properties: {

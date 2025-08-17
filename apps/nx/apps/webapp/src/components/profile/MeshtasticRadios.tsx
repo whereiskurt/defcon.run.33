@@ -18,7 +18,7 @@ import {
   Chip,
   Skeleton,
 } from '@heroui/react';
-import { Trash2, Plus, Radio, Lock, Unlock, AlertCircle, Eye, EyeOff, Edit3, Save, X, Map, RotateCcw } from "lucide-react";
+import { Trash2, Plus, Radio, Lock, Unlock, AlertCircle, Eye, EyeOff, Edit3, Save, X, Map, RotateCcw, ChevronDown, ChevronUp } from "lucide-react";
 
 interface MeshtasticRadio {
   id: string;
@@ -61,6 +61,8 @@ export default function MeshtasticRadios() {
     radioId: '',
     nodeId: ''
   });
+  const [focusedVerifyButtons, setFocusedVerifyButtons] = useState<{ [key: string]: boolean }>({});
+  const [isExpanded, setIsExpanded] = useState<boolean>(false);
 
   useEffect(() => {
     fetchRadios();
@@ -69,10 +71,10 @@ export default function MeshtasticRadios() {
 
   const fetchMeshtasticCheckIns = async () => {
     try {
-      const response = await fetch('/api/user');
+      const response = await fetch('/api/user/checkins?limit=100');
       if (!response.ok) return;
       const data = await response.json();
-      const allCheckIns = data.user?.checkIns || [];
+      const allCheckIns = data.checkIns || [];
       // Filter for meshtastic check-ins (for future use when 'meshtastic' source is added)
       const meshtasticOnly = allCheckIns.filter((checkIn: any) => checkIn.source === 'meshtastic');
       setMeshtasticCheckIns(meshtasticOnly);
@@ -169,6 +171,9 @@ export default function MeshtasticRadios() {
       return;
     }
 
+    // Remove green focus styling when starting verification
+    setFocusedVerifyButtons({ ...focusedVerifyButtons, [radioId]: false });
+
     try {
       setError(null);
       const response = await fetch('/api/meshtastic-radios', {
@@ -186,7 +191,16 @@ export default function MeshtasticRadios() {
       setRadios(radios.map(r => r.id === radioId ? data.radio : r));
       setVerificationInputs({ ...verificationInputs, [radioId]: '' });
     } catch (err: any) {
+      // Clear digits, show error, and focus back to first input on failure
+      setPinInputs({ ...pinInputs, [radioId]: ['', '', '', '', '', ''] });
+      setVerificationInputs({ ...verificationInputs, [radioId]: '' });
       setError(err.message || 'Failed to verify radio');
+      
+      // Focus on the first PIN input after clearing
+      setTimeout(() => {
+        const firstInput = document.getElementById(`pin-${radioId}-0`);
+        firstInput?.focus();
+      }, 100);
     }
   };
 
@@ -298,12 +312,22 @@ export default function MeshtasticRadios() {
       setPinInputs({ ...pinInputs, [radioId]: newPin });
       
       // Update the verification input for backend compatibility
-      setVerificationInputs({ ...verificationInputs, [radioId]: newPin.join('') });
+      const fullCode = newPin.join('');
+      setVerificationInputs({ ...verificationInputs, [radioId]: fullCode });
       
       // Auto-focus next input
       if (value && index < 5) {
         const nextInput = document.getElementById(`pin-${radioId}-${index + 1}`);
         nextInput?.focus();
+      }
+      
+      // If this is the 6th digit and all digits are filled, focus the verify button
+      if (index === 5 && value && fullCode.length === 6) {
+        setFocusedVerifyButtons({ ...focusedVerifyButtons, [radioId]: true });
+        setTimeout(() => {
+          const verifyButton = document.getElementById(`verify-${radioId}`);
+          verifyButton?.focus();
+        }, 100);
       }
     }
   };
@@ -312,14 +336,22 @@ export default function MeshtasticRadios() {
     if (e.key === 'Backspace' && !pinInputs[radioId]?.[index] && index > 0) {
       const prevInput = document.getElementById(`pin-${radioId}-${index - 1}`);
       prevInput?.focus();
+      // Remove green focus if we're backspacing
+      setFocusedVerifyButtons({ ...focusedVerifyButtons, [radioId]: false });
     }
     
-    // If Enter is pressed on the last digit (index 5) and all 6 digits are filled, trigger verification
-    if (e.key === 'Enter' && index === 5) {
+    // If Enter is pressed and all 6 digits are filled, trigger verification
+    if (e.key === 'Enter') {
       const code = verificationInputs[radioId] || '';
       if (code.length === 6) {
         handleVerify(radioId);
       }
+    }
+  };
+
+  const handleVerifyKeyDown = (radioId: string, e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleVerify(radioId);
     }
   };
 
@@ -372,18 +404,42 @@ export default function MeshtasticRadios() {
   if (loading) {
     return (
       <Card className="w-full">
-        <CardHeader className="flex gap-3">
-          <div className="flex flex-col">
-            <p className="text-lg">Meshtastic Radios</p>
-            <p className="text-small text-default-500">Loading...</p>
+        <CardHeader className="flex justify-between items-center pb-2">
+          <div className="flex items-center gap-2">
+            <Radio className="w-5 h-5" />
+            <div className="flex flex-col">
+              <div className="flex items-center gap-2">
+                <h3 className="text-lg font-semibold">Meshtastic</h3>
+                <Skeleton className="w-6 h-4 rounded">
+                  <div className="h-4 w-6 bg-default-300"></div>
+                </Skeleton>
+              </div>
+              <p className="text-sm text-default-500">
+                Manage your Meshtastic radio connections
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              isIconOnly
+              color="success"
+              variant="flat"
+              size="lg"
+              disabled
+            >
+              <Plus className="h-6 w-6" />
+            </Button>
+            <Button 
+              isIconOnly 
+              variant="light" 
+              size="sm"
+              disabled
+            >
+              <ChevronDown className="w-4 h-4" />
+            </Button>
           </div>
         </CardHeader>
         <Divider />
-        <CardBody className="p-4">
-          <Skeleton className="rounded-lg">
-            <div className="h-8 rounded-lg bg-default-300"></div>
-          </Skeleton>
-        </CardBody>
       </Card>
     );
   }
@@ -391,33 +447,26 @@ export default function MeshtasticRadios() {
   return (
     <>
       <Card className="w-full">
-        <CardHeader className="flex gap-3">
-          <div className="flex flex-col flex-1">
-            <div className="text-lg flex items-center gap-2">
-              <Chip 
-                size="sm" 
-                variant="flat" 
-                color={radios.length > 0 ? "success" : "default"}
-              >
-                {radios.length}
-              </Chip>
-              <Radio className="h-5 w-5" />
-              Meshtastic Radios
+        <CardHeader className="flex justify-between items-center pb-2 cursor-pointer" onClick={() => setIsExpanded(!isExpanded)}>
+          <div className="flex items-center gap-2">
+            <Radio className="w-5 h-5" />
+            <div className="flex flex-col">
+              <div className="flex items-center gap-2">
+                <h3 className="text-lg font-semibold">Meshtastic</h3>
+                <Chip 
+                  size="sm" 
+                  variant="flat" 
+                  color={radios.length > 0 ? "success" : "default"}
+                >
+                  {radios.length}
+                </Chip>
+              </div>
+              <p className="text-sm text-default-500">
+                {quota.used} of {quota.total} Radios Used 
+              </p>
             </div>
-            <p className="text-small text-default-500">
-              Manage your Meshtastic radio connections ({quota.used}/{quota.total} quota used)
-            </p>
           </div>
           <div className="flex items-center gap-2">
-            <Button
-              isIconOnly
-              color="primary"
-              variant="flat"
-              size="lg"
-              onClick={() => setShowMeshtasticMap(true)}
-            >
-              <Map className="h-6 w-6" />
-            </Button>
             <Button
               isIconOnly
               color="success"
@@ -428,10 +477,22 @@ export default function MeshtasticRadios() {
             >
               <Plus className="h-6 w-6" />
             </Button>
+            <Button 
+              isIconOnly 
+              variant="light" 
+              size="sm"
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsExpanded(!isExpanded);
+              }}
+            >
+              {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+            </Button>
           </div>
         </CardHeader>
         <Divider />
-        <CardBody className="space-y-4">
+        {isExpanded && (
+          <CardBody className="space-y-4">
           {error && (
             <div className="bg-danger-50 border border-danger-200 text-danger-700 px-4 py-3 rounded relative">
               <span className="flex items-center gap-2">
@@ -510,9 +571,9 @@ export default function MeshtasticRadios() {
 
                   {!radio.verified && (
                     <div className="space-y-3">
-                      <p className="text-sm">Enter 6-digit verification code:</p>
+                      <p className="text-xs pt-2 text-center">Enter 6-digit verification code:</p>
                       <div className="flex flex-col gap-3">
-                        <div className="flex gap-1 justify-center sm:justify-start">
+                        <div className="flex gap-1 justify-center">
                           {[0, 1, 2, 3, 4, 5].map((index) => (
                             <Input
                               key={index}
@@ -522,28 +583,26 @@ export default function MeshtasticRadios() {
                               value={pinInputs[radio.id]?.[index] || ''}
                               onChange={(e) => handlePinInputChange(radio.id, index, e.target.value)}
                               onKeyDown={(e) => handlePinKeyDown(radio.id, index, e)}
-                              className="font-mono text-center w-12 h-12 text-2xl font-bold"
+                              className="w-14 h-14"
+                              classNames={{
+                                input: "text-center text-3xl font-bold font-mono",
+                                inputWrapper: "h-14 min-h-14"
+                              }}
                               size="lg"
                             />
                           ))}
                         </div>
-                        <div className="flex gap-2 justify-center sm:justify-start">
+                        <div className="flex gap-2 justify-center">
                           <Button
+                            id={`verify-${radio.id}`}
                             onClick={() => handleVerify(radio.id)}
+                            onKeyDown={(e) => handleVerifyKeyDown(radio.id, e)}
+                            onBlur={() => setFocusedVerifyButtons({ ...focusedVerifyButtons, [radio.id]: false })}
                             disabled={(verificationInputs[radio.id] || '').length !== 6 || (radio.verificationAttempts || 0) >= 5}
                             size="lg"
-                            className="min-w-24"
+                            className={`min-w-24 ${focusedVerifyButtons[radio.id] ? 'border-2 border-dashed border-success' : ''}`}
                           >
                             Verify
-                          </Button>
-                          <Button
-                            isIconOnly
-                            onClick={() => openDeleteConfirmation(radio.id, radio.nodeId)}
-                            variant="flat"
-                            color="danger"
-                            size="lg"
-                          >
-                            <Trash2 className="h-6 w-6" />
                           </Button>
                           <Button
                             isIconOnly
@@ -554,15 +613,24 @@ export default function MeshtasticRadios() {
                           >
                             <RotateCcw className="h-6 w-6" />
                           </Button>
+                          <Button
+                            isIconOnly
+                            onClick={() => openDeleteConfirmation(radio.id, radio.nodeId)}
+                            variant="flat"
+                            color="danger"
+                            size="lg"
+                          >
+                            <Trash2 className="h-6 w-6" />
+                          </Button>
                         </div>
                       </div>
                       {(radio.verificationAttempts || 0) >= 5 ? (
-                        <p className="text-xs text-danger-500">
+                        <p className="text-xs text-danger-500 text-center">
                           Maximum verification attempts exceeded (5/5). This radio cannot be verified.
                         </p>
                       ) : (
-                        <p className="text-xs text-default-500">
-                          A 6-digit code has been sent to your radio via PKI ({radio.verificationAttempts || 0}/5 attempts used)
+                        <p className="text-xs text-default-500 text-center">
+                          A code was sent to your radio ({Math.min((radio.verificationAttempts || 0) + 1, 5)}/5 attempts used)
                         </p>
                       )}
                     </div>
@@ -659,7 +727,8 @@ export default function MeshtasticRadios() {
               ))
             )}
           </div>
-        </CardBody>
+          </CardBody>
+        )}
       </Card>
 
       <Modal 

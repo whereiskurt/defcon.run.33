@@ -8,9 +8,11 @@ import {
   Divider,
   CardFooter,
   Skeleton,
+  Button,
 } from '@heroui/react';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
+import { ChevronDown, ChevronUp } from 'lucide-react';
 
 interface UserRankData {
   globalRank: number;
@@ -22,6 +24,7 @@ export default function LeaderboardRank() {
   const { data: session, status } = useSession();
   const [rankData, setRankData] = useState<UserRankData | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
+  const [isExpanded, setIsExpanded] = useState<boolean>(false);
 
   const fetchUserRank = async () => {
     if (!session?.user?.email) {
@@ -78,26 +81,24 @@ export default function LeaderboardRank() {
   if (status === 'loading' || loading) {
     return (
       <Card className="w-full">
-        <CardHeader className="flex gap-3">
-          <div className="flex flex-col">
-            <p className="text-lg">Leaderboard Ranking</p>
-            <p className="text-small text-default-500">Your position on the leaderboard</p>
+        <CardHeader className="flex justify-between items-center pb-2">
+          <div className="flex items-center gap-2">
+            <div className="text-2xl">🥕</div>
+            <div className="flex flex-col">
+              <h3 className="text-lg font-semibold">Leaderboard Ranking</h3>
+              <p className="text-sm text-default-500">Your position on the leaderboard</p>
+            </div>
           </div>
+          <Button 
+            isIconOnly 
+            variant="light" 
+            size="sm"
+            disabled
+          >
+            <ChevronDown className="w-4 h-4" />
+          </Button>
         </CardHeader>
         <Divider />
-        <CardBody className="p-4">
-          <div className="space-y-3">
-            <Skeleton className="rounded-lg">
-              <div className="h-12 rounded-lg bg-default-300"></div>
-            </Skeleton>
-            <Skeleton className="rounded-lg">
-              <div className="h-8 rounded-lg bg-default-200"></div>
-            </Skeleton>
-            <Skeleton className="rounded-lg">
-              <div className="h-10 rounded-lg bg-default-300"></div>
-            </Skeleton>
-          </div>
-        </CardBody>
       </Card>
     );
   }
@@ -110,39 +111,57 @@ export default function LeaderboardRank() {
 
   return (
     <Card className="w-full">
-      <CardHeader className="flex gap-3">
-        <div className="flex flex-col">
-          <p className="text-lg">🥕 Leaderboard Ranking</p>
-          <p className="text-small text-default-500">Your position on the leaderboard </p>
+      <CardHeader className="flex justify-between items-center pb-2 cursor-pointer" onClick={() => setIsExpanded(!isExpanded)}>
+        <div className="flex items-center gap-2">
+          <div className="text-2xl">🥕</div>
+          <div className="flex flex-col">
+            <h3 className="text-lg font-semibold">Leaderboard Ranking</h3>
+            <p className="text-sm text-default-500">Your position on the leaderboard</p>
+          </div>
         </div>
+        <Button 
+          isIconOnly 
+          variant="light" 
+          size="sm"
+          onClick={(e) => {
+            e.stopPropagation();
+            setIsExpanded(!isExpanded);
+          }}
+        >
+          {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+        </Button>
       </CardHeader>
       <Divider />
-      <CardBody className="text-center pt-5">
-        <Link 
-          href={`/leaderboard?filter=${encodeURIComponent(userDisplayName)}`}
-          className="block hover:opacity-80 transition-opacity"
-        >
-          <div className="text-5xl font-bold text-primary mb-2">
-            {displayRank}
-          </div>
-          <p className="text-default-500 text-sm">
-            {rankData?.accomplishmentCount && rankData.accomplishmentCount > 0 
-              ? `Based on ${rankData.accomplishmentCount} accomplishment${rankData.accomplishmentCount !== 1 ? 's' : ''}`
-              : 'Run/Walk/Ruck, CTF Flags, Social Events'
-            }
-          </p>
-          <p className="text-primary text-xs">
-            Click here to view full leaderboard
-          </p>
-        </Link>
-      </CardBody>
-      <Divider className="mt-2" />
-      
-      <CardFooter>
-        <p className="text-small text-default-500">
-          Daily accomplishments for run/walk/ruck activities, Meshtastic CTF flags, and for coming out to social events.
-        </p>
-      </CardFooter>
+      {isExpanded && (
+        <>
+          <CardBody className="text-center pt-5">
+            <Link 
+              href={`/leaderboard?filter=${encodeURIComponent(userDisplayName)}`}
+              className="block hover:opacity-80 transition-opacity"
+            >
+              <div className="text-5xl font-bold text-primary mb-2">
+                {displayRank}
+              </div>
+              <p className="text-default-500 text-sm">
+                {rankData?.accomplishmentCount && rankData.accomplishmentCount > 0 
+                  ? `Based on ${rankData.accomplishmentCount} accomplishment${rankData.accomplishmentCount !== 1 ? 's' : ''}`
+                  : 'Run/Walk/Ruck, CTF Flags, Social Events'
+                }
+              </p>
+              <p className="text-primary text-xs">
+                Click here to view full leaderboard
+              </p>
+            </Link>
+          </CardBody>
+          <Divider className="mt-2" />
+          
+          <CardFooter>
+            <p className="text-small text-default-500">
+              Daily accomplishments for run/walk/ruck activities, Meshtastic CTF flags, and for coming out to social events.
+            </p>
+          </CardFooter>
+        </>
+      )}
     </Card>
   );
 }

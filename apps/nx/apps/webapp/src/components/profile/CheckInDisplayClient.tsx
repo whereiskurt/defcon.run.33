@@ -5,26 +5,12 @@ import { useDisclosure } from '@heroui/react';
 import CheckInDisplay from './CheckInDisplay';
 import CheckInModal from '../check-in/CheckInModal';
 
-interface CheckIn {
-  date?: string;
-  timestamp?: number;
-  source?: string;
-  samples?: any;
-  averageCoordinates?: {
-    latitude?: number;
-    longitude?: number;
-  };
-  bestAccuracy?: number;
-  userAgent?: string;
-}
-
 interface CheckInDisplayClientProps {
-  checkIns: CheckIn[];
   remainingQuota: number;
   userEmail: string;
 }
 
-export default function CheckInDisplayClient({ checkIns, remainingQuota, userEmail }: CheckInDisplayClientProps) {
+export default function CheckInDisplayClient({ remainingQuota, userEmail }: CheckInDisplayClientProps) {
   const {
     isOpen: isCheckInOpen,
     onOpen: openCheckIn,
@@ -34,7 +20,6 @@ export default function CheckInDisplayClient({ checkIns, remainingQuota, userEma
   return (
     <>
       <CheckInDisplay 
-        checkIns={checkIns} 
         remainingQuota={remainingQuota}
         onOpenCheckInModal={openCheckIn}
       />
