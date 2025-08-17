@@ -196,7 +196,6 @@ export default function UserDetails() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
           {/* Display Name Section - 50% */}
           <div>
-            <p className="text-lg mb-2">🐰 Display Name</p>
             <div className="flex flex-col gap-2">
               <Input
                 value={displaynameInput}

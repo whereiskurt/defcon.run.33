@@ -12,7 +12,8 @@ import {
   Chip, 
   Divider,
   Spinner,
-  Link 
+  Link,
+  Checkbox 
 } from '@heroui/react';
 import { Target, Satellite, MapPin, Navigation, RotateCw } from 'lucide-react';
 
@@ -43,6 +44,7 @@ export default function CheckInModal({ isOpen, onClose, userEmail, remainingQuot
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [currentQuota, setCurrentQuota] = useState(remainingQuota);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [isPrivate, setIsPrivate] = useState(true);
 
   const TOTAL_SAMPLES = 5;
   const SAMPLE_INTERVAL = 3000; // 3 seconds between samples
@@ -185,7 +187,8 @@ export default function CheckInModal({ isOpen, onClose, userEmail, remainingQuot
         body: JSON.stringify({
           samples,
           source: 'Web GPS',
-          userAgent: navigator.userAgent
+          userAgent: navigator.userAgent,
+          isPrivate
         }),
       });
 
@@ -230,6 +233,7 @@ export default function CheckInModal({ isOpen, onClose, userEmail, remainingQuot
     setHasPermission(false);
     setIsSubmitting(false);
     setIsSuccess(false);
+    setIsPrivate(true);
     onClose();
   };
 
@@ -302,6 +306,34 @@ export default function CheckInModal({ isOpen, onClose, userEmail, remainingQuot
                   <p className="text-xs text-default-400">
                     We'll collect 5 GPS samples over approximately 15 seconds to verify your location.
                   </p>
+                  
+                  {/* Privacy Toggle */}
+                  <div className="flex justify-center pt-4">
+                    <Checkbox
+                      isSelected={!isPrivate}
+                      onValueChange={(checked) => setIsPrivate(!checked)}
+                      color="success"
+                      size="md"
+                      classNames={{
+                        base: "inline-flex max-w-md w-full bg-content1 m-0 hover:bg-content2 items-center justify-start cursor-pointer rounded-lg gap-2 p-4 border-2 border-transparent data-[selected=true]:border-success",
+                        label: "w-full",
+                      }}
+                    >
+                      <div className="w-full flex justify-between gap-2">
+                        <div className="flex flex-col items-start">
+                          <span className="text-medium">
+                            {isPrivate ? "Private" : "Public"}
+                          </span>
+                          <span className="text-tiny text-default-400">
+                            {isPrivate 
+                              ? "Only you can see this check-in" 
+                              : "This check-in will be visible to others"
+                            }
+                          </span>
+                        </div>
+                      </div>
+                    </Checkbox>
+                  </div>
                 </>
               ) : (
                 <div className="p-4 bg-danger-50 rounded-lg">
@@ -408,6 +440,7 @@ export default function CheckInModal({ isOpen, onClose, userEmail, remainingQuot
                         setProgress(0);
                         setHasPermission(false);
                         setError(null);
+                        setIsPrivate(true);
                         // Start new check-in immediately
                         requestPermission();
                       }}

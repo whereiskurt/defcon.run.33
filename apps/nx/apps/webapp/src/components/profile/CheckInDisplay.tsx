@@ -1,9 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Card, CardBody, CardHeader, Divider, Chip, Button, Spinner, Skeleton } from '@heroui/react';
+import { Card, CardBody, CardHeader, Divider, Chip, Button, Spinner, Skeleton, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, useDisclosure } from '@heroui/react';
 import dynamic from 'next/dynamic';
-import { MapPin, Clock, Target, Smartphone, Activity, AlertTriangle, CheckCircle, Zap, Map, Plus, RefreshCw, ChevronDown, ChevronUp, ExternalLink } from 'lucide-react';
+import { MapPin, Clock, Target, Smartphone, Activity, AlertTriangle, CheckCircle, Zap, Map, Plus, RefreshCw, ChevronDown, ChevronUp, ExternalLink, Lock, Globe } from 'lucide-react';
 
 // Dynamically import the map component to avoid SSR issues
 const CheckInMap = dynamic(() => import('./CheckInMap'), {
@@ -38,6 +38,8 @@ interface CheckIn {
   };
   bestAccuracy?: number;
   userAgent?: string;
+  isPrivate?: boolean;
+  checkInId?: string;
 }
 
 interface CheckInDisplayProps {
@@ -172,6 +174,9 @@ export default function CheckInDisplay({ remainingQuota = 50, onOpenCheckInModal
   const [hasMore, setHasMore] = useState(false);
   const [cursor, setCursor] = useState<string | undefined>(undefined);
   const [isExpanded, setIsExpanded] = useState<boolean>(false);
+  const [selectedCheckInForPrivacy, setSelectedCheckInForPrivacy] = useState<CheckIn | null>(null);
+  const [isUpdatingPrivacy, setIsUpdatingPrivacy] = useState(false);
+  const {isOpen: isPrivacyModalOpen, onOpen: onPrivacyModalOpen, onOpenChange: onPrivacyModalOpenChange} = useDisclosure();
 
   // Sort check-ins by timestamp (most recent first)
   const sortedCheckIns = currentCheckIns.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
@@ -188,13 +193,13 @@ export default function CheckInDisplay({ remainingQuota = 50, onOpenCheckInModal
     const years = Math.floor(days / 365);
 
     if (seconds < 60) return 'Just now';
-    if (minutes < 60) return minutes === 1 ? '1 minute' : `${minutes} minutes`;
+    if (minutes < 60) return minutes === 1 ? '1 min' : `${minutes} mins`;
     if (hours < 24) return hours === 1 ? '1 hr' : `${hours} hrs`;
     if (days === 0) return 'Today';
     if (days === 1) return 'Yesterday';
     if (days < 7) return days === 1 ? '1 day' : `${days} days`;
     if (weeks < 4) return weeks === 1 ? '1 week' : `${weeks} weeks`;
-    if (months < 12) return months === 1 ? '1 month' : `${months} months`;
+    if (months < 12) return months === 1 ? '1 mth' : `${months} mths`;
     if (months >= 12) return years === 1 ? '1 year' : `${years}+ years`;
     return years === 1 ? '1 year' : `${years} years`;
   };
@@ -248,6 +253,50 @@ export default function CheckInDisplay({ remainingQuota = 50, onOpenCheckInModal
 
   // Function to refresh check-ins (wrapper for backward compatibility)
   const refreshCheckIns = () => fetchCheckIns(true);
+
+  // Function to toggle check-in privacy
+  const handlePrivacyToggle = (checkIn: CheckIn) => {
+    setSelectedCheckInForPrivacy(checkIn);
+    onPrivacyModalOpen();
+  };
+
+  // Function to update check-in privacy
+  const updateCheckInPrivacy = async () => {
+    if (!selectedCheckInForPrivacy) return;
+
+    setIsUpdatingPrivacy(true);
+    try {
+      const response = await fetch(`/api/check-in/privacy`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          checkInId: selectedCheckInForPrivacy.checkInId,
+          timestamp: selectedCheckInForPrivacy.timestamp,
+          isPrivate: !selectedCheckInForPrivacy.isPrivate
+        }),
+      });
+
+      if (response.ok) {
+        // Update the local state
+        setCurrentCheckIns(prev => prev.map(checkIn => 
+          checkIn.timestamp === selectedCheckInForPrivacy.timestamp && 
+          checkIn.checkInId === selectedCheckInForPrivacy.checkInId
+            ? { ...checkIn, isPrivate: !checkIn.isPrivate }
+            : checkIn
+        ));
+        onPrivacyModalOpenChange();
+        setSelectedCheckInForPrivacy(null);
+      } else {
+        console.error('Failed to update privacy setting');
+      }
+    } catch (error) {
+      console.error('Error updating privacy:', error);
+    } finally {
+      setIsUpdatingPrivacy(false);
+    }
+  };
 
   // Initial fetch of check-ins
   useEffect(() => {
@@ -354,6 +403,7 @@ export default function CheckInDisplay({ remainingQuota = 50, onOpenCheckInModal
   }
 
   return (
+    <>
     <Card>
       <CardHeader className="flex justify-between items-center pb-2 cursor-pointer" onClick={() => setIsExpanded(!isExpanded)}>
         <div className="flex items-center gap-2">
@@ -469,6 +519,19 @@ export default function CheckInDisplay({ remainingQuota = 50, onOpenCheckInModal
                       <Chip size="sm" variant="flat" color="success">
                         {checkIn.source === 'Web GPS' ? 'Web' : checkIn.source}
                       </Chip>
+                      <Chip 
+                        size="sm" 
+                        variant="flat" 
+                        color={checkIn.isPrivate ? "default" : "primary"}
+                        title={checkIn.isPrivate ? "Private - Click to make public" : "Public - Click to make private"}
+                        className="px-2 cursor-pointer hover:opacity-80"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handlePrivacyToggle(checkIn);
+                        }}
+                      >
+                        {checkIn.isPrivate ? <Lock className="w-3 h-3" /> : <Globe className="w-3 h-3" />}
+                      </Chip>
                     </div>
                     <div className="flex items-center gap-1 text-xs text-default-500">
                       <MapPin className="w-3 h-3 mr-1" />
@@ -478,26 +541,10 @@ export default function CheckInDisplay({ remainingQuota = 50, onOpenCheckInModal
                           checkIn.averageCoordinates?.longitude || 0
                         )}
                       </span>
-                      <Button
-                        size="sm"
-                        variant="light"
-                        isIconOnly
-                        as="a"
-                        href={`https://www.openstreetmap.org/?mlat=${checkIn.averageCoordinates?.latitude}&mlon=${checkIn.averageCoordinates?.longitude}#map=17/${checkIn.averageCoordinates?.latitude}/${checkIn.averageCoordinates?.longitude}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        title="View on OpenStreetMap"
-                        className="min-w-unit-6 w-6 h-6"
-                      >
-                        <ExternalLink className="w-3 h-3" />
-                      </Button>
                     </div>
                     </div>
                   </div>
                   <div className="text-right">
-                    <div className="text-xs text-default-400">
-                      ±{(checkIn.bestAccuracy || 0).toFixed(1)}m
-                    </div>
                     {(() => {
                       const movement = analyzeMovement(checkIn.samples || []);
                       const getMovementIcon = () => {
@@ -526,6 +573,19 @@ export default function CheckInDisplay({ remainingQuota = 50, onOpenCheckInModal
                         </div>
                       );
                     })()}
+                    <Button
+                      size="sm"
+                      variant="light"
+                      isIconOnly
+                      as="a"
+                      href={`https://www.openstreetmap.org/?mlat=${checkIn.averageCoordinates?.latitude}&mlon=${checkIn.averageCoordinates?.longitude}#map=17/${checkIn.averageCoordinates?.latitude}/${checkIn.averageCoordinates?.longitude}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      title="View on OpenStreetMap"
+                      className="min-w-unit-6 w-6 h-6"
+                    >
+                      <ExternalLink className="w-3 h-3" />
+                    </Button>
                   </div>
                 </div>
                 
@@ -547,9 +607,7 @@ export default function CheckInDisplay({ remainingQuota = 50, onOpenCheckInModal
                         </div>
                         <div className="flex items-center gap-3 text-xs">
                           {movement.movementType === 'stationary' ? (
-                            <Chip size="sm" variant="flat" color="default">
-                              Stationary
-                            </Chip>
+                            null
                           ) : (
                             <>
                               {(() => {
@@ -592,8 +650,7 @@ export default function CheckInDisplay({ remainingQuota = 50, onOpenCheckInModal
                               attribute = 'Direct path';
                               color = 'primary';
                             } else if (pattern.includes('Consistent GPS')) {
-                              attribute = 'Steady signal';
-                              color = 'success';
+                              return null; // Skip this chip
                             } else if (pattern.includes('high speed')) {
                               attribute = 'High velocity';
                               color = 'warning';
@@ -632,12 +689,25 @@ export default function CheckInDisplay({ remainingQuota = 50, onOpenCheckInModal
                         })()}
                       </div>
                       
-                      {checkIn.userAgent && (
-                        <div className="text-xs text-default-400">
-                          <Smartphone className="w-3 h-3 inline mr-1" />
-                          {checkIn.userAgent.split(' ')[0]}
-                        </div>
-                      )}
+                      <div className="flex items-center justify-between text-xs">
+                        {checkIn.userAgent ? (
+                          <div className="text-default-400">
+                            <Smartphone className="w-3 h-3 inline mr-1" />
+                            {checkIn.userAgent.split(' ')[0]}
+                          </div>
+                        ) : (
+                          <div></div>
+                        )}
+                        <Button
+                          size="sm"
+                          variant="light"
+                          color="primary"
+                          className="h-5 px-2 text-xs"
+                          onPress={() => handlePrivacyToggle(checkIn)}
+                        >
+                          {checkIn.isPrivate ? "Make Public" : "Make Private"}
+                        </Button>
+                      </div>
                     </div>
                   );
                 })()}
@@ -662,5 +732,45 @@ export default function CheckInDisplay({ remainingQuota = 50, onOpenCheckInModal
         </CardBody>
       )}
     </Card>
+    
+    {/* Privacy Toggle Confirmation Modal */}
+    <Modal isOpen={isPrivacyModalOpen} onOpenChange={onPrivacyModalOpenChange} size="sm">
+      <ModalContent>
+        {(onClose) => (
+          <>
+            <ModalHeader className="flex flex-col gap-1">
+              Change Checkin Privacy
+            </ModalHeader>
+            <ModalBody>
+              <p>
+                Change privacy of this checkin to {' '}
+                <strong>
+                  {selectedCheckInForPrivacy?.isPrivate ? 'public' : 'private'}
+                </strong>
+                ?
+              {selectedCheckInForPrivacy?.isPrivate ? (
+                <>This check-in will become visible to others.</>
+              ) : (
+                <>This check-in will not be visible to others.</>
+              )}
+              </p>
+            </ModalBody>
+            <ModalFooter>
+              <Button variant="light" onPress={onClose}>
+                Cancel
+              </Button>
+              <Button 
+                color="primary" 
+                onPress={updateCheckInPrivacy}
+                isLoading={isUpdatingPrivacy}
+              >
+                {selectedCheckInForPrivacy?.isPrivate ? 'Make Public' : 'Make Private'}
+              </Button>
+            </ModalFooter>
+          </>
+        )}
+      </ModalContent>
+    </Modal>
+    </>
   );
 }

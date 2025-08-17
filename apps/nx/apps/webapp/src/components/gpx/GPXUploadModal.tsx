@@ -58,7 +58,15 @@ interface Route {
   id: number;
   name: string;
   distance: string;
-  label: string;
+  description?: string;
+  polyline?: string;
+  elevationGain?: number;
+  difficulty?: string;
+  terrain?: string;
+  startLocation?: any;
+  endLocation?: any;
+  stravaUrl?: string;
+  gpxUrl?: string;
 }
 
 export default function GPXUploadModal({ isOpen, onClose }: GPXUploadModalProps) {
@@ -378,9 +386,18 @@ export default function GPXUploadModal({ isOpen, onClose }: GPXUploadModalProps)
               selectedKeys={defconYear ? [defconYear] : []}
               onSelectionChange={(keys) => setDefconYear(Array.from(keys)[0] as string)}
               isRequired
+              classNames={{
+                value: "text-foreground",
+                listbox: "text-foreground",
+              }}
             >
               {defconYears.map((defcon) => (
-                <SelectItem key={defcon.key}>
+                <SelectItem 
+                  key={defcon.key}
+                  classNames={{
+                    base: "text-foreground data-[hover=true]:text-foreground data-[selectable=true]:text-foreground",
+                  }}
+                >
                   {defcon.label}
                 </SelectItem>
               ))}
@@ -397,6 +414,10 @@ export default function GPXUploadModal({ isOpen, onClose }: GPXUploadModalProps)
                   ? `${remainingUploads[`${defconYear}_${dc33Day}`] ?? maxUploadsPerDay} of ${maxUploadsPerDay} uploads remaining`
                   : undefined
               }
+              classNames={{
+                value: "text-foreground",
+                listbox: "text-foreground",
+              }}
             >
               {dc33Days.map((day) => {
                 const uploadKey = `${defconYear}_${day.key}`;
@@ -409,6 +430,9 @@ export default function GPXUploadModal({ isOpen, onClose }: GPXUploadModalProps)
                         {remaining}/{maxUploadsPerDay} left
                       </Chip>
                     }
+                    classNames={{
+                      base: "text-foreground data-[hover=true]:text-foreground data-[selectable=true]:text-foreground",
+                    }}
                   >
                     {day.label}
                   </SelectItem>
@@ -473,10 +497,27 @@ export default function GPXUploadModal({ isOpen, onClose }: GPXUploadModalProps)
                 selectedKeys={selectedRoute ? [selectedRoute] : []}
                 onSelectionChange={(keys) => setSelectedRoute(Array.from(keys)[0] as string)}
                 isRequired
+                classNames={{
+                  value: "text-foreground",
+                  listbox: "text-foreground",
+                  popover: "text-foreground",
+                  innerWrapper: "text-foreground",
+                  mainWrapper: "text-foreground"
+                }}
+                listboxProps={{
+                  itemClasses: {
+                    base: "text-foreground data-[hover=true]:text-foreground data-[selected=true]:text-foreground data-[selectable=true]:text-foreground",
+                    title: "text-foreground",
+                    description: "text-foreground"
+                  }
+                }}
               >
                 {routes.map((route) => (
-                  <SelectItem key={route.id.toString()}>
-                    {route.label}
+                  <SelectItem 
+                    key={route.id.toString()}
+                    textValue={route.name}
+                  >
+                    {route.name} ({route.distance})
                   </SelectItem>
                 ))}
               </Select>
@@ -488,9 +529,18 @@ export default function GPXUploadModal({ isOpen, onClose }: GPXUploadModalProps)
               selectedKeys={activityType ? [activityType] : []}
               onSelectionChange={(keys) => setActivityType(Array.from(keys)[0] as string)}
               isRequired
+              classNames={{
+                value: "text-foreground",
+                listbox: "text-foreground",
+              }}
             >
               {activityTypes.map((type) => (
-                <SelectItem key={type.key}>
+                <SelectItem 
+                  key={type.key}
+                  classNames={{
+                    base: "text-foreground data-[hover=true]:text-foreground data-[selectable=true]:text-foreground",
+                  }}
+                >
                   {type.label}
                 </SelectItem>
               ))}

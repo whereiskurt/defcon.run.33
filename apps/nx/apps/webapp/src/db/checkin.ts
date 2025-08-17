@@ -70,6 +70,10 @@ const CheckIn = new Entity(
       userAgent: {
         type: 'string',
       },
+      isPrivate: {
+        type: 'boolean',
+        default: true,
+      },
       // Geospatial fields for future geo queries
       geoHash: {
         type: 'string',
@@ -158,6 +162,7 @@ interface CheckInData {
   source: string;
   samples: GPSSample[];
   userAgent?: string;
+  isPrivate?: boolean;
 }
 
 /**
@@ -179,7 +184,7 @@ export async function createCheckIn(
     throw new Error('Check-in quota exceeded');
   }
 
-  const { samples, source, userAgent } = checkInData;
+  const { samples, source, userAgent, isPrivate } = checkInData;
 
   if (!samples || !Array.isArray(samples) || samples.length === 0) {
     throw new Error('Invalid samples data');
@@ -214,6 +219,7 @@ export async function createCheckIn(
     },
     bestAccuracy,
     userAgent,
+    isPrivate: isPrivate ?? true,
     pointsCount: samples.length,
     duration,
   }).go();
@@ -338,6 +344,46 @@ export async function getCheckInCount(userId: string): Promise<number> {
   } while (cursor);
 
   return count;
+}
+
+/**
+ * Update check-in privacy setting
+ */
+export async function updateCheckInPrivacy(
+  userEmail: string,
+  checkInId: string,
+  timestamp: number,
+  isPrivate: boolean
+) {
+  // Get user to verify ownership
+  const user = await getUser(userEmail);
+  if (!user) {
+    throw new Error('User not found');
+  }
+
+  // Get the check-in to verify it exists and belongs to the user
+  const existingCheckIn = await CheckIn.get({
+    userId: user.id,
+    timestamp,
+    checkInId,
+  }).go();
+
+  if (!existingCheckIn.data) {
+    throw new Error('Check-in not found');
+  }
+
+  // Update the privacy setting
+  const result = await CheckIn.update({
+    userId: user.id,
+    timestamp,
+    checkInId,
+  })
+  .set({
+    isPrivate,
+  })
+  .go();
+
+  return result.data;
 }
 
 /**
