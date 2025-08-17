@@ -288,7 +288,7 @@ resource "aws_s3_bucket_cors_configuration" "cf_bucket_cors" {
   cors_rule {
     allowed_headers = ["*"]
     allowed_methods = ["GET", "HEAD", "POST", "PUT", "DELETE"]
-    allowed_origins = ["https://${var.region_zonename}", "https://${var.env_zonename}"]
+    allowed_origins = ["https://${var.region_zonename}", "https://${var.env_zonename}", "http://localhost:3000"]
     expose_headers  = ["Access-Control-Allow-Origin"]
     max_age_seconds = 3000
   }

@@ -28,7 +28,8 @@ locals {
     // These are used for single table applications like electro
     [
       "${local.dyna_arn}:table/electro-${replace(var.region_zonename, ".", "-")}",
-      "${local.dyna_arn}:table/electro-${replace(var.region_zonename, ".", "-")}/index/*"
+      "${local.dyna_arn}:table/electro-${replace(var.region_zonename, ".", "-")}/index/*",
+      "${local.dyna_arn}:table/electro-${replace(var.region_zonename, ".", "-")}/stream/*"
     ]
   )
 }
@@ -55,6 +56,9 @@ resource "aws_dynamodb_table" "electro" {
 
   hash_key  = "pk"
   range_key = "sk"
+  
+  stream_enabled   = true
+  stream_view_type = "NEW_AND_OLD_IMAGES"
 
   attribute {
     name = "pk"
@@ -102,6 +106,14 @@ resource "aws_dynamodb_table" "electro" {
   }
 }
 
+resource "aws_ssm_parameter" "electro_stream_arn" {
+  count    = var.use_single_table ? 1 : 0
+  name     = "/${var.region_zonename}/dynamodb/electro/stream_arn"
+  type     = "String"
+  value    = aws_dynamodb_table.electro[0].stream_arn
+  provider = aws.application
+}
+
 resource "aws_iam_policy" "this" {
   name     = "dyna-${replace(var.region_zonename, ".", "-")}-${random_id.rnd.hex}"
   provider = aws.application
@@ -122,7 +134,11 @@ resource "aws_iam_policy" "this" {
           "dynamodb:Scan",
           "dynamodb:Query",
           "dynamodb:Update*",
-          "dynamodb:Create*"
+          "dynamodb:Create*",
+          "dynamodb:GetRecords",
+          "dynamodb:GetShardIterator",
+          "dynamodb:DescribeStream",
+          "dynamodb:ListStreams"
         ],
         "Resource" : local.dyna_resources
       }

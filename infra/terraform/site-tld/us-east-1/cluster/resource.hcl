@@ -35,7 +35,7 @@ locals {
   rds_serverless = [
     {
       parameter_group_name = "default.aurora-postgresql16"
-      engine_version       = "16.4"
+      engine_version       = "16.6"
       db_dbname            = "strapi"
       db_username          = "strapiadmin"
       db_port              = 5432
@@ -43,7 +43,7 @@ locals {
     },
     {
       parameter_group_name = "default.aurora-postgresql16"
-      engine_version       = "16.4"
+      engine_version       = "16.6"
       db_dbname            = "etherpad"
       db_username          = "etherpad"
       db_port              = 5432
