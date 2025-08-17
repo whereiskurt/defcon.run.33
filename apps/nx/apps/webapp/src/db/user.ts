@@ -122,6 +122,8 @@ const User = new Entity(
           qrScans: { type: 'number' },
           flagChecks: { type: 'number' },
           checkIns: { type: 'number' },
+          meshtasticRadios: { type: 'number' },
+          meshtasticRadiosUsed: { type: 'number' },
         },
         default: () => ({ 
           qrSheet: 10,
@@ -130,7 +132,9 @@ const User = new Entity(
           stravaSync: 16,
           qrScans: 0,
           flagChecks: 0,
-          checkIns: 50
+          checkIns: 50,
+          meshtasticRadios: 5,
+          meshtasticRadiosUsed: 0
         }),
       },
 
@@ -266,6 +270,26 @@ const User = new Entity(
             },
             bestAccuracy: { type: 'number' },
             userAgent: { type: 'string' },
+          },
+        },
+        default: () => [],
+      },
+      
+      meshtasticRadios: {
+        type: 'list',
+        items: {
+          type: 'map',
+          properties: {
+            id: { type: 'string' },
+            nodeId: { type: 'string' },
+            privateKey: { type: 'string' },
+            impersonate: { type: 'boolean' },
+            verificationCode: { type: 'string' },
+            verified: { type: 'boolean' },
+            createdAt: { type: 'number' },
+            verifiedAt: { type: 'number', required: false },
+            verificationAttempts: { type: 'number', default: () => 0 },
+            resendAttempts: { type: 'number', default: () => 0 },
           },
         },
         default: () => [],

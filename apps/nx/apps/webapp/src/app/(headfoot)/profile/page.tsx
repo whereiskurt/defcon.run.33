@@ -8,6 +8,7 @@ import UserDetails from "../../../components/profile/UserDetails";
 import LeaderboardRank from "../../../components/profile/LeaderboardRank";
 import QuotaDisplay from "../../../components/profile/QuotaDisplay";
 import CheckInDisplayClient from "../../../components/profile/CheckInDisplayClient";
+import MeshtasticRadios from "../../../components/profile/MeshtasticRadios";
 
 export default async function Page() {
   const session = await auth();
@@ -24,12 +25,15 @@ export default async function Page() {
       {/* Row 1: User Details - Display name, email, user type all in one row */}
       <UserDetails />
       
-      {/* Row 2: MQTT Credentials + Global Ranking */}
+      {/* Row 2: Global Ranking + MQTT Credentials */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <MqttCredentials />
         <LeaderboardRank />
+        <MqttCredentials />
       </div>
       
+      {/* Row 3: Meshtastic Radios - Full width */}
+      <MeshtasticRadios />
+
       {/* Row 4: Check-Ins Display - Full width */}
       <CheckInDisplayClient 
         checkIns={user?.checkIns || []} 
@@ -37,7 +41,7 @@ export default async function Page() {
         userEmail={session.user.email!}
       />
             
-      {/* Row 3: Strava Connection + Quota Display */}
+      {/* Row 5: Strava Connection + Quota Display */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <StravaConnection />
         <QuotaDisplay />

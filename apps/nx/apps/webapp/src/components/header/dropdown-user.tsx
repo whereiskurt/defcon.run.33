@@ -20,7 +20,7 @@ import { signIn, signOut, useSession } from 'next-auth/react';
 
 import { useRouter } from 'next/navigation';
 import { FaPlus, FaStrava, FaTrophy, FaUserAlt, FaSync } from 'react-icons/fa';
-import { Target } from 'lucide-react';
+import { MapPin } from 'lucide-react';
 import { LogoutIcon } from './icon/logout';
 import { QRIcon } from './icon/qr';
 import { useEffect, useState } from 'react';
@@ -332,25 +332,25 @@ const UserDropDown = (params: any) => {
           <DropdownSection aria-label="Activity Management" showDivider>
             <DropdownItem
               startContent={
-                <Target color="blue" size={16} className={iconClasses} />
+                <MapPin color="blue" size={16} className={iconClasses} />
               }
               className="py-2 text-base"
-              textValue="Checkin!"
+              textValue="GPS Check-in"
               key="check-in"
               closeOnSelect={true}
             >
-              Checkin!
+              GPS Check-in
             </DropdownItem>
             <DropdownItem
               startContent={
                 <FaPlus color="green" size={16} className={iconClasses} />
               }
               className="py-2 text-base"
-              textValue="Manual Add..."
+              textValue="Add Activity"
               key="add-activity"
               closeOnSelect={true}
             >
-              Manual Add...
+              Add Activity
             </DropdownItem>
           </DropdownSection>
           

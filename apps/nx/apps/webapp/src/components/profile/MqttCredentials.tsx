@@ -135,22 +135,23 @@ export default function MqttCredentials() {
       </CardHeader>
       <Divider />
       <CardBody>
-        <div className="space-y-4">
+        <div className="space-y-6">
           <div>
-            <label className="block text-small font-medium mb-1">Username</label>
-            <div className="flex gap-2">
+            <label className="block text-medium font-medium mb-2">Username</label>
+            <div className="flex gap-3">
               <Input
                 readOnly
                 value={userData.mqtt_username}
                 className="flex-grow"
                 variant="bordered"
-                size="sm"
+                size="md"
               />
               <Button
                 onClick={() => copyToClipboard(userData.mqtt_username || '', 'username')}
                 variant="flat"
                 color={copying.username ? "success" : "primary"}
-                size="sm"
+                size="lg"
+                className="min-w-40"
               >
                 {copying.username ? "Copied!" : "Copy"}
               </Button>
@@ -158,25 +159,25 @@ export default function MqttCredentials() {
           </div>
 
           <div>
-            <label className="block text-small font-medium mb-1">Password</label>
-            <div className="flex gap-2">
+            <label className="block text-medium font-medium mb-2">Password</label>
+            <div className="flex gap-3">
               <Input
                 readOnly
                 value={userData.mqtt_password}
                 className="flex-grow"
                 type={showPassword ? "text" : "password"}
                 variant="bordered"
-                size="sm"
+                size="md"
                 endContent={
                   <Button
                     isIconOnly
-                    size="sm"
+                    size="md"
                     variant="light"
                     onClick={() => setShowPassword(!showPassword)}
                   >
                     {showPassword ? 
-                      <FaEyeSlash className="h-4 w-4" /> : 
-                      <FaEye className="h-4 w-4" />
+                      <FaEyeSlash className="h-5 w-5" /> : 
+                      <FaEye className="h-5 w-5" />
                     }
                   </Button>
                 }
@@ -185,7 +186,8 @@ export default function MqttCredentials() {
                 onClick={() => copyToClipboard(userData.mqtt_password || '', 'password')}
                 variant="flat"
                 color={copying.password ? "success" : "primary"}
-                size="sm"
+                size="lg"
+                className="min-w-40"
               >
                 {copying.password ? "Copied!" : "Copy"}
               </Button>

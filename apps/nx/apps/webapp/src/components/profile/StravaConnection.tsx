@@ -85,7 +85,7 @@ export default function StravaConnection() {
         <CardHeader className="flex gap-3">
           <div className="flex flex-col">
             <p className="text-lg">Strava Connection</p>
-            <p className="text-small text-default-500">Connecting allows automatic award of daily activity accomplishments.</p>
+            <p className="text-small text-default-500">Automatically contribute to heatmap.</p>
           </div>
         </CardHeader>
         <Divider />
@@ -114,7 +114,7 @@ export default function StravaConnection() {
       <CardHeader className="flex gap-3">
         <div className="flex flex-col">
           <p className="text-lg">Strava Connection</p>
-          <p className="text-small text-default-500">Connecting allows automatic award of daily activity accomplishments.</p>
+          <p className="text-small text-default-500">Automatically contribute to heatmap.</p>
         </div>
       </CardHeader>
       <Divider />
@@ -124,9 +124,9 @@ export default function StravaConnection() {
             <div className="flex items-center gap-3">
               <FaCheckCircle className="text-green-500 text-xl" />
               <div>
-                <p className="font-medium">You are Connected to Strava</p>
+                <p className="font-medium">Connected</p>
                 <p className="text-small text-default-500">
-                  Your Strava account is linked to your profile
+                  Your profile is linked.
                 </p>
               </div>
             </div>

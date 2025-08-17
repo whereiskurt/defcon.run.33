@@ -222,20 +222,22 @@ export default function UserDetails() {
                   needed
                 </div>
               ) : (
-                <Button
-                  onPress={updateDisplaynameHandler}
-                  isLoading={isUpdatingDisplayname}
-                  color="primary"
-                  variant="flat"
-                  size="lg"
-                  className="self-start px-8"
-                  disabled={
-                    !displaynameInput.trim() ||
-                    displaynameInput.trim() === user?.displayname
-                  }
-                >
-                  Update Display Name
-                </Button>
+                <div className="flex justify-center w-full">
+                  <Button
+                    onPress={updateDisplaynameHandler}
+                    isLoading={isUpdatingDisplayname}
+                    color="primary"
+                    variant="flat"
+                    size="lg"
+                    className="px-8"
+                    disabled={
+                      !displaynameInput.trim() ||
+                      displaynameInput.trim() === user?.displayname
+                    }
+                  >
+                    Save Display Name
+                  </Button>
+                </div>
               )}
               {displaynameError && (
                 <p className="text-red-500 text-small">

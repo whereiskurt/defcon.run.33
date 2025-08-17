@@ -185,7 +185,7 @@ export default function CheckInMap({ checkIns, selectedCheckIn, onCheckInSelect 
       }
     });
 
-    // Fit map to show all markers
+    // Fit map to show all markers but don't change zoom when just selecting
     if (bounds.isValid()) {
       mapInstanceRef.current.fitBounds(bounds, { padding: [20, 20] });
       
@@ -196,42 +196,61 @@ export default function CheckInMap({ checkIns, selectedCheckIn, onCheckInSelect 
     }
   }, [checkIns, selectedCheckIn, onCheckInSelect]);
 
+  // Calculate check-in source counts
+  const sourceCounts = checkIns.reduce((acc, checkIn) => {
+    const source = checkIn.source || 'Unknown';
+    const sourceType = source === 'Web GPS' ? 'Web' : 'Meshtastic';
+    acc[sourceType] = (acc[sourceType] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
+
   return (
     <div className="relative w-full h-full">
       <div ref={mapRef} className="w-full h-full rounded-lg" />
       
-      {/* Legend */}
-      <div className="absolute top-2 right-2 bg-white/90 backdrop-blur-sm rounded-lg p-2 shadow-lg text-xs">
-        <div className="space-y-1">
-          <div className="font-semibold">Accuracy</div>
-          <div className="flex items-center gap-1">
-            <div className="w-3 h-3 rounded-full bg-success"></div>
-            <span>&lt; 10m (Excellent)</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <div className="w-3 h-3 rounded-full bg-warning"></div>
-            <span>&lt; 20m (Good)</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <div className="w-3 h-3 rounded-full bg-danger"></div>
-            <span>≥ 20m (Fair)</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <div className="w-3 h-3 rounded-full bg-primary"></div>
-            <span>Selected</span>
+      {/* Check-in Source Summary */}
+      <div 
+        className="absolute top-2 right-2 rounded-lg p-3 shadow-lg text-sm"
+        style={{
+          backgroundColor: 'rgba(255, 255, 255, 0.95)',
+          backdropFilter: 'blur(4px)',
+          zIndex: 400,
+          border: '1px solid rgba(0, 0, 0, 0.1)'
+        }}
+      >
+        <div className="space-y-2">
+          <div className="font-semibold text-base">Check-ins</div>
+          <div className="space-y-1">
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-1">
+                <div 
+                  className="w-3 h-3 rounded-full"
+                  style={{ backgroundColor: '#17C964' }}
+                ></div>
+                <span>Web GPS</span>
+              </div>
+              <span className="font-semibold">{sourceCounts['Web'] || 0}</span>
+            </div>
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-1">
+                <div 
+                  className="w-3 h-3 rounded-full"
+                  style={{ backgroundColor: '#006FEE' }}
+                ></div>
+                <span>Meshtastic</span>
+              </div>
+              <span className="font-semibold">{sourceCounts['Meshtastic'] || 0}</span>
+            </div>
+            <div className="border-t pt-1 mt-1">
+              <div className="flex items-center justify-between gap-3">
+                <span className="font-medium">Total</span>
+                <span className="font-bold">{checkIns.length}</span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
       
-      {/* Sample count info */}
-      {selectedCheckIn && (
-        <div className="absolute bottom-2 left-2 bg-white/90 backdrop-blur-sm rounded-lg p-2 shadow-lg text-xs">
-          <div className="font-semibold">Selected Check-In</div>
-          <div>Large marker: Average position</div>
-          <div>Small dots: Individual GPS samples</div>
-          <div>Dashed circle: Accuracy radius</div>
-        </div>
-      )}
     </div>
   );
 }

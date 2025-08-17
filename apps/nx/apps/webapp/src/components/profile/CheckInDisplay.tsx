@@ -114,10 +114,10 @@ function analyzeMovement(samples: GPSSample[]): MovementAnalysis {
 
   // Check for suspicious patterns
   if (maxDistance < 5 && totalDistance < 10) {
-    suspiciousPatterns.push('Very little movement detected');
+    suspiciousPatterns.push('Little or no movement detected');
     movementType = 'stationary';
   } else if (maxDistance < 2 && samples.length >= 4) {
-    suspiciousPatterns.push('Suspiciously consistent position');
+    suspiciousPatterns.push('Consistent positioning');
     movementType = 'stationary';
   } else {
     isMoving = true;
@@ -147,7 +147,7 @@ function analyzeMovement(samples: GPSSample[]): MovementAnalysis {
   }, 0) / Math.max(1, samples.length - 1);
   
   if (accuracyVariance < 0.1 && samples.length > 3) {
-    suspiciousPatterns.push('Suspiciously consistent GPS accuracy');
+    suspiciousPatterns.push('Consistent GPS accuracy');
   }
 
   return {
@@ -163,10 +163,12 @@ function analyzeMovement(samples: GPSSample[]): MovementAnalysis {
 
 export default function CheckInDisplay({ checkIns = [], remainingQuota = 50, onOpenCheckInModal }: CheckInDisplayProps) {
   const [selectedCheckIn, setSelectedCheckIn] = useState<CheckIn | null>(null);
-  const [showMap, setShowMap] = useState(false);
+  const [showMap, setShowMap] = useState(true);
+  const [mapEnabled, setMapEnabled] = useState(true);
   const [currentCheckIns, setCurrentCheckIns] = useState<CheckIn[]>(checkIns);
   const [currentQuota, setCurrentQuota] = useState(remainingQuota);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [visibleCount, setVisibleCount] = useState(10);
 
   // Sort check-ins by timestamp (most recent first)
   const sortedCheckIns = currentCheckIns.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
@@ -225,6 +227,8 @@ export default function CheckInDisplay({ checkIns = [], remainingQuota = 50, onO
   useEffect(() => {
     setCurrentCheckIns(checkIns);
     setCurrentQuota(remainingQuota);
+    // Reset visible count when new check-ins come in
+    setVisibleCount(10);
   }, [checkIns, remainingQuota]);
 
   // Listen for check-in updates
@@ -259,7 +263,7 @@ export default function CheckInDisplay({ checkIns = [], remainingQuota = 50, onO
             <Button
               color="success"
               variant="flat"
-              startContent={<Plus className="w-4 h-4" />}
+              startContent={<Plus className="w-6 h-6" />}
               isDisabled={currentQuota <= 0}
               onPress={onOpenCheckInModal}
             >
@@ -284,7 +288,7 @@ export default function CheckInDisplay({ checkIns = [], remainingQuota = 50, onO
           </div>
           <div className="flex gap-2 items-center">
             <Button
-              size="sm"
+              size="lg"
               variant="flat"
               color="default"
               isIconOnly
@@ -292,20 +296,30 @@ export default function CheckInDisplay({ checkIns = [], remainingQuota = 50, onO
               isLoading={isRefreshing}
               aria-label="Refresh Check-Ins"
             >
-              {!isRefreshing && <RefreshCw className="w-4 h-4" />}
+              {!isRefreshing && <RefreshCw className="w-6 h-6" />}
             </Button>
             <Button
-              size="sm"
-              variant={showMap ? "solid" : "flat"}
+              size="lg"
+              variant={mapEnabled ? "solid" : "flat"}
               color="primary"
               isIconOnly
-              onPress={() => setShowMap(!showMap)}
-              aria-label={showMap ? 'Hide Map' : 'Show Map'}
+              onPress={() => {
+                if (mapEnabled) {
+                  // Disable map
+                  setMapEnabled(false);
+                  setShowMap(false);
+                } else {
+                  // Enable map and show it (reset)
+                  setMapEnabled(true);
+                  setShowMap(true);
+                }
+              }}
+              aria-label={mapEnabled ? 'Disable Map' : 'Enable Map'}
             >
-              <Map className="w-4 h-4" />
+              <Map className="w-6 h-6" />
             </Button>
             <Button
-              size="sm"
+              size="lg"
               color="success"
               variant="flat"
               isIconOnly
@@ -313,7 +327,7 @@ export default function CheckInDisplay({ checkIns = [], remainingQuota = 50, onO
               aria-label={currentQuota <= 0 ? 'Quota Exceeded' : 'New Check-In'}
               onPress={onOpenCheckInModal}
             >
-              <Plus className="w-4 h-4" />
+              <Plus className="w-6 h-6" />
             </Button>
           </div>
         </div>
@@ -329,8 +343,8 @@ export default function CheckInDisplay({ checkIns = [], remainingQuota = 50, onO
           </div>
         )}
         
-        {showMap && (
-          <div className="h-64 rounded-lg overflow-hidden">
+        {showMap && mapEnabled && (
+          <div className="h-64 rounded-lg overflow-hidden relative z-10">
             <CheckInMap 
               checkIns={sortedCheckIns}
               selectedCheckIn={selectedCheckIn}
@@ -341,8 +355,8 @@ export default function CheckInDisplay({ checkIns = [], remainingQuota = 50, onO
 
         <div className="space-y-3">
           <h4 className="font-medium text-sm text-default-600">Recent Check-Ins</h4>
-          <div className="space-y-2 max-h-64 overflow-y-auto">
-            {sortedCheckIns.slice(0, 10).map((checkIn, index) => (
+          <div className="space-y-2 max-h-96 overflow-y-auto">
+            {sortedCheckIns.slice(0, visibleCount).map((checkIn, index) => (
               <div
                 key={index}
                 className={`p-3 rounded-lg border transition-colors cursor-pointer ${
@@ -351,8 +365,13 @@ export default function CheckInDisplay({ checkIns = [], remainingQuota = 50, onO
                     : 'border-default-200 hover:border-default-300'
                 }`}
                 onClick={() => {
-                  setSelectedCheckIn(selectedCheckIn === checkIn ? null : checkIn);
-                  if (!showMap) setShowMap(true);
+                  const wasSelected = selectedCheckIn === checkIn;
+                  setSelectedCheckIn(wasSelected ? null : checkIn);
+                  
+                  if (!wasSelected && mapEnabled) {
+                    setShowMap(true);
+                  }
+                  // When unselecting, keep the map showing with all points
                 }}
               >
                 <div className="flex items-start justify-between">
@@ -557,11 +576,17 @@ export default function CheckInDisplay({ checkIns = [], remainingQuota = 50, onO
             ))}
           </div>
           
-          {currentCheckIns.length > 10 && (
-            <div className="text-center pt-2">
-              <span className="text-sm text-default-400">
-                Showing 10 of {currentCheckIns.length} check-ins
-              </span>
+          {currentCheckIns.length > visibleCount && (
+            <div className="text-center pt-3">
+              <Button
+                variant="flat"
+                color="primary"
+                size="lg"
+                onPress={() => setVisibleCount(prev => prev + 10)}
+                className="w-full sm:w-auto"
+              >
+                Load More ({visibleCount} of {currentCheckIns.length})
+              </Button>
             </div>
           )}
         </div>
