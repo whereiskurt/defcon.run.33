@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { usePersistedState } from '../../hooks/usePersistedState';
 import {
   Card,
   CardHeader,
@@ -62,7 +63,7 @@ export default function MeshtasticRadios() {
     nodeId: ''
   });
   const [focusedVerifyButtons, setFocusedVerifyButtons] = useState<{ [key: string]: boolean }>({});
-  const [isExpanded, setIsExpanded] = useState<boolean>(false);
+  const [isExpanded, setIsExpanded] = usePersistedState('profile-meshtastic-expanded', false);
 
   useEffect(() => {
     fetchRadios();

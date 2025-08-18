@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { usePersistedState } from '../../hooks/usePersistedState';
 import {
   Card,
   CardHeader,
@@ -30,7 +31,7 @@ export default function MqttCredentials() {
     password: false,
   });
   const [showPassword, setShowPassword] = useState<boolean>(false);
-  const [isExpanded, setIsExpanded] = useState<boolean>(false);
+  const [isExpanded, setIsExpanded] = usePersistedState('profile-mqtt-expanded', false);
 
   useEffect(() => {
     const fetchUserData = async () => {

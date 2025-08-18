@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { usePersistedState } from '../../hooks/usePersistedState';
 import {
   Card,
   CardHeader,
@@ -26,7 +27,7 @@ export default function QuotaDisplay() {
   const [quota, setQuota] = useState<QuotaData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [isExpanded, setIsExpanded] = usePersistedState('profile-quota-expanded', false);
 
   useEffect(() => {
     const fetchUserData = async () => {

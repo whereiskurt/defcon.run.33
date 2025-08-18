@@ -54,6 +54,10 @@ const User = new Entity(
       displayname: {
         type: 'string',
       },
+      checkin_preference: {
+        type: 'string',
+        default: 'public',
+      },
       eqr: {
         type: 'string',
       },

@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { useTheme } from 'next-themes';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
@@ -34,6 +35,7 @@ interface CheckIn {
   };
   bestAccuracy?: number;
   userAgent?: string;
+  isPrivate?: boolean;
 }
 
 interface CheckInMapProps {
@@ -46,6 +48,9 @@ export default function CheckInMap({ checkIns, selectedCheckIn, onCheckInSelect 
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
   const markersRef = useRef<L.LayerGroup | null>(null);
+  const tileLayerRef = useRef<L.TileLayer | null>(null);
+  const [legendVisible, setLegendVisible] = useState(true);
+  const { theme } = useTheme();
 
   useEffect(() => {
     if (!mapRef.current || mapInstanceRef.current) return;
@@ -57,12 +62,21 @@ export default function CheckInMap({ checkIns, selectedCheckIn, onCheckInSelect 
       zoomControl: true,
     });
 
-    // Add tile layer
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '© OpenStreetMap contributors',
+    // Add tile layer (will be set based on theme)
+    const tileUrl = theme === 'dark' 
+      ? 'https://cartodb-basemaps-{s}.global.ssl.fastly.net/dark_all/{z}/{x}/{y}.png'
+      : 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+    
+    const tileAttribution = theme === 'dark'
+      ? '© <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> © <a href="http://cartodb.com/attributions">CartoDB</a>'
+      : '© OpenStreetMap contributors';
+
+    const tileLayer = L.tileLayer(tileUrl, {
+      attribution: tileAttribution,
     }).addTo(map);
 
     mapInstanceRef.current = map;
+    tileLayerRef.current = tileLayer;
     markersRef.current = L.layerGroup().addTo(map);
 
     return () => {
@@ -73,6 +87,29 @@ export default function CheckInMap({ checkIns, selectedCheckIn, onCheckInSelect 
     };
   }, []);
 
+  // Update tile layer when theme changes
+  useEffect(() => {
+    if (!mapInstanceRef.current || !tileLayerRef.current) return;
+
+    const tileUrl = theme === 'dark' 
+      ? 'https://cartodb-basemaps-{s}.global.ssl.fastly.net/dark_all/{z}/{x}/{y}.png'
+      : 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+    
+    const tileAttribution = theme === 'dark'
+      ? '© <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> © <a href="http://cartodb.com/attributions">CartoDB</a>'
+      : '© OpenStreetMap contributors';
+
+    // Remove old tile layer
+    mapInstanceRef.current.removeLayer(tileLayerRef.current);
+    
+    // Add new tile layer
+    const newTileLayer = L.tileLayer(tileUrl, {
+      attribution: tileAttribution,
+    }).addTo(mapInstanceRef.current);
+    
+    tileLayerRef.current = newTileLayer;
+  }, [theme]);
+
   useEffect(() => {
     if (!mapInstanceRef.current || !markersRef.current) return;
 
@@ -82,6 +119,7 @@ export default function CheckInMap({ checkIns, selectedCheckIn, onCheckInSelect 
     if (checkIns.length === 0) return;
 
     const bounds = L.latLngBounds([]);
+    let selectedLatLng: [number, number] | null = null;
     
     checkIns.forEach((checkIn, index) => {
       const latitude = checkIn.averageCoordinates?.latitude;
@@ -91,19 +129,41 @@ export default function CheckInMap({ checkIns, selectedCheckIn, onCheckInSelect 
       
       const isSelected = selectedCheckIn === checkIn;
       
+      // Track selected check-in coordinates for zooming
+      if (isSelected) {
+        selectedLatLng = [latitude, longitude];
+      }
+      
       // Create custom icon based on source type
       const isWeb = checkIn.source === 'Web GPS' || checkIn.source === 'Web';
       const color = isWeb ? '#006FEE' : '#17C964'; // Blue for Web, Green for Meshtastic
       const iconSize = isSelected ? 35 : 25;
+      const isPrivate = checkIn.isPrivate || false;
+      
+      // Lock icon SVG for private check-ins
+      const lockIcon = isPrivate ? `
+        <svg style="
+          position: absolute;
+          top: -2px;
+          right: -2px;
+          width: ${iconSize > 30 ? '14px' : '10px'};
+          height: ${iconSize > 30 ? '14px' : '10px'};
+          fill: white;
+          filter: drop-shadow(0 1px 2px rgba(0,0,0,0.5));
+        " viewBox="0 0 24 24">
+          <path d="M12 2C9.243 2 7 4.243 7 7v3H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2h-1V7c0-2.757-2.243-5-5-5zM9 7c0-1.654 1.346-3 3-3s3 1.346 3 3v3H9V7z"/>
+        </svg>
+      ` : '';
       
       const customIcon = L.divIcon({
         html: `
           <div style="
+            position: relative;
             background-color: ${color};
             width: ${iconSize}px;
             height: ${iconSize}px;
             border-radius: 50%;
-            border: 3px solid white;
+            border: 3px solid ${isPrivate ? '#FFA500' : 'white'};
             box-shadow: 0 2px 4px rgba(0,0,0,0.3);
             display: flex;
             align-items: center;
@@ -113,6 +173,7 @@ export default function CheckInMap({ checkIns, selectedCheckIn, onCheckInSelect 
             font-size: ${iconSize > 30 ? '14px' : '11px'};
           ">
             ${index + 1}
+            ${lockIcon}
           </div>
         `,
         className: 'custom-marker',
@@ -123,8 +184,9 @@ export default function CheckInMap({ checkIns, selectedCheckIn, onCheckInSelect 
       const marker = L.marker([latitude, longitude], { icon: customIcon })
         .bindPopup(`
           <div style="min-width: 200px;">
-            <strong>Check-In #${index + 1}</strong><br/>
+            <strong>Check-In #${index + 1}</strong> ${isPrivate ? '🔒' : '🌐'}<br/>
             <small>${new Date(checkIn.timestamp || 0).toLocaleString()}</small><br/>
+            <strong>Privacy:</strong> ${isPrivate ? 'Private' : 'Public'}<br/>
             <strong>Coordinates:</strong> ${latitude.toFixed(6)}, ${longitude.toFixed(6)}<br/>
             <strong>Accuracy:</strong> ±${(checkIn.bestAccuracy || 0).toFixed(1)}m<br/>
             <strong>Samples:</strong> ${(checkIn.samples || []).length}<br/>
@@ -186,9 +248,20 @@ export default function CheckInMap({ checkIns, selectedCheckIn, onCheckInSelect 
       }
     });
 
-    // Fit map to show all markers but don't change zoom when just selecting
-    if (bounds.isValid()) {
-      mapInstanceRef.current.fitBounds(bounds, { padding: [20, 20] });
+    // Handle zooming based on selection
+    if (selectedLatLng) {
+      // Zoom into selected check-in with smooth animation
+      mapInstanceRef.current.setView(selectedLatLng, 17, {
+        animate: true,
+        duration: 0.5
+      });
+    } else if (bounds.isValid()) {
+      // No selection - fit map to show all markers
+      mapInstanceRef.current.fitBounds(bounds, { 
+        padding: [30, 30],
+        animate: true,
+        duration: 0.5
+      });
       
       // If only one check-in, set a reasonable zoom level
       if (checkIns.length === 1) {
@@ -197,7 +270,7 @@ export default function CheckInMap({ checkIns, selectedCheckIn, onCheckInSelect 
     }
   }, [checkIns, selectedCheckIn, onCheckInSelect]);
 
-  // Calculate check-in source counts
+  // Calculate check-in source and privacy counts
   const sourceCounts = checkIns.reduce((acc, checkIn) => {
     const source = checkIn.source || 'Unknown';
     const sourceType = source === 'Web GPS' ? 'Web' : 'Meshtastic';
@@ -205,50 +278,101 @@ export default function CheckInMap({ checkIns, selectedCheckIn, onCheckInSelect 
     return acc;
   }, {} as Record<string, number>);
 
+  const privacyCounts = checkIns.reduce((acc, checkIn) => {
+    const privacyType = checkIn.isPrivate ? 'Private' : 'Public';
+    acc[privacyType] = (acc[privacyType] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
+
   return (
     <div className="relative w-full h-full">
       <div ref={mapRef} className="w-full h-full rounded-lg" />
       
-      {/* Check-in Source Summary */}
-      <div 
-        className="absolute top-2 right-2 rounded-lg p-3 shadow-lg text-sm bg-content1 border border-divider"
-        style={{
-          backdropFilter: 'blur(8px)',
-          zIndex: 400,
-        }}
-      >
-        <div className="space-y-2">
-          <div className="font-semibold text-base text-foreground">CheckIn</div>
-          <div className="space-y-1">
-            <div className="flex items-center justify-between gap-3">
-              <div className="flex items-center gap-1">
-                <div 
-                  className="w-3 h-3 rounded-full border border-content3"
-                  style={{ backgroundColor: '#17C964' }}
-                ></div>
-                <span className="text-foreground">Web GPS</span>
-              </div>
-              <span className="font-semibold text-foreground">{sourceCounts['Web'] || 0}</span>
+      {/* Show Legend Button when hidden */}
+      {!legendVisible && (
+        <button
+          className="absolute top-2 right-2 rounded-lg px-3 py-2 shadow-lg bg-content1 border border-divider hover:bg-content2 transition-colors flex items-center gap-2"
+          style={{
+            backdropFilter: 'blur(8px)',
+            zIndex: 400,
+          }}
+          onClick={() => setLegendVisible(true)}
+          aria-label="Show legend"
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+          </svg>
+          <span className="text-sm font-medium">Legend</span>
+        </button>
+      )}
+      
+      {/* Check-in Source Summary Legend */}
+      {legendVisible && (
+        <div 
+          className="absolute top-2 right-2 rounded-lg p-3 shadow-lg text-sm bg-content1 border border-divider transition-all duration-300"
+          style={{
+            backdropFilter: 'blur(8px)',
+            zIndex: 400,
+          }}
+        >
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <div className="font-semibold text-base text-foreground">CheckIn</div>
+              <button
+                className="rounded-lg p-1.5 hover:bg-content2 transition-colors"
+                onClick={() => setLegendVisible(false)}
+                aria-label="Hide legend"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
             </div>
-            <div className="flex items-center justify-between gap-3">
-              <div className="flex items-center gap-1">
-                <div 
-                  className="w-3 h-3 rounded-full border border-content3"
-                  style={{ backgroundColor: '#006FEE' }}
-                ></div>
-                <span className="text-foreground">Meshtastic</span>
-              </div>
-              <span className="font-semibold text-foreground">{sourceCounts['Meshtastic'] || 0}</span>
-            </div>
-            <div className="border-t border-divider pt-1 mt-1">
+            <div className="space-y-1">
               <div className="flex items-center justify-between gap-3">
-                <span className="font-medium text-foreground">Total</span>
-                <span className="font-bold text-foreground">{checkIns.length}</span>
+                <div className="flex items-center gap-1">
+                  <div 
+                    className="w-3 h-3 rounded-full border border-content3"
+                    style={{ backgroundColor: '#006FEE' }}
+                  ></div>
+                  <span className="text-foreground">Web GPS</span>
+                </div>
+                <span className="font-semibold text-foreground">{sourceCounts['Web'] || 0}</span>
+              </div>
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-1">
+                  <div 
+                    className="w-3 h-3 rounded-full border border-content3"
+                    style={{ backgroundColor: '#17C964' }}
+                  ></div>
+                  <span className="text-foreground">Meshtastic</span>
+                </div>
+                <span className="font-semibold text-foreground">{sourceCounts['Meshtastic'] || 0}</span>
+              </div>
+              <div className="border-t border-divider pt-1 mt-1">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-1">
+                    <span className="text-foreground">🌐 Public</span>
+                  </div>
+                  <span className="font-semibold text-foreground">{privacyCounts['Public'] || 0}</span>
+                </div>
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-1">
+                    <span className="text-foreground">🔒 Private</span>
+                  </div>
+                  <span className="font-semibold text-foreground">{privacyCounts['Private'] || 0}</span>
+                </div>
+              </div>
+              <div className="border-t border-divider pt-1 mt-1">
+                <div className="flex items-center justify-between gap-3">
+                  <span className="font-medium text-foreground">Total</span>
+                  <span className="font-bold text-foreground">{checkIns.length}</span>
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
+      )}
       
     </div>
   );

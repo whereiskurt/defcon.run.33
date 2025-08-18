@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { usePersistedState } from '../../hooks/usePersistedState';
 import {
   Card,
   CardHeader,
@@ -11,13 +12,14 @@ import {
   Chip,
   Skeleton,
 } from '@heroui/react';
-import { ChevronDown, ChevronUp } from 'lucide-react';
+import { ChevronDown, ChevronUp, Lock, Globe, Check, X } from 'lucide-react';
 
 type UserData = {
   email: string;
   displayname?: string;
   mqtt_usertype?: string;
   totalPoints?: number;
+  checkin_preference?: 'public' | 'private';
   // Add other fields from the API response as needed
 };
 
@@ -36,8 +38,13 @@ export default function UserDetails() {
   // Email display state
   const [showFullEmail, setShowFullEmail] = useState(false);
   
+  // Check-in preference state
+  const [isUpdatingPreference, setIsUpdatingPreference] = useState(false);
+  const [preferenceError, setPreferenceError] = useState('');
+  const [preferenceSuccess, setPreferenceSuccess] = useState('');
+  
   // Collapse/expand state
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [isExpanded, setIsExpanded] = usePersistedState('profile-userdetails-expanded', false);
 
 
   useEffect(() => {
@@ -124,6 +131,57 @@ export default function UserDetails() {
       );
     } finally {
       setIsUpdatingDisplayname(false);
+    }
+  };
+
+  const cancelDisplaynameChange = () => {
+    setDisplaynameInput(user?.displayname || '');
+    setHasDisplaynameChanged(false);
+    setDisplaynameError('');
+    setDisplaynameSuccess('');
+  };
+
+  const updatePreferenceHandler = async (preference: 'public' | 'private') => {
+    if (user?.checkin_preference === preference) {
+      return; // No change needed
+    }
+
+    setIsUpdatingPreference(true);
+    setPreferenceError('');
+    setPreferenceSuccess('');
+
+    try {
+      const response = await fetch('/api/user/checkin-preference', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ checkin_preference: preference }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to update check-in preference');
+      }
+
+      setUser(prev => prev ? { ...prev, checkin_preference: preference } : null);
+      setPreferenceSuccess(`Check-in preference updated to ${preference}!`);
+
+      // Dispatch event to notify other components
+      window.dispatchEvent(new CustomEvent('userUpdated', { 
+        detail: { checkin_preference: preference } 
+      }));
+
+      // Clear success message after 3 seconds
+      setTimeout(() => setPreferenceSuccess(''), 3000);
+    } catch (err) {
+      console.error('Error updating check-in preference:', err);
+      setPreferenceError(
+        err instanceof Error ? err.message : 'Failed to update check-in preference'
+      );
+    } finally {
+      setIsUpdatingPreference(false);
     }
   };
 
@@ -223,6 +281,39 @@ export default function UserDetails() {
                   input: `text-lg ${(user?.totalPoints || 0) < 2 ? 'text-default-400' : ''}`,
                   inputWrapper: (user?.totalPoints || 0) < 2 ? 'opacity-60' : ''
                 }}
+                endContent={
+                  hasDisplaynameChanged && (user?.totalPoints || 0) >= 2 && (
+                    <div className="flex gap-1">
+                      <Button
+                        isIconOnly
+                        size="sm"
+                        color="success"
+                        variant="flat"
+                        onPress={updateDisplaynameHandler}
+                        isLoading={isUpdatingDisplayname}
+                        isDisabled={
+                          isUpdatingDisplayname ||
+                          !displaynameInput.trim() ||
+                          displaynameInput.trim().length > 16
+                        }
+                        aria-label="Save display name"
+                      >
+                        <Check className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        isIconOnly
+                        size="sm"
+                        color="danger"
+                        variant="flat"
+                        onPress={cancelDisplaynameChange}
+                        isDisabled={isUpdatingDisplayname}
+                        aria-label="Cancel changes"
+                      >
+                        <X className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  )
+                }
               />
               {/* Character counter - only show when unlocked */}
               {(user?.totalPoints || 0) >= 2 && (
@@ -237,7 +328,7 @@ export default function UserDetails() {
                   )}
                 </div>
               )}
-              {(user?.totalPoints || 0) < 2 ? (
+              {(user?.totalPoints || 0) < 2 && (
                 <div className="text-small text-default-500 text-center">
                   🔐 Locked.
                   <Chip
@@ -250,24 +341,6 @@ export default function UserDetails() {
                   </Chip>
                   needed
                 </div>
-              ) : (
-                <div className="flex justify-center w-full">
-                  <Button
-                    onPress={updateDisplaynameHandler}
-                    isLoading={isUpdatingDisplayname}
-                    color="primary"
-                    variant="flat"
-                    size="lg"
-                    className="px-8"
-                    disabled={
-                      !displaynameInput.trim() ||
-                      !hasDisplaynameChanged ||
-                      displaynameInput.trim().length > 16
-                    }
-                  >
-                    Save Display Name
-                  </Button>
-                </div>
               )}
               {displaynameError && (
                 <p className="text-red-500 text-small">
@@ -277,6 +350,45 @@ export default function UserDetails() {
               {displaynameSuccess && (
                 <p className="text-green-500 text-small">
                   {displaynameSuccess}
+                </p>
+              )}
+            </div>
+            
+            {/* Check-in Preference Section */}
+            <div>
+              <p className="text-lg mb-2">Check-in Preference</p>
+              <div className="flex gap-2">
+                <Button
+                  size="sm"
+                  variant={user.checkin_preference === 'public' ? "solid" : "flat"}
+                  color={user.checkin_preference === 'public' ? "success" : "default"}
+                  startContent={<Globe className="w-4 h-4" />}
+                  onPress={() => updatePreferenceHandler('public')}
+                  isLoading={isUpdatingPreference}
+                  isDisabled={isUpdatingPreference}
+                >
+                  Public
+                </Button>
+                <Button
+                  size="sm"
+                  variant={user.checkin_preference === 'private' ? "solid" : "flat"}
+                  color={user.checkin_preference === 'private' ? "warning" : "default"}
+                  startContent={<Lock className="w-4 h-4" />}
+                  onPress={() => updatePreferenceHandler('private')}
+                  isLoading={isUpdatingPreference}
+                  isDisabled={isUpdatingPreference}
+                >
+                  Private
+                </Button>
+              </div>
+              {preferenceError && (
+                <p className="text-danger text-small mt-1">
+                  {preferenceError}
+                </p>
+              )}
+              {preferenceSuccess && (
+                <p className={`text-small mt-1 ${preferenceSuccess.includes('private') ? 'text-warning' : 'text-success'}`}>
+                  {preferenceSuccess}
                 </p>
               )}
             </div>

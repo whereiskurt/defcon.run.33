@@ -15,7 +15,7 @@ import {
   Link,
   Checkbox 
 } from '@heroui/react';
-import { Target, Satellite, MapPin, Navigation, RotateCw } from 'lucide-react';
+import { Target, Satellite, MapPin, Navigation, RotateCw, Lock, Globe } from 'lucide-react';
 
 interface GPSSample {
   latitude: number;
@@ -33,9 +33,12 @@ interface CheckInModalProps {
   onClose: () => void;
   userEmail: string;
   remainingQuota: number;
+  userPreference?: 'public' | 'private';
+  sessionPreference?: 'public' | 'private' | null;
+  onPrivacyChange?: (isPrivate: boolean) => void;
 }
 
-export default function CheckInModal({ isOpen, onClose, userEmail, remainingQuota }: CheckInModalProps) {
+export default function CheckInModal({ isOpen, onClose, userEmail, remainingQuota, userPreference, sessionPreference, onPrivacyChange }: CheckInModalProps) {
   const [isCollecting, setIsCollecting] = useState(false);
   const [samples, setSamples] = useState<GPSSample[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -44,11 +47,23 @@ export default function CheckInModal({ isOpen, onClose, userEmail, remainingQuot
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [currentQuota, setCurrentQuota] = useState(remainingQuota);
   const [isSuccess, setIsSuccess] = useState(false);
-  const [isPrivate, setIsPrivate] = useState(true);
+  const [isPrivate, setIsPrivate] = useState(() => {
+    // Priority: sessionPreference > userPreference > default to public
+    if (sessionPreference !== null) {
+      return sessionPreference === 'private';
+    }
+    return userPreference === 'private';
+  });
 
   const TOTAL_SAMPLES = 5;
   const SAMPLE_INTERVAL = 3000; // 3 seconds between samples
   const TOTAL_DURATION = (TOTAL_SAMPLES - 1) * SAMPLE_INTERVAL; // Total time for collection
+
+  // Handle privacy setting changes
+  const handlePrivacyChange = (newIsPrivate: boolean) => {
+    setIsPrivate(newIsPrivate);
+    onPrivacyChange?.(newIsPrivate);
+  };
 
   // Initialize quota when modal opens fresh (not after success)
   useEffect(() => {
@@ -56,6 +71,19 @@ export default function CheckInModal({ isOpen, onClose, userEmail, remainingQuot
       setCurrentQuota(remainingQuota);
     }
   }, [isOpen, remainingQuota]);
+
+  // Update privacy state whenever session preference changes
+  useEffect(() => {
+    // Only update if we're not in the middle of a check-in process
+    if (!isCollecting && !isSubmitting) {
+      // Priority: sessionPreference > userPreference > default to public
+      if (sessionPreference !== null) {
+        setIsPrivate(sessionPreference === 'private');
+      } else {
+        setIsPrivate(userPreference === 'private');
+      }
+    }
+  }, [sessionPreference, userPreference, isCollecting, isSubmitting]);
 
   const requestPermission = async () => {
     if (!navigator.geolocation) {
@@ -233,7 +261,12 @@ export default function CheckInModal({ isOpen, onClose, userEmail, remainingQuot
     setHasPermission(false);
     setIsSubmitting(false);
     setIsSuccess(false);
-    setIsPrivate(true);
+    // Reset to session preference if available, otherwise user preference
+    if (sessionPreference !== null) {
+      setIsPrivate(sessionPreference === 'private');
+    } else {
+      setIsPrivate(userPreference === 'private');
+    }
     onClose();
   };
 
@@ -257,7 +290,19 @@ export default function CheckInModal({ isOpen, onClose, userEmail, remainingQuot
         <ModalHeader className="text-center">
           <div className="flex flex-col gap-2 w-full">
             <div className="flex items-center justify-center gap-3">
-              <h1 className="text-xl font-bold">Check-in</h1>
+              <h1 className="text-xl font-bold flex items-center gap-2">
+                {isPrivate ? (
+                  <>
+                    <Lock className="w-5 h-5 text-warning" />
+                    <span>Private Check-in</span>
+                  </>
+                ) : (
+                  <>
+                    <Globe className="w-5 h-5 text-success" />
+                    <span>Public Check-in</span>
+                  </>
+                )}
+              </h1>
               <Chip size="sm" variant="flat" color="default">
                 {currentQuota}/50 <Target className="w-3 h-3 inline ml-1" />
               </Chip>
@@ -303,37 +348,57 @@ export default function CheckInModal({ isOpen, onClose, userEmail, remainingQuot
                   <p className="text-default-600 text-sm">
                     This check-in requires access to your device's precise location.
                   </p>
-                  <p className="text-xs text-default-400">
-                    We'll collect 5 GPS samples over approximately 15 seconds to verify your location.
-                  </p>
                   
-                  {/* Privacy Toggle */}
-                  <div className="flex justify-center pt-4">
-                    <Checkbox
-                      isSelected={!isPrivate}
-                      onValueChange={(checked) => setIsPrivate(!checked)}
-                      color="success"
-                      size="md"
-                      classNames={{
-                        base: "inline-flex max-w-md w-full bg-content1 m-0 hover:bg-content2 items-center justify-start cursor-pointer rounded-lg gap-2 p-4 border-2 border-transparent data-[selected=true]:border-success",
-                        label: "w-full",
-                      }}
+                  <Divider />
+                  
+                  {/* Privacy Selection - Side by side buttons */}
+                  <div className="flex gap-3 justify-center">
+                    <button
+                      onClick={() => handlePrivacyChange(false)}
+                      className={`flex-1 max-w-[200px] p-4 rounded-lg border-2 transition-all ${
+                        !isPrivate 
+                          ? 'border-success bg-success-50 dark:bg-success-50/10' 
+                          : 'border-default-200 bg-content1 hover:bg-content2'
+                      }`}
                     >
-                      <div className="w-full flex justify-between gap-2">
-                        <div className="flex flex-col items-start">
-                          <span className="text-medium">
-                            {isPrivate ? "Private" : "Public"}
-                          </span>
-                          <span className="text-tiny text-default-400">
-                            {isPrivate 
-                              ? "Only you can see this check-in" 
-                              : "This check-in will be visible to others"
-                            }
-                          </span>
+                      <div className="flex flex-col items-center gap-2">
+                        <Globe className={`w-6 h-6 ${!isPrivate ? 'text-success' : 'text-default-400'}`} />
+                        <div className="text-center">
+                          <div className={`text-sm font-semibold ${!isPrivate ? 'text-success' : 'text-default-600'}`}>
+                            Public
+                          </div>
+                          <div className="text-tiny text-default-400">
+                            Visible to others
+                          </div>
                         </div>
                       </div>
-                    </Checkbox>
+                    </button>
+                    
+                    <button
+                      onClick={() => handlePrivacyChange(true)}
+                      className={`flex-1 max-w-[200px] p-4 rounded-lg border-2 transition-all ${
+                        isPrivate 
+                          ? 'border-warning bg-warning-50 dark:bg-warning-50/10' 
+                          : 'border-default-200 bg-content1 hover:bg-content2'
+                      }`}
+                    >
+                      <div className="flex flex-col items-center gap-2">
+                        <Lock className={`w-6 h-6 ${isPrivate ? 'text-warning' : 'text-default-400'}`} />
+                        <div className="text-center">
+                          <div className={`text-sm font-semibold ${isPrivate ? 'text-warning' : 'text-default-600'}`}>
+                            Private
+                          </div>
+                          <div className="text-tiny text-default-400">
+                            Only you can see
+                          </div>
+                        </div>
+                      </div>
+                    </button>
                   </div>
+                  
+                  <p className="text-xs text-default-400">
+                    We'll collect samples over approximately 15 seconds.
+                  </p>
                 </>
               ) : (
                 <div className="p-4 bg-danger-50 rounded-lg">
@@ -365,7 +430,7 @@ export default function CheckInModal({ isOpen, onClose, userEmail, remainingQuot
               <div className="space-y-2">
                 <div className="flex justify-between text-sm">
                   <span>Progress</span>
-                  <span>{samples.length} / {TOTAL_SAMPLES} samples</span>
+                  <span>{Math.max(1, samples.length)} / {TOTAL_SAMPLES} samples</span>
                 </div>
                 <Progress 
                   value={progress} 
@@ -440,15 +505,20 @@ export default function CheckInModal({ isOpen, onClose, userEmail, remainingQuot
                         setProgress(0);
                         setHasPermission(false);
                         setError(null);
-                        setIsPrivate(true);
+                        // Keep the same privacy setting for next check-in
                         // Start new check-in immediately
                         requestPermission();
                       }}
-                      color="primary"
+                      color={isPrivate ? "warning" : "success"}
                       size="md"
-                      startContent={<RotateCw className="w-4 h-4" />}
+                      startContent={
+                        <div className="flex items-center gap-1">
+                          {isPrivate ? <Lock className="w-4 h-4" /> : <Globe className="w-4 h-4" />}
+                          <RotateCw className="w-4 h-4" />
+                        </div>
+                      }
                     >
-                      Check-in Again!
+                      {isPrivate ? "Private Check-in Again" : "Public Check-in Again"}
                     </Button>
                   )}
                   <Button
@@ -473,10 +543,11 @@ export default function CheckInModal({ isOpen, onClose, userEmail, remainingQuot
                 {currentQuota > 0 && !hasPermission && !error && (
                   <Button
                     onPress={requestPermission}
-                    color="primary"
+                    color={isPrivate ? "warning" : "success"}
                     size="md"
+                    startContent={isPrivate ? <Lock className="w-4 h-4" /> : <Globe className="w-4 h-4" />}
                   >
-                    Start Check-In
+                    {isPrivate ? "Start Private Check-In" : "Start Public Check-In"}
                   </Button>
                 )}
                 {error && (

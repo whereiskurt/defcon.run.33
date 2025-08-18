@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { usePersistedState } from '../../hooks/usePersistedState';
 import { Card, CardBody, CardHeader, Divider, Chip, Button, Spinner, Skeleton, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, useDisclosure } from '@heroui/react';
 import dynamic from 'next/dynamic';
 import { MapPin, Clock, Target, Smartphone, Activity, AlertTriangle, CheckCircle, Zap, Map, Plus, RefreshCw, ChevronDown, ChevronUp, ExternalLink, Lock, Globe } from 'lucide-react';
@@ -173,7 +174,7 @@ export default function CheckInDisplay({ remainingQuota = 50, onOpenCheckInModal
   const [visibleCount, setVisibleCount] = useState(10);
   const [hasMore, setHasMore] = useState(false);
   const [cursor, setCursor] = useState<string | undefined>(undefined);
-  const [isExpanded, setIsExpanded] = useState<boolean>(false);
+  const [isExpanded, setIsExpanded] = usePersistedState<boolean>('profile-checkin-expanded', false);
   const [selectedCheckInForPrivacy, setSelectedCheckInForPrivacy] = useState<CheckIn | null>(null);
   const [isUpdatingPrivacy, setIsUpdatingPrivacy] = useState(false);
   const {isOpen: isPrivacyModalOpen, onOpen: onPrivacyModalOpen, onOpenChange: onPrivacyModalOpenChange} = useDisclosure();
@@ -307,6 +308,18 @@ export default function CheckInDisplay({ remainingQuota = 50, onOpenCheckInModal
   useEffect(() => {
     setCurrentQuota(remainingQuota);
   }, [remainingQuota]);
+
+  // Auto-expand if user has check-ins and no preference is saved
+  useEffect(() => {
+    if (!isLoading && currentCheckIns.length > 0) {
+      // Check if we have a saved preference
+      const stored = localStorage.getItem('profile-checkin-expanded');
+      if (stored === null) {
+        // No saved preference, default to expanded for users with check-ins
+        setIsExpanded(true);
+      }
+    }
+  }, [isLoading, currentCheckIns.length]);
 
   // Listen for check-in updates
   useEffect(() => {

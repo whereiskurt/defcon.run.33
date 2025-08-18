@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { usePersistedState } from '../../hooks/usePersistedState';
 import {
   Card,
   CardHeader,
@@ -24,7 +25,7 @@ export default function LeaderboardRank() {
   const { data: session, status } = useSession();
   const [rankData, setRankData] = useState<UserRankData | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
-  const [isExpanded, setIsExpanded] = useState<boolean>(false);
+  const [isExpanded, setIsExpanded] = usePersistedState('profile-leaderboard-expanded', false);
 
   const fetchUserRank = async () => {
     if (!session?.user?.email) {

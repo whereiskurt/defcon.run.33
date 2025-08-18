@@ -25,20 +25,21 @@ export default async function Page() {
       {/* Row 1: User Details - Display name, email, user type all in one row */}
       <UserDetails />
       
-      {/* Row 2: Global Ranking + MQTT Credentials */}
+      {/* Row 2: Check-Ins Display - Full width */}
+      <CheckInDisplayClient 
+        remainingQuota={user?.quota?.checkIns ?? 50}
+        userEmail={session.user.email!}
+        userPreference={user?.checkin_preference as 'public' | 'private' | undefined}
+      />
+      
+      {/* Row 3: Global Ranking + MQTT Credentials */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <LeaderboardRank />
         <MqttCredentials />
       </div>
       
-      {/* Row 3: Meshtastic Radios - Full width */}
+      {/* Row 4: Meshtastic Radios - Full width */}
       <MeshtasticRadios />
-
-      {/* Row 4: Check-Ins Display - Full width */}
-      <CheckInDisplayClient 
-        remainingQuota={user?.quota?.checkIns ?? 50}
-        userEmail={session.user.email!}
-      />
             
       {/* Row 5: Strava Connection + Quota Display */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

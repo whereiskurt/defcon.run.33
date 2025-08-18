@@ -500,7 +500,7 @@ export default function GPXUploadModal({ isOpen, onClose }: GPXUploadModalProps)
                 classNames={{
                   value: "text-foreground",
                   listbox: "text-foreground",
-                  popover: "text-foreground",
+                  popoverContent: "text-foreground",
                   innerWrapper: "text-foreground",
                   mainWrapper: "text-foreground"
                 }}

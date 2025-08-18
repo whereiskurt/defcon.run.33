@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { usePersistedState } from '../../hooks/usePersistedState';
 import {
   Card,
   CardHeader,
@@ -20,7 +21,7 @@ export default function StravaConnection() {
   const [loading, setLoading] = useState<boolean>(false);
   const [syncing, setSyncing] = useState<boolean>(false);
   const [syncMessage, setSyncMessage] = useState<string>('');
-  const [isExpanded, setIsExpanded] = useState<boolean>(false);
+  const [isExpanded, setIsExpanded] = usePersistedState('profile-strava-expanded', false);
 
   // Handle connecting to Strava
   const handleStravaConnect = async () => {
@@ -145,6 +146,12 @@ export default function StravaConnection() {
             </div>
             
             <div className="space-y-4">
+              <div className="text-center">
+                <p className="text-small text-default-500">
+                  Sync Strava DEFCON activities (4x daily limit)
+                </p>
+              </div>
+              
               <div className="flex justify-center">
                 <Button
                   color="primary"
@@ -157,12 +164,6 @@ export default function StravaConnection() {
                 >
                   {syncing ? 'Syncing...' : 'Sync Strava'}
                 </Button>
-              </div>
-              
-              <div className="text-center">
-                <p className="text-small text-default-500">
-                  Sync Strava DEFCON activities (4x daily limit)
-                </p>
               </div>
               
               {syncMessage && (
