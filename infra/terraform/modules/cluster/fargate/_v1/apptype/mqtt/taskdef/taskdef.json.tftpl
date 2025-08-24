@@ -64,11 +64,11 @@
     "secrets": [
       {
         "name": "MESHTK_SERVER_S3BUCKETNAME",
-        "valueFrom": "${p_cluster}/ecs/s3/common_bucket_name"
+        "valueFrom": "${p_app}/mqtt/s3/logging_bucket_name"
       },
       {
         "name": "MESHTK_SERVER_S3BUCKETREGION",
-        "valueFrom": "${p_cluster}/ecs/s3/common_bucket_region"
+        "valueFrom": "${p_app}/mqtt/s3/logging_bucket_region"
       },
       {
       "name": "USER_CREATION_SEED",

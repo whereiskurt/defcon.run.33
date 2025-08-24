@@ -21,6 +21,51 @@ locals {
   }
 }
 
+resource "aws_iam_role" "task_role" {
+  name = replace("mqtt-task-${var.env_zonename}", ".", "-")
+  
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "ecs-tasks.amazonaws.com"
+        }
+      }
+    ]
+  })
+  
+  provider = aws.application
+}
+
+resource "aws_iam_role_policy" "task_role_s3_policy" {
+  name = "mqtt-task-s3-policy"
+  role = aws_iam_role.task_role.id
+  
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "s3:GetObject",
+          "s3:PutObject",
+          "s3:DeleteObject",
+          "s3:ListBucket"
+        ]
+        Resource = [
+          aws_s3_bucket.mqtt_logging.arn,
+          "${aws_s3_bucket.mqtt_logging.arn}/*"
+        ]
+      }
+    ]
+  })
+  
+  provider = aws.application
+}
+
 resource "aws_service_discovery_service" "service_discovery" {
   name = "mqtt"
   dns_config {
@@ -41,6 +86,7 @@ resource "aws_ecs_task_definition" "service" {
   family                   = replace("${var.env_zonename}", ".", "-")
   requires_compatibilities = ["FARGATE"]
   execution_role_arn       = var.task_execution_role_arn
+  task_role_arn           = aws_iam_role.task_role.arn
   cpu                      = 512
   memory                   = 1024
   network_mode             = "awsvpc"
