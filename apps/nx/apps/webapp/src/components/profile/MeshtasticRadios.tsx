@@ -25,7 +25,9 @@ interface MeshtasticRadio {
   id: string;
   nodeId: string;
   privateKey: string;
+  publicKey: string;
   impersonate: boolean;
+  addPublicKey: boolean;
   verificationCode: string;
   verified: boolean;
   createdAt: number;
@@ -42,14 +44,19 @@ export default function MeshtasticRadios() {
   const [newRadio, setNewRadio] = useState({
     nodeId: '',
     privateKey: '',
+    publicKey: '',
     impersonate: false,
+    addPublicKey: false,
   });
+  const [modalError, setModalError] = useState<string | null>(null);
+  const [showModalPrivateKey, setShowModalPrivateKey] = useState(false);
   const [verificationInputs, setVerificationInputs] = useState<{ [key: string]: string }>({});
   const [pinInputs, setPinInputs] = useState<{ [key: string]: string[] }>({});
   const [quota, setQuota] = useState({ used: 0, total: 5 });
   const [showPrivateKeys, setShowPrivateKeys] = useState<{ [key: string]: boolean }>({});
   const [editingRadios, setEditingRadios] = useState<{ [key: string]: boolean }>({});
-  const [editValues, setEditValues] = useState<{ [key: string]: { privateKey: string; impersonate: boolean } }>({});
+  const [editValues, setEditValues] = useState<{ [key: string]: { privateKey: string; publicKey: string; impersonate: boolean; addPublicKey: boolean } }>({});
+  const [editErrors, setEditErrors] = useState<{ [key: string]: string | null }>({});
   const [showMeshtasticMap, setShowMeshtasticMap] = useState(false);
   const [meshtasticCheckIns, setMeshtasticCheckIns] = useState<any[]>([]);
   const [deleteConfirmation, setDeleteConfirmation] = useState<{ isOpen: boolean; radioId: string; nodeId: string }>({
@@ -121,18 +128,24 @@ export default function MeshtasticRadios() {
     // Validate and format NodeID
     const nodeIdValidation = validateAndFormatNodeId(newRadio.nodeId);
     if (!nodeIdValidation.isValid) {
-      setError('Invalid NodeID. Must be hex (!1234abcd) or integer (≤32-bit)');
+      setModalError('Invalid NodeID. Must be hex (!1234abcd) or integer (≤32-bit)');
+      return;
+    }
+
+    // Validate that public key is provided when add public key is enabled
+    if (newRadio.addPublicKey && !newRadio.publicKey.trim()) {
+      setModalError('Public key is required when "Add public key" is enabled');
       return;
     }
 
     // Validate that private key is provided when impersonation is enabled
     if (newRadio.impersonate && !newRadio.privateKey.trim()) {
-      setError('Private key is required when "Allow impersonation" is enabled');
+      setModalError('Private key is required when "Allow impersonation" is enabled');
       return;
     }
 
     try {
-      setError(null);
+      setModalError(null);
       const radioData = {
         ...newRadio,
         nodeId: nodeIdValidation.formatted
@@ -153,9 +166,11 @@ export default function MeshtasticRadios() {
       // Increment quota used count since a new radio was successfully added
       setQuota({ used: quota.used + 1, total: quota.total });
       onOpenChange();
-      setNewRadio({ nodeId: '', privateKey: '', impersonate: false });
+      setNewRadio({ nodeId: '', privateKey: '', publicKey: '', impersonate: false, addPublicKey: false });
+      setModalError(null);
+      setShowModalPrivateKey(false);
     } catch (err: any) {
-      setError(err.message || 'Failed to add radio');
+      setModalError(err.message || 'Failed to add radio');
     }
   };
 
@@ -368,8 +383,10 @@ export default function MeshtasticRadios() {
     setEditValues({ 
       ...editValues, 
       [radio.id]: { 
-        privateKey: radio.privateKey, 
-        impersonate: radio.impersonate 
+        privateKey: radio.privateKey,
+        publicKey: radio.publicKey || '',
+        impersonate: radio.impersonate,
+        addPublicKey: radio.addPublicKey || false
       } 
     });
   };
@@ -378,27 +395,34 @@ export default function MeshtasticRadios() {
     setEditingRadios({ ...editingRadios, [radioId]: false });
     const { [radioId]: _, ...remainingEditValues } = editValues;
     setEditValues(remainingEditValues);
-    setError(null);
+    setEditErrors({ ...editErrors, [radioId]: null });
   };
 
   const saveEditing = async (radioId: string) => {
     const editValue = editValues[radioId];
     if (!editValue) return;
 
+    // Validate that public key is provided when add public key is enabled
+    if (editValue.addPublicKey && !editValue.publicKey.trim()) {
+      setEditErrors({ ...editErrors, [radioId]: 'Public key is required when "Add public key" is enabled' });
+      return;
+    }
+
     // Validate that private key is provided when impersonation is enabled
     if (editValue.impersonate && !editValue.privateKey.trim()) {
-      setError('Private key is required when "Allow impersonation" is enabled');
+      setEditErrors({ ...editErrors, [radioId]: 'Private key is required when "Allow impersonation" is enabled' });
       return;
     }
 
     try {
-      setError(null);
+      setEditErrors({ ...editErrors, [radioId]: null });
       await handleUpdateRadio(radioId, editValue);
       setEditingRadios({ ...editingRadios, [radioId]: false });
       const { [radioId]: _, ...remainingEditValues } = editValues;
       setEditValues(remainingEditValues);
+      setEditErrors({ ...editErrors, [radioId]: null });
     } catch (err: any) {
-      setError(err.message || 'Failed to save changes');
+      setEditErrors({ ...editErrors, [radioId]: err.message || 'Failed to save changes' });
     }
   };
 
@@ -627,11 +651,11 @@ export default function MeshtasticRadios() {
                       </div>
                       {(radio.verificationAttempts || 0) >= 5 ? (
                         <p className="text-xs text-danger-500 text-center">
-                          Maximum verification attempts exceeded (5/5). This radio cannot be verified.
+                          Maximum verification attempts exceeded. This radio cannot be verified.
                         </p>
                       ) : (
                         <p className="text-xs text-default-500 text-center">
-                          A code was sent to your radio ({Math.min((radio.verificationAttempts || 0) + 1, 5)}/5 attempts used)
+                          A code was sent to your radio ({5 - (radio.verificationAttempts || 0)} attempt{5 - (radio.verificationAttempts || 0) !== 1 ? 's' : ''} left{(radio.resendAttempts || 0) > 0 && `, ${3 - (radio.resendAttempts || 0)} resend${3 - (radio.resendAttempts || 0) !== 1 ? 's' : ''} left`})
                         </p>
                       )}
                     </div>
@@ -639,6 +663,22 @@ export default function MeshtasticRadios() {
 
                   {radio.verified && !editingRadios[radio.id] && (
                     <div className="space-y-2">
+                      <div className="flex items-center space-x-2">
+                        <span className="text-sm text-default-500">Add public key:</span>
+                        <Chip size="sm" color={radio.addPublicKey ? "success" : "default"} variant="flat">
+                          {radio.addPublicKey ? "Yes" : "No"}
+                        </Chip>
+                      </div>
+                      
+                      {radio.addPublicKey && radio.publicKey && (
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm text-default-500">Public Key:</span>
+                          <span className="text-sm font-mono">
+                            {radio.publicKey}
+                          </span>
+                        </div>
+                      )}
+
                       <div className="flex items-center space-x-2">
                         <span className="text-sm text-default-500">Allow impersonation:</span>
                         <Chip size="sm" color={radio.impersonate ? "success" : "default"} variant="flat">
@@ -670,24 +710,91 @@ export default function MeshtasticRadios() {
 
                   {radio.verified && editingRadios[radio.id] && (
                     <div className="space-y-2">
-                      <div className="flex items-center gap-2">
-                        <Checkbox
-                          isSelected={editValues[radio.id]?.impersonate ?? radio.impersonate}
-                          onValueChange={(checked) => 
-                            setEditValues({ 
+                      {editErrors[radio.id] && (
+                        <div className="bg-danger-50 border border-danger-200 text-danger-700 px-3 py-2 rounded text-sm">
+                          <span className="flex items-center gap-2">
+                            <AlertCircle className="h-3 w-3" />
+                            {editErrors[radio.id]}
+                          </span>
+                        </div>
+                      )}
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2">
+                          <Checkbox
+                            isSelected={editValues[radio.id]?.addPublicKey ?? radio.addPublicKey}
+                            onValueChange={(checked) => 
+                              setEditValues({ 
+                                ...editValues, 
+                                [radio.id]: { 
+                                  ...editValues[radio.id], 
+                                  addPublicKey: checked,
+                                  publicKey: checked ? (editValues[radio.id]?.publicKey ?? radio.publicKey ?? '') : ''
+                                } 
+                              })
+                            }
+                          />
+                          <label 
+                            className="text-sm font-normal cursor-pointer"
+                            onClick={() => setEditValues({ 
                               ...editValues, 
                               [radio.id]: { 
                                 ...editValues[radio.id], 
-                                impersonate: checked,
-                                privateKey: checked ? (editValues[radio.id]?.privateKey ?? radio.privateKey) : ''
+                                addPublicKey: !(editValues[radio.id]?.addPublicKey ?? radio.addPublicKey),
+                                publicKey: !(editValues[radio.id]?.addPublicKey ?? radio.addPublicKey) ? (editValues[radio.id]?.publicKey ?? radio.publicKey ?? '') : ''
                               } 
-                            })
-                          }
-                        />
-                        <label className="text-sm font-normal cursor-pointer min-w-fit">
-                          Allow impersonation
-                        </label>
-                        
+                            })}
+                          >
+                            Add public key
+                          </label>
+                        </div>
+                        {(editValues[radio.id]?.addPublicKey ?? radio.addPublicKey) && (
+                          <Input
+                            type="text"
+                            placeholder="Public key (optional)"
+                            value={editValues[radio.id]?.publicKey ?? radio.publicKey ?? ''}
+                            onChange={(e) => 
+                              setEditValues({ 
+                                ...editValues, 
+                                [radio.id]: { 
+                                  ...editValues[radio.id], 
+                                  publicKey: e.target.value 
+                                } 
+                              })
+                            }
+                            color="default"
+                            className="ml-6"
+                          />
+                        )}
+                      </div>
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2">
+                          <Checkbox
+                            isSelected={editValues[radio.id]?.impersonate ?? radio.impersonate}
+                            onValueChange={(checked) => 
+                              setEditValues({ 
+                                ...editValues, 
+                                [radio.id]: { 
+                                  ...editValues[radio.id], 
+                                  impersonate: checked,
+                                  privateKey: checked ? (editValues[radio.id]?.privateKey ?? radio.privateKey) : ''
+                                } 
+                              })
+                            }
+                          />
+                          <label 
+                            className="text-sm font-normal cursor-pointer"
+                            onClick={() => setEditValues({ 
+                              ...editValues, 
+                              [radio.id]: { 
+                                ...editValues[radio.id], 
+                                impersonate: !(editValues[radio.id]?.impersonate ?? radio.impersonate),
+                                privateKey: !(editValues[radio.id]?.impersonate ?? radio.impersonate) ? (editValues[radio.id]?.privateKey ?? radio.privateKey) : ''
+                              } 
+                            })}
+                          >
+                            Allow impersonation
+                          </label>
+                        </div>
                         {(editValues[radio.id]?.impersonate ?? radio.impersonate) && (
                           <Input
                             type={showPrivateKeys[radio.id] ? "text" : "password"}
@@ -703,9 +810,9 @@ export default function MeshtasticRadios() {
                                 } 
                               })
                             }
-                            className="flex-1"
                             isRequired
-                            color={(editValues[radio.id]?.privateKey ?? radio.privateKey) ? "default" : "danger"}
+                            color="default"
+                            className="ml-6"
                             endContent={
                               <Button
                                 isIconOnly
@@ -748,6 +855,14 @@ export default function MeshtasticRadios() {
                 <p className="text-sm text-default-500 mb-4">
                   Enter your radio's Node ID. You'll need to verify ownership with a 6-digit code.
                 </p>
+                {modalError && (
+                  <div className="bg-danger-50 border border-danger-200 text-danger-700 px-4 py-3 rounded relative mb-4">
+                    <span className="flex items-center gap-2">
+                      <AlertCircle className="h-4 w-4" />
+                      {modalError}
+                    </span>
+                  </div>
+                )}
                 <div className="space-y-4">
                   <div className="space-y-2">
                     <label className="text-sm">Node ID</label>
@@ -757,34 +872,87 @@ export default function MeshtasticRadios() {
                       onChange={(e) => setNewRadio({ ...newRadio, nodeId: e.target.value })}
                       color={newRadio.nodeId && !validateAndFormatNodeId(newRadio.nodeId).isValid ? "danger" : "default"}
                       description={newRadio.nodeId && !validateAndFormatNodeId(newRadio.nodeId).isValid ? "Must be hex (!1234abcd) or integer (≤32-bit)" : ""}
+                      size="lg"
+                      classNames={{
+                        input: "text-xl font-mono font-semibold"
+                      }}
                     />
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Checkbox
-                      isSelected={newRadio.impersonate}
-                      onValueChange={(checked) => 
-                        setNewRadio({ ...newRadio, impersonate: checked, privateKey: checked ? newRadio.privateKey : '' })
-                      }
-                    />
-                    <label className="text-sm font-normal min-w-fit">
-                      Allow impersonation
-                    </label>
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <Checkbox
+                        isSelected={newRadio.addPublicKey}
+                        onValueChange={(checked) => 
+                          setNewRadio({ ...newRadio, addPublicKey: checked, publicKey: checked ? newRadio.publicKey : '' })
+                        }
+                      />
+                      <label 
+                        className="text-sm font-normal cursor-pointer"
+                        onClick={() => setNewRadio({ ...newRadio, addPublicKey: !newRadio.addPublicKey, publicKey: !newRadio.addPublicKey ? newRadio.publicKey : '' })}
+                      >
+                        Add public key
+                      </label>
+                    </div>
+                    {newRadio.addPublicKey && (
+                      <Input
+                        type="text"
+                        placeholder="Public key (optional)"
+                        value={newRadio.publicKey}
+                        onChange={(e) => setNewRadio({ ...newRadio, publicKey: e.target.value })}
+                        color="default"
+                        className="ml-6"
+                      />
+                    )}
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <Checkbox
+                        isSelected={newRadio.impersonate}
+                        onValueChange={(checked) => 
+                          setNewRadio({ ...newRadio, impersonate: checked, privateKey: checked ? newRadio.privateKey : '' })
+                        }
+                      />
+                      <label 
+                        className="text-sm font-normal cursor-pointer"
+                        onClick={() => setNewRadio({ ...newRadio, impersonate: !newRadio.impersonate, privateKey: !newRadio.impersonate ? newRadio.privateKey : '' })}
+                      >
+                        Allow impersonation
+                      </label>
+                    </div>
                     {newRadio.impersonate && (
                       <Input
-                        type="password"
+                        type={showModalPrivateKey ? "text" : "password"}
                         placeholder="Cut&Paste from Meshtastic App"
                         value={newRadio.privateKey}
                         onChange={(e) => setNewRadio({ ...newRadio, privateKey: e.target.value })}
-                        className="flex-1"
                         isRequired
-                        color={newRadio.privateKey ? "default" : "danger"}
+                        color="default"
+                        className="ml-6"
+                        endContent={
+                          <Button
+                            isIconOnly
+                            variant="light"
+                            size="sm"
+                            onClick={() => setShowModalPrivateKey(!showModalPrivateKey)}
+                          >
+                            {showModalPrivateKey ? 
+                              <EyeOff className="h-4 w-4" /> : 
+                              <Eye className="h-4 w-4" />
+                            }
+                          </Button>
+                        }
                       />
                     )}
                   </div>
                 </div>
               </ModalBody>
               <ModalFooter>
-                <Button color="danger" variant="light" onPress={onClose}>
+                <Button color="danger" variant="light" onPress={() => {
+                  onClose();
+                  setModalError(null);
+                  setShowModalPrivateKey(false);
+                  setNewRadio({ nodeId: '', privateKey: '', publicKey: '', impersonate: false, addPublicKey: false });
+                }}>
                   Cancel
                 </Button>
                 <Button color="primary" onPress={handleAddRadio} disabled={!newRadio.nodeId}>
