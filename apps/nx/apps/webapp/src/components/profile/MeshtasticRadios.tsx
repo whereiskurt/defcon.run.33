@@ -132,9 +132,9 @@ export default function MeshtasticRadios() {
       return;
     }
 
-    // Validate that public key is provided when add public key is enabled
+    // Validate that public key is provided when lock public key is enabled
     if (newRadio.addPublicKey && !newRadio.publicKey.trim()) {
-      setModalError('Public key is required when "Add public key" is enabled');
+      setModalError('Public key is required when "Lock public key" is enabled');
       return;
     }
 
@@ -402,9 +402,9 @@ export default function MeshtasticRadios() {
     const editValue = editValues[radioId];
     if (!editValue) return;
 
-    // Validate that public key is provided when add public key is enabled
+    // Validate that public key is provided when lock public key is enabled
     if (editValue.addPublicKey && !editValue.publicKey.trim()) {
-      setEditErrors({ ...editErrors, [radioId]: 'Public key is required when "Add public key" is enabled' });
+      setEditErrors({ ...editErrors, [radioId]: 'Public key is required when "Lock public key" is enabled' });
       return;
     }
 
@@ -664,7 +664,7 @@ export default function MeshtasticRadios() {
                   {radio.verified && !editingRadios[radio.id] && (
                     <div className="space-y-2">
                       <div className="flex items-center space-x-2">
-                        <span className="text-sm text-default-500">Add public key:</span>
+                        <span className="text-sm text-default-500">Lock public key:</span>
                         <Chip size="sm" color={radio.addPublicKey ? "success" : "default"} variant="flat">
                           {radio.addPublicKey ? "Yes" : "No"}
                         </Chip>
@@ -744,7 +744,7 @@ export default function MeshtasticRadios() {
                               } 
                             })}
                           >
-                            Add public key
+                            Lock public key
                           </label>
                         </div>
                         {(editValues[radio.id]?.addPublicKey ?? radio.addPublicKey) && (
@@ -890,7 +890,7 @@ export default function MeshtasticRadios() {
                         className="text-sm font-normal cursor-pointer"
                         onClick={() => setNewRadio({ ...newRadio, addPublicKey: !newRadio.addPublicKey, publicKey: !newRadio.addPublicKey ? newRadio.publicKey : '' })}
                       >
-                        Add public key
+                        Lock public key
                       </label>
                     </div>
                     {newRadio.addPublicKey && (
