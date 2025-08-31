@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { usePersistedState } from '../../hooks/usePersistedState';
 import { Card, CardBody, CardHeader, Divider, Chip, Button, Spinner, Skeleton, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, useDisclosure } from '@heroui/react';
 import dynamic from 'next/dynamic';
-import { MapPin, Clock, Target, Smartphone, Activity, AlertTriangle, CheckCircle, Zap, Map, Plus, RefreshCw, ChevronDown, ChevronUp, ExternalLink, Lock, Globe } from 'lucide-react';
+import { MapPin, Clock, Target, Smartphone, Activity, Zap, Map, Plus, ChevronDown, ChevronUp, ExternalLink, Lock, Globe, Maximize2, Circle } from 'lucide-react';
 
 // Dynamically import the map component to avoid SSR issues
 const CheckInMap = dynamic(() => import('./CheckInMap'), {
@@ -167,6 +167,7 @@ export default function CheckInDisplay({ remainingQuota = 50, onOpenCheckInModal
   const [selectedCheckIn, setSelectedCheckIn] = useState<CheckIn | null>(null);
   const [showMap, setShowMap] = useState(true);
   const [mapEnabled, setMapEnabled] = useState(true);
+  const [isMapExpanded, setIsMapExpanded] = useState(false);
   const [currentCheckIns, setCurrentCheckIns] = useState<CheckIn[]>([]);
   const [currentQuota, setCurrentQuota] = useState(remainingQuota);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -454,6 +455,23 @@ export default function CheckInDisplay({ remainingQuota = 50, onOpenCheckInModal
           </Button>
           <Button
             size="lg"
+            variant={isMapExpanded ? "solid" : "flat"}
+            color="secondary"
+            isIconOnly
+            isDisabled={!mapEnabled}
+            aria-label={isMapExpanded ? 'Shrink Map' : 'Expand Map'}
+            onPress={() => {
+              // If card is collapsed, expand it first
+              if (!isExpanded) {
+                setIsExpanded(true);
+              }
+              setIsMapExpanded(!isMapExpanded);
+            }}
+          >
+            <Maximize2 className="w-6 h-6" />
+          </Button>
+          <Button
+            size="lg"
             color="success"
             variant="flat"
             isIconOnly
@@ -489,11 +507,12 @@ export default function CheckInDisplay({ remainingQuota = 50, onOpenCheckInModal
         )}
         
         {showMap && mapEnabled && (
-          <div className="h-64 rounded-lg overflow-hidden relative z-10">
+          <div className={`${isMapExpanded ? 'h-[32rem]' : 'h-64'} rounded-lg overflow-hidden relative z-10 transition-all duration-300`}>
             <CheckInMap 
               checkIns={sortedCheckIns}
               selectedCheckIn={selectedCheckIn}
               onCheckInSelect={setSelectedCheckIn}
+              isExpanded={isMapExpanded}
             />
           </div>
         )}
@@ -514,6 +533,10 @@ export default function CheckInDisplay({ remainingQuota = 50, onOpenCheckInModal
                   
                   if (!wasSelected && mapEnabled) {
                     setShowMap(true);
+                    // If card is collapsed, expand it to show the map
+                    if (!isExpanded) {
+                      setIsExpanded(true);
+                    }
                   }
                   // When unselecting, keep the map showing with all points
                 }}
@@ -535,7 +558,7 @@ export default function CheckInDisplay({ remainingQuota = 50, onOpenCheckInModal
                       <Chip 
                         size="sm" 
                         variant="flat" 
-                        color={checkIn.isPrivate ? "default" : "primary"}
+                        color={checkIn.isPrivate ? "warning" : "primary"}
                         title={checkIn.isPrivate ? "Private - Click to make public" : "Public - Click to make private"}
                         className="px-2 cursor-pointer hover:opacity-80"
                         onClick={(e) => {
@@ -565,7 +588,7 @@ export default function CheckInDisplay({ remainingQuota = 50, onOpenCheckInModal
                           case 'running': return <Zap className="w-3 h-3 text-success" />;
                           case 'walking': return <Activity className="w-3 h-3 text-primary" />;
                           case 'vehicle': return <Target className="w-3 h-3 text-warning" />;
-                          default: return <AlertTriangle className="w-3 h-3 text-default-500" />;
+                          default: return <Circle className="w-3 h-3 text-default-500" />;
                         }
                       };
                       

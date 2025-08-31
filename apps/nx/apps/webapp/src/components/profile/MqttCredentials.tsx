@@ -76,7 +76,7 @@ export default function MqttCredentials() {
           <div className="flex items-center gap-2">
             <div className="text-2xl">🔐</div>
             <div className="flex flex-col">
-              <h3 className="text-lg font-semibold">MQTT Credentials</h3>
+              <h3 className="text-lg font-semibold">MQTT</h3>
               <p className="text-sm text-default-500">Your unique credentials</p>
             </div>
           </div>
@@ -115,7 +115,7 @@ export default function MqttCredentials() {
       <Card className="max-w-lg mx-auto">
         <CardHeader className="flex gap-3">
           <div className="flex flex-col">
-            <p className="text-md">MQTT Credentials</p>
+            <p className="text-md">MQTT</p>
           </div>
         </CardHeader>
         <Divider />
@@ -132,7 +132,7 @@ export default function MqttCredentials() {
         <div className="flex items-center gap-2">
           <div className="text-2xl">🔐</div>
           <div className="flex flex-col">
-            <h3 className="text-lg font-semibold">MQTT Credentials</h3>
+            <h3 className="text-lg font-semibold">MQTT</h3>
             <p className="text-sm text-default-500">Your unique credentials</p>
           </div>
         </div>

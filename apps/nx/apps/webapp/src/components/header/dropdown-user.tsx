@@ -245,6 +245,7 @@ const UserDropDown = (params: any) => {
         onClose={closeCheckIn}
         userEmail={session.user.email || ''}
         remainingQuota={userDetail?.quota?.checkIns ?? 50}
+        userPreference={userDetail?.checkin_preference || 'public'}
       />
       <Dropdown
         backdrop="blur"

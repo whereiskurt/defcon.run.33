@@ -86,7 +86,7 @@ export default function LeaderboardRank() {
           <div className="flex items-center gap-2">
             <div className="text-2xl">🥕</div>
             <div className="flex flex-col">
-              <h3 className="text-lg font-semibold">Leaderboard Ranking</h3>
+              <h3 className="text-lg font-semibold">Your Rank</h3>
               <p className="text-sm text-default-500">Your position on the leaderboard</p>
             </div>
           </div>
@@ -116,7 +116,7 @@ export default function LeaderboardRank() {
         <div className="flex items-center gap-2">
           <div className="text-2xl">🥕</div>
           <div className="flex flex-col">
-            <h3 className="text-lg font-semibold">Leaderboard Ranking</h3>
+            <h3 className="text-lg font-semibold">Your Rank</h3>
             <p className="text-sm text-default-500">Your position on the leaderboard</p>
           </div>
         </div>

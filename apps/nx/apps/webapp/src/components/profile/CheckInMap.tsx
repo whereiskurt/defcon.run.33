@@ -42,9 +42,10 @@ interface CheckInMapProps {
   checkIns: CheckIn[];
   selectedCheckIn: CheckIn | null;
   onCheckInSelect: (checkIn: CheckIn | null) => void;
+  isExpanded?: boolean;
 }
 
-export default function CheckInMap({ checkIns, selectedCheckIn, onCheckInSelect }: CheckInMapProps) {
+export default function CheckInMap({ checkIns, selectedCheckIn, onCheckInSelect, isExpanded }: CheckInMapProps) {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
   const markersRef = useRef<L.LayerGroup | null>(null);
@@ -109,6 +110,18 @@ export default function CheckInMap({ checkIns, selectedCheckIn, onCheckInSelect 
     
     tileLayerRef.current = newTileLayer;
   }, [theme]);
+
+  // Handle map resize when expanded state changes
+  useEffect(() => {
+    if (!mapInstanceRef.current) return;
+    
+    // Use setTimeout to ensure the container has finished its CSS transition
+    const timer = setTimeout(() => {
+      mapInstanceRef.current?.invalidateSize(true);
+    }, 350); // Slightly longer than the 300ms transition
+    
+    return () => clearTimeout(timer);
+  }, [isExpanded]);
 
   useEffect(() => {
     if (!mapInstanceRef.current || !markersRef.current) return;

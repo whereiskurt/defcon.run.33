@@ -39,7 +39,7 @@ export default function UserDetails() {
   const [showFullEmail, setShowFullEmail] = useState(false);
   
   // Check-in preference state
-  const [isUpdatingPreference, setIsUpdatingPreference] = useState(false);
+  const [updatingPreference, setUpdatingPreference] = useState<'public' | 'private' | null>(null);
   const [preferenceError, setPreferenceError] = useState('');
   const [preferenceSuccess, setPreferenceSuccess] = useState('');
   
@@ -59,6 +59,13 @@ export default function UserDetails() {
           setUser(data.user);
           setDisplaynameInput(data.user.displayname || '');
           setHasDisplaynameChanged(false);
+          
+          // Dispatch event to sync preference with CheckInDisplayClient
+          if (data.user.checkin_preference) {
+            window.dispatchEvent(new CustomEvent('userUpdated', { 
+              detail: { checkin_preference: data.user.checkin_preference } 
+            }));
+          }
         } else {
           throw new Error('User data not found in response');
         }
@@ -146,7 +153,7 @@ export default function UserDetails() {
       return; // No change needed
     }
 
-    setIsUpdatingPreference(true);
+    setUpdatingPreference(preference);
     setPreferenceError('');
     setPreferenceSuccess('');
 
@@ -181,7 +188,7 @@ export default function UserDetails() {
         err instanceof Error ? err.message : 'Failed to update check-in preference'
       );
     } finally {
-      setIsUpdatingPreference(false);
+      setUpdatingPreference(null);
     }
   };
 
@@ -364,8 +371,8 @@ export default function UserDetails() {
                   color={user.checkin_preference === 'public' ? "success" : "default"}
                   startContent={<Globe className="w-4 h-4" />}
                   onPress={() => updatePreferenceHandler('public')}
-                  isLoading={isUpdatingPreference}
-                  isDisabled={isUpdatingPreference}
+                  isLoading={updatingPreference === 'public'}
+                  isDisabled={updatingPreference !== null}
                 >
                   Public
                 </Button>
@@ -375,8 +382,8 @@ export default function UserDetails() {
                   color={user.checkin_preference === 'private' ? "warning" : "default"}
                   startContent={<Lock className="w-4 h-4" />}
                   onPress={() => updatePreferenceHandler('private')}
-                  isLoading={isUpdatingPreference}
-                  isDisabled={isUpdatingPreference}
+                  isLoading={updatingPreference === 'private'}
+                  isDisabled={updatingPreference !== null}
                 >
                   Private
                 </Button>

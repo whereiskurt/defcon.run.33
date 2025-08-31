@@ -34,11 +34,9 @@ interface CheckInModalProps {
   userEmail: string;
   remainingQuota: number;
   userPreference?: 'public' | 'private';
-  sessionPreference?: 'public' | 'private' | null;
-  onPrivacyChange?: (isPrivate: boolean) => void;
 }
 
-export default function CheckInModal({ isOpen, onClose, userEmail, remainingQuota, userPreference, sessionPreference, onPrivacyChange }: CheckInModalProps) {
+export default function CheckInModal({ isOpen, onClose, userEmail, remainingQuota, userPreference }: CheckInModalProps) {
   const [isCollecting, setIsCollecting] = useState(false);
   const [samples, setSamples] = useState<GPSSample[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -47,22 +45,22 @@ export default function CheckInModal({ isOpen, onClose, userEmail, remainingQuot
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [currentQuota, setCurrentQuota] = useState(remainingQuota);
   const [isSuccess, setIsSuccess] = useState(false);
-  const [isPrivate, setIsPrivate] = useState(() => {
-    // Priority: sessionPreference > userPreference > default to public
-    if (sessionPreference !== null) {
-      return sessionPreference === 'private';
-    }
-    return userPreference === 'private';
-  });
+  const [isPrivate, setIsPrivate] = useState(false);
 
   const TOTAL_SAMPLES = 5;
   const SAMPLE_INTERVAL = 3000; // 3 seconds between samples
   const TOTAL_DURATION = (TOTAL_SAMPLES - 1) * SAMPLE_INTERVAL; // Total time for collection
 
+  // Reset to user preference when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      setIsPrivate(userPreference === 'private');
+    }
+  }, [isOpen, userPreference]);
+
   // Handle privacy setting changes
   const handlePrivacyChange = (newIsPrivate: boolean) => {
     setIsPrivate(newIsPrivate);
-    onPrivacyChange?.(newIsPrivate);
   };
 
   // Initialize quota when modal opens fresh (not after success)
@@ -71,19 +69,6 @@ export default function CheckInModal({ isOpen, onClose, userEmail, remainingQuot
       setCurrentQuota(remainingQuota);
     }
   }, [isOpen, remainingQuota]);
-
-  // Update privacy state whenever session preference changes
-  useEffect(() => {
-    // Only update if we're not in the middle of a check-in process
-    if (!isCollecting && !isSubmitting) {
-      // Priority: sessionPreference > userPreference > default to public
-      if (sessionPreference !== null) {
-        setIsPrivate(sessionPreference === 'private');
-      } else {
-        setIsPrivate(userPreference === 'private');
-      }
-    }
-  }, [sessionPreference, userPreference, isCollecting, isSubmitting]);
 
   const requestPermission = async () => {
     if (!navigator.geolocation) {
@@ -261,12 +246,7 @@ export default function CheckInModal({ isOpen, onClose, userEmail, remainingQuot
     setHasPermission(false);
     setIsSubmitting(false);
     setIsSuccess(false);
-    // Reset to session preference if available, otherwise user preference
-    if (sessionPreference !== null) {
-      setIsPrivate(sessionPreference === 'private');
-    } else {
-      setIsPrivate(userPreference === 'private');
-    }
+    // Privacy will be reset to user preference when modal opens again
     onClose();
   };
 
@@ -317,9 +297,9 @@ export default function CheckInModal({ isOpen, onClose, userEmail, remainingQuot
           {/* Success State */}
           {isSuccess && (
             <div className="text-center space-y-4">
-              <div className="p-4 bg-success-50 rounded-lg">
-                <p className="text-success font-semibold text-lg">
-                  ✅ Check-in successful!
+              <div className={`p-4 ${isPrivate ? 'bg-warning-50' : 'bg-success-50'} rounded-lg`}>
+                <p className={`${isPrivate ? 'text-warning' : 'text-success'} font-semibold text-lg`}>
+                  ✅ {isPrivate ? 'Private' : 'Public'} Check-in successful!
                 </p>
                 <p className="text-sm text-default-600 mt-2">
                   Collected {samples.length} GPS samples
@@ -492,7 +472,6 @@ export default function CheckInModal({ isOpen, onClose, userEmail, remainingQuot
         </ModalBody>
         <ModalFooter className="flex justify-center gap-3">
           {(() => {
-            console.log('Footer render - isSuccess:', isSuccess, 'isSubmitting:', isSubmitting, 'isCollecting:', isCollecting);
             // Success state - show Check-in Again and Close buttons
             if (isSuccess) {
               return (

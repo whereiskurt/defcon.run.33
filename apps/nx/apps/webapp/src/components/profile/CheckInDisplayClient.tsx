@@ -18,18 +18,14 @@ export default function CheckInDisplayClient({ remainingQuota, userEmail, userPr
     onClose: closeCheckIn,
   } = useDisclosure();
 
-  // Track the last used privacy setting during this session
-  const [lastUsedPrivacy, setLastUsedPrivacy] = useState<'public' | 'private' | null>(null);
-
-  const handlePrivacyChange = (isPrivate: boolean) => {
-    setLastUsedPrivacy(isPrivate ? 'private' : 'public');
-  };
+  // Track the current user preference - default to 'public' if not provided
+  const [currentUserPreference, setCurrentUserPreference] = useState<'public' | 'private'>(userPreference || 'public');
 
   // Listen for preference updates from UserDetails component
   useEffect(() => {
     const handleUserUpdated = (event: CustomEvent) => {
       if (event.detail?.checkin_preference) {
-        setLastUsedPrivacy(event.detail.checkin_preference);
+        setCurrentUserPreference(event.detail.checkin_preference);
       }
     };
 
@@ -51,9 +47,7 @@ export default function CheckInDisplayClient({ remainingQuota, userEmail, userPr
         onClose={closeCheckIn}
         userEmail={userEmail}
         remainingQuota={remainingQuota}
-        userPreference={userPreference}
-        sessionPreference={lastUsedPrivacy}
-        onPrivacyChange={handlePrivacyChange}
+        userPreference={currentUserPreference}
       />
     </>
   );
