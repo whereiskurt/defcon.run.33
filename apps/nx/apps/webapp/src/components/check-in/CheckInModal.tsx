@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { 
   Modal, 
   ModalContent, 
@@ -13,9 +13,24 @@ import {
   Divider,
   Spinner,
   Link,
-  Checkbox 
+  Checkbox,
+  Input,
+  Select,
+  SelectItem,
+  InputOtp
 } from '@heroui/react';
-import { Target, Satellite, MapPin, Navigation, RotateCw, Lock, Globe } from 'lucide-react';
+import { Target, Satellite, MapPin, Navigation, RotateCw, Lock, Globe, Flag, KeyRound, Circle, Map } from 'lucide-react';
+import dynamic from 'next/dynamic';
+
+// Dynamically import the map component to avoid SSR issues
+const ManualLocationMap = dynamic(() => import('./ManualLocationMap'), {
+  ssr: false,
+  loading: () => (
+    <div className="h-64 bg-default-100 rounded-lg flex items-center justify-center">
+      <Spinner size="lg" color="primary" />
+    </div>
+  )
+});
 
 interface GPSSample {
   latitude: number;
@@ -46,9 +61,15 @@ export default function CheckInModal({ isOpen, onClose, userEmail, remainingQuot
   const [currentQuota, setCurrentQuota] = useState(remainingQuota);
   const [isSuccess, setIsSuccess] = useState(false);
   const [isPrivate, setIsPrivate] = useState(false);
+  const [checkInType, setCheckInType] = useState<'Basic' | 'OTP' | 'With Flag' | 'Manual'>('Basic');
+  const [otpCode, setOtpCode] = useState('');
+  const [flagText, setFlagText] = useState('');
+  const [manualCoordinates, setManualCoordinates] = useState<{latitude: number, longitude: number} | null>(null);
+  const startButtonRef = useRef<HTMLButtonElement>(null);
 
-  const TOTAL_SAMPLES = 5;
-  const SAMPLE_INTERVAL = 3000; // 3 seconds between samples
+  // Dynamic sample settings based on check-in type
+  const TOTAL_SAMPLES = checkInType === 'Basic' ? 3 : 5;
+  const SAMPLE_INTERVAL = checkInType === 'Basic' ? 1000 : 3000; // 1 second for Basic, 3 seconds for others
   const TOTAL_DURATION = (TOTAL_SAMPLES - 1) * SAMPLE_INTERVAL; // Total time for collection
 
   // Reset to user preference when modal opens
@@ -57,6 +78,13 @@ export default function CheckInModal({ isOpen, onClose, userEmail, remainingQuot
       setIsPrivate(userPreference === 'private');
     }
   }, [isOpen, userPreference]);
+
+  // Auto-focus start button when OTP is complete
+  useEffect(() => {
+    if (checkInType === 'OTP' && otpCode.length === 6 && startButtonRef.current) {
+      startButtonRef.current.focus();
+    }
+  }, [checkInType, otpCode]);
 
   // Handle privacy setting changes
   const handlePrivacyChange = (newIsPrivate: boolean) => {
@@ -71,6 +99,39 @@ export default function CheckInModal({ isOpen, onClose, userEmail, remainingQuot
   }, [isOpen, remainingQuota]);
 
   const requestPermission = async () => {
+    // Validate required fields BEFORE GPS collection
+    if (checkInType === 'OTP' && (!otpCode || otpCode.length !== 6)) {
+      setError('Please enter a valid 6-digit OTP code');
+      return;
+    }
+
+    if (checkInType === 'With Flag' && (!flagText || flagText.trim().length === 0)) {
+      setError('Please enter flag text');
+      return;
+    }
+
+    if (checkInType === 'Manual') {
+      if (!manualCoordinates) {
+        setError('Please select a location on the map');
+        return;
+      }
+      // For manual check-in, skip GPS and submit directly
+      const manualSample: GPSSample = {
+        latitude: manualCoordinates.latitude,
+        longitude: manualCoordinates.longitude,
+        accuracy: 10, // Set a reasonable accuracy for manual selection
+        altitude: null,
+        altitudeAccuracy: null,
+        heading: null,
+        speed: null,
+        timestamp: Date.now()
+      };
+      setSamples([manualSample]);
+      setIsCollecting(false);
+      // Submit will be triggered by useEffect watching samples
+      return;
+    }
+
     if (!navigator.geolocation) {
       setError('Geolocation is not supported by your browser');
       return;
@@ -86,20 +147,22 @@ export default function CheckInModal({ isOpen, onClose, userEmail, remainingQuot
         setError(null);
         startCollection();
       },
-      (error) => {
+      (positionError) => {
         setIsCollecting(false);
-        switch(error.code) {
-          case error.PERMISSION_DENIED:
+        console.warn('Geolocation error:', positionError.message || 'Unknown error');
+        
+        switch(positionError.code) {
+          case positionError.PERMISSION_DENIED:
             setError('Location permission denied. Please enable location access for this site.');
             break;
-          case error.POSITION_UNAVAILABLE:
+          case positionError.POSITION_UNAVAILABLE:
             setError('Location information unavailable. Please check your device settings.');
             break;
-          case error.TIMEOUT:
+          case positionError.TIMEOUT:
             setError('Location request timed out. Please try again.');
             break;
           default:
-            setError('An unknown error occurred while accessing location.');
+            setError(`Location error: ${positionError.message || 'Unable to access GPS'}`);
         }
       },
       {
@@ -115,6 +178,21 @@ export default function CheckInModal({ isOpen, onClose, userEmail, remainingQuot
     setProgress(0);
     let sampleCount = 0;
     const startTime = Date.now();
+    let timeoutId: NodeJS.Timeout;
+    let intervalId: NodeJS.Timeout;
+
+    // Set a maximum timeout for collection
+    const maxCollectionTime = TOTAL_DURATION + 10000; // Add 10 seconds buffer
+    timeoutId = setTimeout(() => {
+      if (sampleCount < TOTAL_SAMPLES) {
+        setIsCollecting(false);
+        setError(`GPS collection timed out. Only collected ${sampleCount} of ${TOTAL_SAMPLES} samples. Please try again.`);
+        setSamples([]);
+      }
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
+    }, maxCollectionTime);
 
     // Function to collect a sample
     const collectSample = () => {
@@ -133,39 +211,45 @@ export default function CheckInModal({ isOpen, onClose, userEmail, remainingQuot
 
           setSamples(prev => [...prev, sample]);
           sampleCount++;
+          
+          console.log(`GPS sample ${sampleCount}/${TOTAL_SAMPLES} collected:`, sample);
 
-          // Update progress based on time elapsed
-          const elapsed = Date.now() - startTime;
-          const progressPercent = Math.min((elapsed / TOTAL_DURATION) * 100, 100);
+          // Update progress based on samples collected
+          const progressPercent = Math.min((sampleCount / TOTAL_SAMPLES) * 100, 100);
           setProgress(progressPercent);
 
           // Check if we've collected enough samples
           if (sampleCount >= TOTAL_SAMPLES) {
             setIsCollecting(false);
             setProgress(100);
-            // Clear the interval
+            // Clear the interval and timeout
             if (intervalId) {
               clearInterval(intervalId);
             }
+            if (timeoutId) {
+              clearTimeout(timeoutId);
+            }
+            console.log(`GPS collection complete: ${sampleCount} samples collected`);
           }
         },
-        (error) => {
-          console.error('Error getting position:', error);
-          // Continue collecting even if one sample fails
+        (positionError) => {
+          console.warn('Error getting position sample:', positionError.message || 'Unknown error', positionError);
+          // Continue collecting even if one sample fails, but make it more forgiving
         },
         {
-          enableHighAccuracy: true,
-          timeout: 10000,
-          maximumAge: 0
+          enableHighAccuracy: false, // Less strict for better compatibility
+          timeout: 15000, // Longer timeout per sample
+          maximumAge: 5000 // Allow slightly cached positions
         }
       );
     };
 
     // Collect first sample immediately
+    console.log(`Starting GPS collection: ${TOTAL_SAMPLES} samples needed`);
     collectSample();
 
     // Set up interval for remaining samples
-    const intervalId = setInterval(() => {
+    intervalId = setInterval(() => {
       if (sampleCount < TOTAL_SAMPLES) {
         collectSample();
       } else {
@@ -178,12 +262,26 @@ export default function CheckInModal({ isOpen, onClose, userEmail, remainingQuot
       if (intervalId) {
         clearInterval(intervalId);
       }
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
     };
   };
 
   const submitCheckIn = async () => {
     if (samples.length === 0) {
-      setError('No GPS samples collected');
+      setError('No GPS samples collected. Please try again.');
+      setIsSubmitting(false);
+      setIsCollecting(false);
+      return;
+    }
+    
+    // Check if we have minimum required samples for non-manual types
+    if (checkInType !== 'Manual' && samples.length < TOTAL_SAMPLES) {
+      setError(`Only collected ${samples.length} of ${TOTAL_SAMPLES} required GPS samples. Please try again.`);
+      setIsSubmitting(false);
+      setIsCollecting(false);
+      setSamples([]);
       return;
     }
 
@@ -201,7 +299,10 @@ export default function CheckInModal({ isOpen, onClose, userEmail, remainingQuot
           samples,
           source: 'Web GPS',
           userAgent: navigator.userAgent,
-          isPrivate
+          isPrivate,
+          checkInType,
+          otpCode: checkInType === 'OTP' ? otpCode : undefined,
+          flagText: checkInType === 'With Flag' ? flagText : undefined
         }),
       });
 
@@ -212,11 +313,27 @@ export default function CheckInModal({ isOpen, onClose, userEmail, remainingQuot
 
       await response.json();
       
-      // Update quota and show success
+      // Update quota 
       setCurrentQuota(prev => prev - 1);
       setIsSubmitting(false);
-      setIsSuccess(true);
-      console.log('Check-in successful! isSuccess set to true');
+      
+      if (checkInType === 'Manual') {
+        // For Manual: Reset to clean Manual form instead of showing success
+        setSamples([]);
+        setProgress(0);
+        setHasPermission(false);
+        setError(null);
+        setCheckInType('Manual');
+        setManualCoordinates(null);
+        setOtpCode('');
+        setFlagText('');
+        // Keep privacy setting
+        console.log('Manual check-in successful! Reset to Manual form');
+      } else {
+        // For other types: Show success dialog
+        setIsSuccess(true);
+        console.log('Check-in successful! Showing success dialog');
+      }
       
       // Dispatch custom event to refresh profile data
       if (typeof window !== 'undefined') {
@@ -232,10 +349,18 @@ export default function CheckInModal({ isOpen, onClose, userEmail, remainingQuot
 
   // Auto-submit when collection is complete
   useEffect(() => {
-    if (!isCollecting && samples.length === TOTAL_SAMPLES && !isSubmitting && !isSuccess && !error) {
-      submitCheckIn();
+    if (checkInType === 'Manual') {
+      // For manual, submit as soon as we have 1 sample
+      if (samples.length === 1 && !isSubmitting && !isSuccess && !error) {
+        submitCheckIn();
+      }
+    } else {
+      // For other types, wait for all samples
+      if (!isCollecting && samples.length === TOTAL_SAMPLES && !isSubmitting && !isSuccess && !error) {
+        submitCheckIn();
+      }
     }
-  }, [isCollecting, samples.length, isSubmitting, isSuccess, error]);
+  }, [isCollecting, samples.length, isSubmitting, isSuccess, error, checkInType]);
 
   const handleClose = () => {
     // Reset all state when closing
@@ -246,6 +371,10 @@ export default function CheckInModal({ isOpen, onClose, userEmail, remainingQuot
     setHasPermission(false);
     setIsSubmitting(false);
     setIsSuccess(false);
+    setCheckInType('Basic');
+    setOtpCode('');
+    setFlagText('');
+    setManualCoordinates(null);
     // Privacy will be reset to user preference when modal opens again
     onClose();
   };
@@ -256,9 +385,9 @@ export default function CheckInModal({ isOpen, onClose, userEmail, remainingQuot
       placement="center"
       isOpen={isOpen}
       backdrop="blur"
-      onClose={handleClose}
-      hideCloseButton={isCollecting || isSubmitting}
-      isDismissable={!isCollecting && !isSubmitting}
+      onClose={() => {}}  // Prevent closing except via Cancel button
+      hideCloseButton={true}  // Always hide the X button
+      isDismissable={false}  // Prevent dismissal by clicking outside or pressing Escape
       scrollBehavior="inside"
       classNames={{
         wrapper: "z-[999]",
@@ -274,12 +403,12 @@ export default function CheckInModal({ isOpen, onClose, userEmail, remainingQuot
                 {isPrivate ? (
                   <>
                     <Lock className="w-5 h-5 text-warning" />
-                    <span>Private Check-in</span>
+                    <span>Private CheckIn</span>
                   </>
                 ) : (
                   <>
                     <Globe className="w-5 h-5 text-success" />
-                    <span>Public Check-in</span>
+                    <span>Public CheckIn</span>
                   </>
                 )}
               </h1>
@@ -287,22 +416,26 @@ export default function CheckInModal({ isOpen, onClose, userEmail, remainingQuot
                 {currentQuota}/50 <Target className="w-3 h-3 inline ml-1" />
               </Chip>
             </div>
-            <p className="text-default-600 text-sm">
-              Verify your presence with GPS coordinates
-            </p>
+            {checkInType !== 'Manual' && (
+              <p className="text-default-600 text-sm">
+                Requires access to device location.
+              </p>
+            )}
           </div>
         </ModalHeader>
         <Divider />
-        <ModalBody className="gap-4 py-4">
+        <ModalBody className="gap-2 py-3">
           {/* Success State */}
           {isSuccess && (
             <div className="text-center space-y-4">
               <div className={`p-4 ${isPrivate ? 'bg-warning-50' : 'bg-success-50'} rounded-lg`}>
                 <p className={`${isPrivate ? 'text-warning' : 'text-success'} font-semibold text-lg`}>
-                  ✅ {isPrivate ? 'Private' : 'Public'} Check-in successful!
+                  ✅ {isPrivate ? 'Private' : 'Public'} CheckIn successful!
                 </p>
                 <p className="text-sm text-default-600 mt-2">
                   Collected {samples.length} GPS samples
+                  {checkInType === 'OTP' && ` • OTP: ${otpCode}`}
+                  {checkInType === 'With Flag' && ` • Flag: "${flagText}"`}
                 </p>
                 <p className="text-xs text-default-500 mt-1">
                   Remaining quota: {currentQuota}/50
@@ -325,60 +458,128 @@ export default function CheckInModal({ isOpen, onClose, userEmail, remainingQuot
             <div className="text-center space-y-4">
               {currentQuota > 0 ? (
                 <>
-                  <p className="text-default-600 text-sm">
-                    This check-in requires access to your device's precise location.
-                  </p>
-                  
-                  <Divider />
-                  
-                  {/* Privacy Selection - Side by side buttons */}
-                  <div className="flex gap-3 justify-center">
-                    <button
-                      onClick={() => handlePrivacyChange(false)}
-                      className={`flex-1 max-w-[200px] p-4 rounded-lg border-2 transition-all ${
-                        !isPrivate 
-                          ? 'border-success bg-success-50 dark:bg-success-50/10' 
-                          : 'border-default-200 bg-content1 hover:bg-content2'
-                      }`}
-                    >
-                      <div className="flex flex-col items-center gap-2">
-                        <Globe className={`w-6 h-6 ${!isPrivate ? 'text-success' : 'text-default-400'}`} />
-                        <div className="text-center">
-                          <div className={`text-sm font-semibold ${!isPrivate ? 'text-success' : 'text-default-600'}`}>
+                  {/* Privacy Selection - First */}
+                  <div className="flex gap-2 justify-center">
+                      <button
+                        onClick={() => handlePrivacyChange(false)}
+                        className={`flex-1 max-w-[140px] px-3 py-1 rounded-lg border-2 transition-all ${
+                          !isPrivate 
+                            ? 'border-success bg-success-50 dark:bg-success-50/10' 
+                            : 'border-default-200 bg-content1 hover:bg-content2'
+                        }`}
+                      >
+                        <div className="flex items-center justify-center gap-2">
+                          <Globe className={`w-4 h-4 ${!isPrivate ? 'text-success' : 'text-default-400'}`} />
+                          <div className={`text-xs font-semibold ${!isPrivate ? 'text-success' : 'text-default-600'}`}>
                             Public
                           </div>
-                          <div className="text-tiny text-default-400">
-                            Visible to others
-                          </div>
                         </div>
-                      </div>
-                    </button>
-                    
-                    <button
-                      onClick={() => handlePrivacyChange(true)}
-                      className={`flex-1 max-w-[200px] p-4 rounded-lg border-2 transition-all ${
-                        isPrivate 
-                          ? 'border-warning bg-warning-50 dark:bg-warning-50/10' 
-                          : 'border-default-200 bg-content1 hover:bg-content2'
-                      }`}
-                    >
-                      <div className="flex flex-col items-center gap-2">
-                        <Lock className={`w-6 h-6 ${isPrivate ? 'text-warning' : 'text-default-400'}`} />
-                        <div className="text-center">
-                          <div className={`text-sm font-semibold ${isPrivate ? 'text-warning' : 'text-default-600'}`}>
+                      </button>
+                      
+                      <button
+                        onClick={() => handlePrivacyChange(true)}
+                        className={`flex-1 max-w-[140px] px-3 py-1 rounded-lg border-2 transition-all ${
+                          isPrivate 
+                            ? 'border-warning bg-warning-50 dark:bg-warning-50/10' 
+                            : 'border-default-200 bg-content1 hover:bg-content2'
+                        }`}
+                      >
+                        <div className="flex items-center justify-center gap-2">
+                          <Lock className={`w-4 h-4 ${isPrivate ? 'text-warning' : 'text-default-400'}`} />
+                          <div className={`text-xs font-semibold ${isPrivate ? 'text-warning' : 'text-default-600'}`}>
                             Private
                           </div>
-                          <div className="text-tiny text-default-400">
-                            Only you can see
-                          </div>
                         </div>
-                      </div>
-                    </button>
+                      </button>
                   </div>
+
+                  {/* Check-in Type Selection - Dropdown Style with Matching Width */}
+                  <div className="flex justify-center">
+                    <div className="w-[288px]">
+                      <Select
+                        label="Check-in Type"
+                        placeholder="Select type"
+                        selectedKeys={[checkInType]}
+                        onSelectionChange={(keys) => {
+                          const selected = Array.from(keys)[0] as 'Basic' | 'OTP' | 'With Flag' | 'Manual';
+                          setCheckInType(selected);
+                          // Clear manual coordinates when switching away from Manual
+                          if (selected !== 'Manual') {
+                            setManualCoordinates(null);
+                          }
+                        }}
+                        size="sm"
+                        variant="bordered"
+                        startContent={
+                          checkInType === 'Basic' ? <Circle className="w-4 h-4 text-primary" /> :
+                          checkInType === 'OTP' ? <KeyRound className="w-4 h-4 text-secondary" /> :
+                          checkInType === 'Manual' ? <Map className="w-4 h-4 text-warning" /> :
+                          <Flag className="w-4 h-4 text-success" />
+                        }
+                      >
+                        <SelectItem key="Basic" startContent={<Circle className="w-4 h-4 text-primary" />}>
+                          Basic
+                        </SelectItem>
+                        <SelectItem key="OTP" startContent={<KeyRound className="w-4 h-4 text-secondary" />}>
+                          OTP
+                        </SelectItem>
+                        <SelectItem key="With Flag" startContent={<Flag className="w-4 h-4 text-success" />}>
+                          With Flag
+                        </SelectItem>
+                        <SelectItem key="Manual" startContent={<Map className="w-4 h-4 text-warning" />}>
+                          Manual
+                        </SelectItem>
+                      </Select>
+                    </div>
+                  </div>
+
+                  {/* Conditional input fields based on check-in type */}
+                  {checkInType === 'OTP' && (
+                    <div className="flex flex-col items-center space-y-1">
+                      <InputOtp
+                        value={otpCode}
+                        onValueChange={setOtpCode}
+                        length={6}
+                        placeholder="XXXXXX"
+                        description="Enter 6-digit OTP code"
+                        size="sm"
+                      />
+                    </div>
+                  )}
+
+                  {checkInType === 'With Flag' && (
+                    <div className="flex justify-center">
+                      <div className="w-[288px]">
+                        <Input
+                          label="Flag Text"
+                          placeholder="Enter flag text (max 20 chars)"
+                          value={flagText}
+                          onValueChange={(value) => setFlagText(value.slice(0, 20))}
+                          maxLength={20}
+                          size="sm"
+                          startContent={<Flag className="w-4 h-4 text-default-400" />}
+                          description={`${flagText.length}/20 characters`}
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {checkInType === 'Manual' && (
+                    <div className="space-y-2">
+                      <ManualLocationMap
+                        onLocationSelect={setManualCoordinates}
+                        initialCoords={manualCoordinates || undefined}
+                      />
+                    </div>
+                  )}
                   
-                  <p className="text-xs text-default-400">
-                    We'll collect samples over approximately 15 seconds.
-                  </p>
+                  {checkInType !== 'Manual' && (
+                    <p className="text-xs text-default-400">
+                      {checkInType === 'Basic' 
+                        ? "We'll collect 3 samples over 2 seconds."
+                        : "We'll collect 5 samples over approximately 12 seconds."}
+                    </p>
+                  )}
                 </>
               ) : (
                 <div className="p-4 bg-danger-50 rounded-lg">
@@ -403,7 +604,13 @@ export default function CheckInModal({ isOpen, onClose, userEmail, remainingQuot
                 </div>
                 <div className="text-center">
                   <p className="text-sm font-semibold">Acquiring GPS Signal</p>
-                  <p className="text-xs text-default-500">Collecting location samples...</p>
+                  <p className="text-xs text-default-500">
+                    {checkInType === 'Basic' 
+                      ? 'Quick collection (2 seconds)...'
+                      : checkInType === 'Manual'
+                      ? 'Processing manual location...'
+                      : 'Collecting location samples...'}
+                  </p>
                 </div>
               </div>
               
@@ -484,9 +691,12 @@ export default function CheckInModal({ isOpen, onClose, userEmail, remainingQuot
                         setProgress(0);
                         setHasPermission(false);
                         setError(null);
+                        setCheckInType('Manual');
+                        setManualCoordinates(null);
+                        setOtpCode('');
+                        setFlagText('');
                         // Keep the same privacy setting for next check-in
-                        // Start new check-in immediately
-                        requestPermission();
+                        // Return to modal form instead of starting immediately
                       }}
                       color={isPrivate ? "warning" : "success"}
                       size="md"
@@ -497,7 +707,7 @@ export default function CheckInModal({ isOpen, onClose, userEmail, remainingQuot
                         </div>
                       }
                     >
-                      {isPrivate ? "Private Check-in Again" : "Public Check-in Again"}
+                      {isPrivate ? "Private CheckIn Again" : "Public CheckIn Again"}
                     </Button>
                   )}
                   <Button
@@ -521,12 +731,14 @@ export default function CheckInModal({ isOpen, onClose, userEmail, remainingQuot
               <>
                 {currentQuota > 0 && !hasPermission && !error && (
                   <Button
+                    ref={startButtonRef}
                     onPress={requestPermission}
                     color={isPrivate ? "warning" : "success"}
                     size="md"
+                    isDisabled={checkInType === 'Manual' && !manualCoordinates}
                     startContent={isPrivate ? <Lock className="w-4 h-4" /> : <Globe className="w-4 h-4" />}
                   >
-                    {isPrivate ? "Start Private Check-In" : "Start Public Check-In"}
+                    Submit
                   </Button>
                 )}
                 {error && (

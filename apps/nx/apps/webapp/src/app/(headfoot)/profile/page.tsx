@@ -29,7 +29,7 @@ export default async function Page() {
       <CheckInDisplayClient 
         remainingQuota={user?.quota?.checkIns ?? 50}
         userEmail={session.user.email!}
-        userPreference={user?.checkin_preference || 'public'}
+        userPreference={(user?.checkin_preference || 'public') as 'public' | 'private'}
       />
       
       {/* Row 3: Global Ranking + MQTT Credentials */}

@@ -10,14 +10,17 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const { samples, source, userAgent, isPrivate } = await request.json();
+    const { samples, source, userAgent, isPrivate, checkInType, otpCode, flagText } = await request.json();
 
     // Create check-in using the new entity
     const checkIn = await createCheckIn(session.user.email, {
       samples,
       source,
       userAgent,
-      isPrivate
+      isPrivate,
+      checkInType: checkInType || 'Basic',
+      otpCode,
+      flagText
     });
 
     return NextResponse.json({

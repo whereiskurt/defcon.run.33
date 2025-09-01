@@ -74,6 +74,16 @@ const CheckIn = new Entity(
         type: 'boolean',
         default: true,
       },
+      checkInType: {
+        type: ['Basic', 'OTP', 'With Flag', 'Manual'],
+        default: 'Basic',
+      },
+      otpCode: {
+        type: 'string',
+      },
+      flagText: {
+        type: 'string',
+      },
       // Geospatial fields for future geo queries
       geoHash: {
         type: 'string',
@@ -163,6 +173,9 @@ interface CheckInData {
   samples: GPSSample[];
   userAgent?: string;
   isPrivate?: boolean;
+  checkInType?: 'Basic' | 'OTP' | 'With Flag' | 'Manual';
+  otpCode?: string;
+  flagText?: string;
 }
 
 /**
@@ -184,7 +197,7 @@ export async function createCheckIn(
     throw new Error('Check-in quota exceeded');
   }
 
-  const { samples, source, userAgent, isPrivate } = checkInData;
+  const { samples, source, userAgent, isPrivate, checkInType, otpCode, flagText } = checkInData;
 
   if (!samples || !Array.isArray(samples) || samples.length === 0) {
     throw new Error('Invalid samples data');
@@ -220,6 +233,9 @@ export async function createCheckIn(
     bestAccuracy,
     userAgent,
     isPrivate: isPrivate ?? true,
+    checkInType: checkInType || 'Basic',
+    otpCode,
+    flagText,
     pointsCount: samples.length,
     duration,
   }).go();
@@ -302,7 +318,7 @@ export async function getCheckIn(userId: string, timestamp: number, checkInId: s
 /**
  * Delete a check-in (admin function)
  */
-export async function deleteCheckIn(
+export async function deleteCheckInAdmin(
   userId: string,
   timestamp: number,
   checkInId: string,
@@ -438,4 +454,55 @@ export async function migrateUserCheckIns(userEmail: string) {
 
   console.log(`Migrated ${migrated} check-ins for user ${userEmail}`);
   return migrated;
+}
+
+/**
+ * Delete a check-in (user can only delete their own check-ins)
+ */
+export async function deleteCheckIn(
+  userEmail: string,
+  checkInId: string,
+  timestamp: number
+) {
+  // Get user to verify ownership
+  const user = await getUser(userEmail);
+  if (!user) {
+    throw new Error('User not found');
+  }
+
+  try {
+    // First, verify the check-in exists and belongs to the user
+    const existingCheckIn = await CheckIn.get({
+      userId: user.id,
+      timestamp,
+      checkInId,
+    }).go();
+
+    if (!existingCheckIn.data) {
+      throw new Error('Check-in not found');
+    }
+
+    // Delete the check-in
+    await CheckIn.delete({
+      userId: user.id,
+      timestamp,
+      checkInId,
+    }).go();
+
+    // Update user's check-in count
+    await updateUser({
+      email: userEmail,
+      checkInCount: Math.max(0, (user.checkInCount || 0) - 1),
+    });
+
+    // Invalidate user cache
+    invalidateCache(userEmail, 'users');
+
+    return { success: true };
+  } catch (error) {
+    if (error instanceof Error && error.message === 'Check-in not found') {
+      throw error;
+    }
+    throw new Error('Failed to delete check-in');
+  }
 }

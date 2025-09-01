@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { usePersistedState } from '../../hooks/usePersistedState';
 import { Card, CardBody, CardHeader, Divider, Chip, Button, Spinner, Skeleton, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, useDisclosure } from '@heroui/react';
 import dynamic from 'next/dynamic';
-import { MapPin, Clock, Target, Smartphone, Activity, Zap, Map, Plus, ChevronDown, ChevronUp, ExternalLink, Lock, Globe, Maximize2, Circle } from 'lucide-react';
+import { MapPin, Clock, Target, Smartphone, Activity, Zap, Map, Plus, ChevronDown, ChevronUp, ExternalLink, Lock, Globe, Maximize2, Circle, Trash2 } from 'lucide-react';
 
 // Dynamically import the map component to avoid SSR issues
 const CheckInMap = dynamic(() => import('./CheckInMap'), {
@@ -41,6 +41,7 @@ interface CheckIn {
   userAgent?: string;
   isPrivate?: boolean;
   checkInId?: string;
+  checkInType?: 'Basic' | 'OTP' | 'With Flag' | 'Manual';
 }
 
 interface CheckInDisplayProps {
@@ -179,6 +180,9 @@ export default function CheckInDisplay({ remainingQuota = 50, onOpenCheckInModal
   const [selectedCheckInForPrivacy, setSelectedCheckInForPrivacy] = useState<CheckIn | null>(null);
   const [isUpdatingPrivacy, setIsUpdatingPrivacy] = useState(false);
   const {isOpen: isPrivacyModalOpen, onOpen: onPrivacyModalOpen, onOpenChange: onPrivacyModalOpenChange} = useDisclosure();
+  const [selectedCheckInForDelete, setSelectedCheckInForDelete] = useState<CheckIn | null>(null);
+  const [isDeletingCheckIn, setIsDeletingCheckIn] = useState(false);
+  const {isOpen: isDeleteModalOpen, onOpen: onDeleteModalOpen, onOpenChange: onDeleteModalOpenChange} = useDisclosure();
 
   // Sort check-ins by timestamp (most recent first)
   const sortedCheckIns = currentCheckIns.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
@@ -300,6 +304,54 @@ export default function CheckInDisplay({ remainingQuota = 50, onOpenCheckInModal
     }
   };
 
+  // Function to handle delete check-in
+  const handleDeleteCheckIn = (checkIn: CheckIn) => {
+    setSelectedCheckInForDelete(checkIn);
+    onDeleteModalOpen();
+  };
+
+  // Function to delete check-in
+  const deleteCheckInConfirmed = async () => {
+    if (!selectedCheckInForDelete) return;
+
+    setIsDeletingCheckIn(true);
+    try {
+      const response = await fetch(`/api/check-in/delete`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          checkInId: selectedCheckInForDelete.checkInId,
+          timestamp: selectedCheckInForDelete.timestamp
+        }),
+      });
+
+      if (response.ok) {
+        // Remove the check-in from local state
+        setCurrentCheckIns(prev => prev.filter(checkIn => 
+          !(checkIn.timestamp === selectedCheckInForDelete.timestamp && 
+            checkIn.checkInId === selectedCheckInForDelete.checkInId)
+        ));
+        onDeleteModalOpenChange();
+        setSelectedCheckInForDelete(null);
+        
+        // Trigger refresh events
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('userUpdated'));
+          window.dispatchEvent(new CustomEvent('checkInUpdated'));
+        }
+      } else {
+        const errorData = await response.json();
+        console.error('Failed to delete check-in:', errorData.error);
+      }
+    } catch (error) {
+      console.error('Error deleting check-in:', error);
+    } finally {
+      setIsDeletingCheckIn(false);
+    }
+  };
+
   // Initial fetch of check-ins
   useEffect(() => {
     fetchCheckIns();
@@ -360,6 +412,15 @@ export default function CheckInDisplay({ remainingQuota = 50, onOpenCheckInModal
               disabled
             >
               <Map className="w-6 h-6" />
+            </Button>
+            <Button
+              size="lg"
+              variant="flat"
+              color="secondary"
+              isIconOnly
+              disabled
+            >
+              <Maximize2 className="w-6 h-6" />
             </Button>
             <Button
               size="lg"
@@ -580,7 +641,20 @@ export default function CheckInDisplay({ remainingQuota = 50, onOpenCheckInModal
                     </div>
                     </div>
                   </div>
-                  <div className="text-right">
+                  <div className="flex flex-col items-end gap-1">
+                    <Button
+                      size="sm"
+                      variant="light"
+                      as="a"
+                      href={`https://www.openstreetmap.org/?mlat=${checkIn.averageCoordinates?.latitude}&mlon=${checkIn.averageCoordinates?.longitude}#map=17/${checkIn.averageCoordinates?.latitude}/${checkIn.averageCoordinates?.longitude}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      title="View on OpenStreetMap"
+                      className="text-xs"
+                      endContent={<ExternalLink className="w-3 h-3" />}
+                    >
+                      Map
+                    </Button>
                     {(() => {
                       const movement = analyzeMovement(checkIn.samples || []);
                       const getMovementIcon = () => {
@@ -609,19 +683,6 @@ export default function CheckInDisplay({ remainingQuota = 50, onOpenCheckInModal
                         </div>
                       );
                     })()}
-                    <Button
-                      size="sm"
-                      variant="light"
-                      isIconOnly
-                      as="a"
-                      href={`https://www.openstreetmap.org/?mlat=${checkIn.averageCoordinates?.latitude}&mlon=${checkIn.averageCoordinates?.longitude}#map=17/${checkIn.averageCoordinates?.latitude}/${checkIn.averageCoordinates?.longitude}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      title="View on OpenStreetMap"
-                      className="min-w-unit-6 w-6 h-6"
-                    >
-                      <ExternalLink className="w-3 h-3" />
-                    </Button>
                   </div>
                 </div>
                 
@@ -691,8 +752,8 @@ export default function CheckInDisplay({ remainingQuota = 50, onOpenCheckInModal
                               attribute = 'High velocity';
                               color = 'warning';
                             } else if (pattern.includes('Insufficient samples')) {
-                              attribute = 'Limited data';
-                              color = 'default';
+                              // Skip this chip, we'll show check-in type instead
+                              return null;
                             }
                             
                             return (
@@ -709,9 +770,23 @@ export default function CheckInDisplay({ remainingQuota = 50, onOpenCheckInModal
                         </div>
                       )}
 
-                      {/* Compact GPS Sample Summary */}
+                      {/* Check-in Type and GPS Sample Summary */}
                       <div className="text-xs text-default-500">
-                        <span className="font-medium">{(checkIn.samples || []).length} GPS points</span>
+                        <Chip
+                          size="sm"
+                          variant="flat"
+                          color={(checkIn.checkInType || 'Basic') === 'Manual' ? 'secondary' : 
+                                 (checkIn.checkInType || 'Basic') === 'OTP' ? 'success' :
+                                 (checkIn.checkInType || 'Basic') === 'With Flag' ? 'warning' : 'primary'}
+                          className="mr-2"
+                        >
+                          {(checkIn.checkInType || 'Basic') === 'Manual' ? '📍 Manual' :
+                           (checkIn.checkInType || 'Basic') === 'OTP' ? '🔑 OTP' :
+                           (checkIn.checkInType || 'Basic') === 'With Flag' ? '🚩 Flag' : '📡 GPS'}
+                        </Chip>
+                        {(checkIn.checkInType || 'Basic') !== 'Manual' && (
+                          <span className="font-medium">{(checkIn.samples || []).length} GPS points</span>
+                        )}
                         {(checkIn.samples || []).length > 0 && (() => {
                           const accuracies = (checkIn.samples || []).map((s: any) => s.accuracy);
                           const bestAccuracy = Math.min(...accuracies);
@@ -734,15 +809,28 @@ export default function CheckInDisplay({ remainingQuota = 50, onOpenCheckInModal
                         ) : (
                           <div></div>
                         )}
-                        <Button
-                          size="sm"
-                          variant="light"
-                          color="primary"
-                          className="h-5 px-2 text-xs"
-                          onPress={() => handlePrivacyToggle(checkIn)}
-                        >
-                          {checkIn.isPrivate ? "Make Public" : "Make Private"}
-                        </Button>
+                        <div className="flex gap-2">
+                          <Button
+                            size="sm"
+                            variant="light"
+                            color="danger"
+                            className="h-5 px-1 text-xs min-w-unit-6"
+                            isIconOnly
+                            onPress={() => handleDeleteCheckIn(checkIn)}
+                            title="Delete check-in"
+                          >
+                            <Trash2 className="w-3 h-3" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="light"
+                            color="primary"
+                            className="h-5 px-2 text-xs"
+                            onPress={() => handlePrivacyToggle(checkIn)}
+                          >
+                            {checkIn.isPrivate ? "Make Public" : "Make Private"}
+                          </Button>
+                        </div>
                       </div>
                     </div>
                   );
@@ -774,10 +862,10 @@ export default function CheckInDisplay({ remainingQuota = 50, onOpenCheckInModal
       <ModalContent>
         {(onClose) => (
           <>
-            <ModalHeader className="flex flex-col gap-1">
-              Change Checkin Privacy
+            <ModalHeader className="pb-2">
+              {selectedCheckInForPrivacy?.isPrivate ? 'Make Public' : 'Make Private'}
             </ModalHeader>
-            <ModalBody>
+            <ModalBody className="py-2">
               <p>
                 Change privacy of this checkin to {' '}
                 <strong>
@@ -791,7 +879,7 @@ export default function CheckInDisplay({ remainingQuota = 50, onOpenCheckInModal
               )}
               </p>
             </ModalBody>
-            <ModalFooter>
+            <ModalFooter className="pt-2">
               <Button variant="light" onPress={onClose}>
                 Cancel
               </Button>
@@ -801,6 +889,49 @@ export default function CheckInDisplay({ remainingQuota = 50, onOpenCheckInModal
                 isLoading={isUpdatingPrivacy}
               >
                 {selectedCheckInForPrivacy?.isPrivate ? 'Make Public' : 'Make Private'}
+              </Button>
+            </ModalFooter>
+          </>
+        )}
+      </ModalContent>
+    </Modal>
+
+    {/* Delete Confirmation Modal */}
+    <Modal isOpen={isDeleteModalOpen} onOpenChange={onDeleteModalOpenChange} size="sm">
+      <ModalContent>
+        {(onClose) => (
+          <>
+            <ModalHeader className="pb-2">
+              Delete Check-In
+            </ModalHeader>
+            <ModalBody className="py-2">
+              <p>
+                Are you sure you want to delete this check-in? This action cannot be undone.
+              </p>
+              {selectedCheckInForDelete && (
+                <div className="mt-2 p-2 bg-danger-50 rounded-lg">
+                  <div className="text-xs text-danger-600">
+                    <strong>Date:</strong> {selectedCheckInForDelete.timestamp ? 
+                      new Date(selectedCheckInForDelete.timestamp).toLocaleString() : 'Unknown'}
+                  </div>
+                  {selectedCheckInForDelete.averageCoordinates && (
+                    <div className="text-xs text-danger-600 mt-1">
+                      <strong>Location:</strong> {selectedCheckInForDelete.averageCoordinates.latitude?.toFixed(6)}, {selectedCheckInForDelete.averageCoordinates.longitude?.toFixed(6)}
+                    </div>
+                  )}
+                </div>
+              )}
+            </ModalBody>
+            <ModalFooter className="pt-2">
+              <Button variant="light" onPress={onClose}>
+                Cancel
+              </Button>
+              <Button 
+                color="danger" 
+                onPress={deleteCheckInConfirmed}
+                isLoading={isDeletingCheckIn}
+              >
+                Delete
               </Button>
             </ModalFooter>
           </>
