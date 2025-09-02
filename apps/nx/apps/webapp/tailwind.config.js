@@ -1,9 +1,7 @@
 import { heroui } from '@heroui/theme';
 
 import {
-  MuseoModerno as FontMuseo,
-  Atkinson_Hyperlegible as FontAtkinson,
-  Lato as FontLato,
+  Inter as FontInter,
 } from 'next/font/google';
 
 /** @type {import('tailwindcss').Config} */
@@ -18,9 +16,7 @@ module.exports = {
       fontFamily: {
         sans: ['var(--font-sans)'],
         mono: ['var(--font-mono)'],
-        museo: FontMuseo,
-        atkinson: FontAtkinson,
-        lato: FontLato,
+        inter: FontInter,
       },
       colors: {
       },
@@ -53,7 +49,7 @@ module.exports = {
   darkMode: 'class',
   plugins: [heroui()],
   safelist: [
-    'font-museo', 'font-atkinson', 'font-lato',
+    'font-inter',
     'text-red-500',
     'text-orange-500',
     'text-yellow-500',

@@ -167,7 +167,6 @@ export default function ManualLocationMap({ onLocationSelect, initialCoords }: M
       return;
     }
 
-    console.log('Getting user location...');
     
     navigator.geolocation.getCurrentPosition(
       (position) => {
@@ -176,7 +175,6 @@ export default function ManualLocationMap({ onLocationSelect, initialCoords }: M
           longitude: position.coords.longitude,
         };
         
-        console.log('Got user location:', coords);
         
         if (mapRef.current) {
           // Center map on user location with higher zoom
@@ -215,7 +213,6 @@ export default function ManualLocationMap({ onLocationSelect, initialCoords }: M
           setSelectedCoords(coords);
           onLocationSelect(coords);
           
-          console.log('User location pin placed successfully');
         }
       },
       (error) => {

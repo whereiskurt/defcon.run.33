@@ -217,16 +217,8 @@ export async function POST(req: NextRequest) {
       // Handle route selection - fetch route details from Strapi
       if (selectedRoute) {
         try {
-          console.log(
-            `--->Attempting to fetch route details for route ID: ${selectedRoute}`
-          );
           routeDetails = await fetchRouteFromStrapi(selectedRoute);
-          console.log(`-->>Route details fetched:`, !!routeDetails);
           if (routeDetails) {
-            console.log(
-              `-->>>>>Route details object:`,
-              JSON.stringify(routeDetails, null, 2)
-            );
             // Convert Strapi distance to kilometers based on unit
             let distanceInKm = 0;
             if (routeDetails.distance && routeDetails.distanceUnit) {
@@ -256,11 +248,6 @@ export async function POST(req: NextRequest) {
                   distanceInKm = distance;
               }
 
-              console.log(
-                `Strapi distance conversion: ${routeDetails.distance} ${
-                  routeDetails.distanceUnit
-                } = ${distanceInKm.toFixed(3)} km`
-              );
             }
 
             // Initialize with converted Strapi values
@@ -276,7 +263,6 @@ export async function POST(req: NextRequest) {
                 : `https://run.defcon.run${routeDetails.gpxurl}`
                 ;
 
-              console.log(`Fetching GPX from: ${gpxUrl}`);
               const gpxResponse = await fetch(gpxUrl, {
                 method: 'GET',
                 headers: {
@@ -285,14 +271,11 @@ export async function POST(req: NextRequest) {
               });
               if (gpxResponse.ok) {
                 const gpxContent = await gpxResponse.text();
-                console.log(`GPX content length: ${gpxContent.length}`);
                 let tracks = parseGPX(gpxContent);
-                console.log(`Parsed ${tracks.length} tracks`);
 
                 // If no tracks found, try parsing routes
                 if (tracks.length === 0) {
                   const routes = parseGPXRoutes(gpxContent);
-                  console.log(`Parsed ${routes.length} routes`);
                   if (routes.length > 0) {
                     tracks = routes;
                   }
@@ -300,7 +283,6 @@ export async function POST(req: NextRequest) {
 
                 if (tracks.length > 0 && tracks[0].points.length > 0) {
                   const track = tracks[0];
-                  console.log(`Track has ${track.points.length} points`);
                   startLocation = [track.points[0].lat, track.points[0].lon];
                   endLocation = [
                     track.points[track.points.length - 1].lat,
@@ -314,29 +296,16 @@ export async function POST(req: NextRequest) {
                     if (calculatedStats.distance > 0) {
                       stats.distance = calculatedStats.distance;
                       stats.movingTime = calculatedStats.movingTime;
-                      console.log(
-                        `Distance calculation: Using GPX calculated ${stats.distance}km (no Strapi distance available)`
-                      );
                     } else {
-                      console.log(
-                        `Distance calculation: No valid distance from Strapi or GPX`
-                      );
                     }
                   } else {
-                    console.log(
-                      `Distance calculation: Using Strapi value ${stats.distance}km`
-                    );
                   }
 
                   // Always update moving time from GPX if not set
                   if (!stats.movingTime) {
                     const calculatedStats = calculateTrackStats(track.points);
                     stats.movingTime = calculatedStats.movingTime;
-                    console.log(
-                      `Moving time: Using GPX calculated ${stats.movingTime}min`
-                    );
                   }
-                  console.log(`Start: ${startLocation}, End: ${endLocation}`);
 
                   // Verify route is in Nevada
                   const isInNevada = checkLocationBounds(track.points);
@@ -350,7 +319,6 @@ export async function POST(req: NextRequest) {
                     );
                   }
                 } else {
-                  console.log('No valid tracks or points found in GPX');
                 }
               } else {
                 console.error(
@@ -358,24 +326,18 @@ export async function POST(req: NextRequest) {
                 );
               }
             } else {
-              console.log('No GPX URL found in route details');
             }
           }
         } catch (error) {
           console.error('Error fetching route details:', error);
           // Don't fail the entire upload if route fetching fails
           // Just log the error and continue with basic route info
-          console.log(
-            'Continuing with basic route information due to fetch error'
-          );
         }
       } else {
-        console.log('No selectedRoute provided, skipping route details fetch');
       }
 
       // If we still don't have route details but have a selected route, create minimal info
       if (!routeDetails && selectedRoute) {
-        console.log('Creating minimal route details as fallback');
         routeDetails = {
           id: selectedRoute,
           name: `Route ${selectedRoute}`,
@@ -454,13 +416,6 @@ export async function POST(req: NextRequest) {
     }
 
     // Final validation and logging before creating accomplishment
-    console.log('Final accomplishment data before creation:');
-    console.log(`- Upload method: ${uploadMethod}`);
-    console.log(`- Stats: ${stats.distance}km, ${stats.movingTime}min`);
-    console.log(`- Start location: ${startLocation}`);
-    console.log(`- End location: ${endLocation}`);
-    console.log(`- Polyline length: ${polyline?.length || 0}`);
-    console.log(`- Route details available: ${!!routeDetails}`);
 
     // Create accomplishment
     const accomplishmentName = `${
@@ -790,7 +745,6 @@ async function fetchRouteFromStrapi(routeId: string): Promise<any> {
     const strapiUrl = process.env.STRAPI_URL || 'https://strapi.defcon.run';
     const url = `${strapiUrl}/api/routes?populate=*`;
 
-    console.log(`Fetching route details from: ${url}`);
 
     const response = await fetch(url, {
       method: 'GET',
@@ -814,10 +768,6 @@ async function fetchRouteFromStrapi(routeId: string): Promise<any> {
       for (const route of data.data) {
         // Check if the route ID matches (handle both string and number comparisons)
         if (route.id && route.id.toString() === routeId.toString()) {
-          console.log(
-            `Found matching route for ID ${routeId}:`,
-            JSON.stringify(route, null, 2)
-          );
           return route;
         }
       }

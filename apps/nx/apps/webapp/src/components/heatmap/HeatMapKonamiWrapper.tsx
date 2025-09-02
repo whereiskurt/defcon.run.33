@@ -283,9 +283,12 @@ export function HeatMapKonamiWrapper({ children, stats, routes }: HeatMapKonamiW
       setIsMatrixMode(hasMatrixMode);
     };
 
-    // Initial check
-    checkMatrixMode();
-
+    // Ensure initial state is false
+    setIsMatrixMode(false);
+    
+    // Clean up any existing matrixMode class on component mount
+    document.body.classList.remove('matrixMode');
+    
     // Monitor for class changes
     const observer = new MutationObserver(checkMatrixMode);
     observer.observe(document.body, {
@@ -293,7 +296,11 @@ export function HeatMapKonamiWrapper({ children, stats, routes }: HeatMapKonamiW
       attributeFilter: ['class']
     });
 
-    return () => observer.disconnect();
+    return () => {
+      observer.disconnect();
+      // Clean up on unmount
+      document.body.classList.remove('matrixMode');
+    };
   }, []);
 
   const distance = getDistanceDisplay();

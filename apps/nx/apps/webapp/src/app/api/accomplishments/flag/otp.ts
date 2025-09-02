@@ -12,13 +12,11 @@ export function validateTOTP(otpUrl: string, code: string, window: number = 1): 
     // Parse the OTP URL to extract the secret
     const url = new URL(otpUrl);
     if (url.protocol !== 'otpauth:' || url.host !== 'totp') {
-      console.error('Invalid OTP URL format');
       return false;
     }
 
     const secret = url.searchParams.get('secret');
     if (!secret) {
-      console.error('No secret found in OTP URL');
       return false;
     }
 
@@ -40,21 +38,17 @@ export function validateTOTP(otpUrl: string, code: string, window: number = 1): 
     const currentCounter = Math.floor(currentTime / period);
 
     // Check current time window and adjacent windows
-    // console.log('Current time counter:', currentCounter, 'Time:', new Date().toISOString());
     for (let i = -window; i <= window; i++) {
       const counter = currentCounter + i;
       const generatedCode = generateTOTP(secretBuffer, counter, digits, hashAlgorithm);
-      // console.log(`Window ${i}: counter=${counter}, generated=${generatedCode}, input=${code}`);
       
       if (generatedCode === code) {
-        // console.log('TOTP validation successful!');
         return true;
       }
     }
 
     return false;
   } catch (error) {
-    console.error('Error validating TOTP:', error);
     return false;
   }
 }
@@ -63,7 +57,6 @@ export function validateTOTP(otpUrl: string, code: string, window: number = 1): 
  * Generates a TOTP code for a given counter value
  */
 function generateTOTP(secret: Buffer, counter: number, digits: number, algorithm: string): string {
-  console.log('Generating TOTP:', { counter, digits, algorithm, secretLength: secret.length });
   // Convert counter to 8-byte buffer (big-endian)
   const counterBuffer = Buffer.alloc(8);
   counterBuffer.writeBigInt64BE(BigInt(counter));
@@ -83,7 +76,6 @@ function generateTOTP(secret: Buffer, counter: number, digits: number, algorithm
   // Generate final code
   const code = truncated % Math.pow(10, digits);
   const result = code.toString().padStart(digits, '0');
-  console.log('Generated TOTP code:', result);
   return result;
 }
 

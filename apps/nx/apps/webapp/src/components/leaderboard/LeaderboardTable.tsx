@@ -298,29 +298,24 @@ export default function LeaderboardTable({ ghosts }: LeaderboardTableProps) {
     if (!metadata) return null;
     
     // Debug log to see what metadata we're getting
-    console.log('Checking polyline data for metadata:', metadata);
     
     // First try summary_polyline (Strava data)
     if (metadata.summary_polyline && typeof metadata.summary_polyline === 'string') {
-      console.log('Found summary_polyline:', metadata.summary_polyline.substring(0, 50) + '...');
       
       // Check if it's a JSON coordinate array first
       try {
         const coordArray = JSON.parse(metadata.summary_polyline);
         if (Array.isArray(coordArray) && coordArray.length > 0 && Array.isArray(coordArray[0])) {
           // This is a coordinate array, not a polyline string - skip for now
-          console.log('Found coordinate array instead of polyline string');
           return null;
         }
       } catch {
         // If JSON parsing fails, it's likely a proper polyline string
-        console.log('Using polyline string from summary_polyline');
         return metadata.summary_polyline;
       }
       
       // If JSON parsing succeeded but it's not a coordinate array, it might still be a valid polyline
       if (metadata.summary_polyline.length > 10) {
-        console.log('Using polyline string (not JSON)');
         return metadata.summary_polyline;
       }
     }
@@ -335,12 +330,10 @@ export default function LeaderboardTable({ ghosts }: LeaderboardTableProps) {
     
     for (const field of polylineFields) {
       if (metadata[field] && typeof metadata[field] === 'string' && metadata[field].length > 10) {
-        console.log(`Found polyline in field: ${field}`);
         return metadata[field];
       }
     }
     
-    console.log('No polyline data found');
     return null;
   };
 
@@ -606,7 +599,6 @@ export default function LeaderboardTable({ ghosts }: LeaderboardTableProps) {
                         .sort((a, b) => b.completedAt - a.completedAt)
                         .map((accomplishment, idx) => {
                           const polylineData = getPolylineData(accomplishment.metadata);
-                          console.log(`Accomplishment "${accomplishment.name}": has polyline = ${!!polylineData}`);
                           
                           return (
                             <div key={idx} className="border-l-2 border-l-gray-300 pl-3 py-1">

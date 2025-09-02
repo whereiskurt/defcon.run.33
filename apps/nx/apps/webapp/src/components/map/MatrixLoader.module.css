@@ -6,7 +6,7 @@
   bottom: 0 !important;
   width: 100vw !important;
   height: 100vh !important;
-  background: #000;
+  background: var(--matrix-bg, #000);
   overflow: hidden;
   display: flex;
   align-items: center;
@@ -32,7 +32,7 @@
   flex-direction: column;
   font-family: 'Courier New', monospace;
   font-size: 14px;
-  color: #00ff00;
+  color: var(--matrix-primary, #00ff00);
   animation: fall 3s linear infinite;
   opacity: 0.8;
 }
@@ -81,7 +81,7 @@
 .char {
   display: block;
   line-height: 1.2;
-  text-shadow: 0 0 5px #00ff00;
+  text-shadow: 0 0 5px var(--matrix-primary, #00ff00);
   animation: flicker 0.1s linear infinite;
 }
 
@@ -98,9 +98,9 @@
   position: relative;
   z-index: 10;
   text-align: center;
-  color: #00ff00;
+  color: var(--matrix-primary, #00ff00);
   font-family: 'Courier New', monospace;
-  text-shadow: 0 0 10px #00ff00;
+  text-shadow: 0 0 10px var(--matrix-primary, #00ff00);
 }
 
 .loadingText {
@@ -112,10 +112,10 @@
 
 @keyframes glow {
   from {
-    text-shadow: 0 0 5px #00ff00, 0 0 10px #00ff00, 0 0 15px #00ff00;
+    text-shadow: 0 0 5px var(--matrix-primary, #00ff00), 0 0 10px var(--matrix-primary, #00ff00), 0 0 15px var(--matrix-primary, #00ff00);
   }
   to {
-    text-shadow: 0 0 10px #00ff00, 0 0 20px #00ff00, 0 0 30px #00ff00;
+    text-shadow: 0 0 10px var(--matrix-primary, #00ff00), 0 0 20px var(--matrix-primary, #00ff00), 0 0 30px var(--matrix-primary, #00ff00);
   }
 }
 

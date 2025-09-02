@@ -3,7 +3,7 @@
 import { auth } from '@auth';
 import { getAllAccomplishmentsForType } from '@db/accomplishment';
 import EnhancedClientMap from '@components/map/EnhancedClientMap';
-import styles from '../routes/routes.module.css';
+import styles from '../routes-map/routes.module.css';
 import polyline from '@mapbox/polyline';
 import { HeatMapKonamiWrapper } from '@components/heatmap/HeatMapKonamiWrapper';
 
@@ -167,7 +167,6 @@ async function fetchHeatMapData() {
             const coordArray = JSON.parse(metadata.summary_polyline);
             if (Array.isArray(coordArray) && coordArray.length > 0 && Array.isArray(coordArray[0])) {
               decodedPoints = coordArray as [number, number][];
-              console.log(`Parsed ${decodedPoints.length} points from JSON coordinate array`);
             }
           } catch {
             // If JSON parsing fails, try polyline decoding (for Strava data)
@@ -177,11 +176,9 @@ async function fetchHeatMapData() {
         
         // If no Strava polyline, check for pre-selected route GPX URL
         if (decodedPoints.length === 0 && metadata?.gpxUrl) {
-          console.log(`No Strava polyline for activity, fetching GPX from: ${metadata.gpxUrl}`);
           const gpxContent = await fetchGPXFromStrapi(metadata.gpxUrl);
           if (gpxContent) {
             decodedPoints = parseGPXToPoints(gpxContent);
-            console.log(`Parsed ${decodedPoints.length} points from GPX`);
           }
         }
         
@@ -200,12 +197,10 @@ async function fetchHeatMapData() {
           
           for (const gpxField of possibleGpxFields) {
             if (gpxField && typeof gpxField === 'string') {
-              console.log(`Found GPX URL in metadata: ${gpxField}`);
               const gpxContent = await fetchGPXFromStrapi(gpxField);
               if (gpxContent) {
                 decodedPoints = parseGPXToPoints(gpxContent);
                 if (decodedPoints.length > 0) {
-                  console.log(`Successfully parsed ${decodedPoints.length} points from GPX`);
                   break;
                 }
               }
@@ -215,18 +210,6 @@ async function fetchHeatMapData() {
         
         // Log debug info for activities without points
         if (decodedPoints.length === 0 && metadata) {
-          console.log(`No points found for accomplishment: ${accomplishment.name}`);
-          console.log('Available metadata fields:', Object.keys(metadata));
-          // Log specific fields that might contain route data
-          if ((metadata as any).selectedRoute) {
-            console.log('selectedRoute:', (metadata as any).selectedRoute);
-          }
-          if ((metadata as any).route) {
-            console.log('route:', (metadata as any).route);
-          }
-          if (accomplishment.year === 2025) {
-            console.log('DC33 activity with no points - full metadata:', JSON.stringify(metadata, null, 2));
-          }
         }
         
         return {
@@ -260,7 +243,6 @@ async function fetchHeatMapData() {
       }
     }
     
-    console.log(`Heat map: ${totalActivityCount} total activities, ${filteredOutCount} filtered out (outside Las Vegas), ${totalActivityCount - filteredOutCount} included`);
     
     const routes: any[] = [];
     
@@ -376,7 +358,6 @@ async function fetchHeatMapData() {
       years: defconYears.length // Always show total possible years
     };
     
-    console.log(`Generated heat map with ${routes.length} routes across ${defconYears.length} DEFCON years`, stats);
     
     return { routes, stats };
   } catch (error) {

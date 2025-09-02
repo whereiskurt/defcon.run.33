@@ -5,7 +5,6 @@ import { auth } from '@auth';
 // GPX parsing utility to extract polyline and start/end points
 async function extractPolylineFromGPX(gpxUrl: string): Promise<{ polyline: string | null; startPoint?: { lat: number; lng: number }; endPoint?: { lat: number; lng: number } }> {
   try {
-    console.log('Fetching GPX from:', gpxUrl);
     const response = await fetch(gpxUrl);
     if (!response.ok) return { polyline: null };
     
@@ -54,10 +53,8 @@ async function extractPolylineFromGPX(gpxUrl: string): Promise<{ polyline: strin
       }
     }
     
-    console.log(`GPX parsing results - Track points: ${trkptCount}, Route points: ${rteptCount}, Waypoints: ${wptCount}, Total: ${allPoints.length}`);
     
     if (allPoints.length < 2) {
-      console.log('Not enough points to create polyline');
       return { polyline: null };
     }
     
@@ -67,14 +64,11 @@ async function extractPolylineFromGPX(gpxUrl: string): Promise<{ polyline: strin
     if (trkptCount >= 2) {
       // Use only track points if we have enough
       finalPoints = allPoints.slice(0, trkptCount);
-      console.log('Using track points for polyline');
     } else if (rteptCount >= 2) {
       // Use route points if no track points but we have route points
       finalPoints = allPoints.slice(trkptCount, trkptCount + rteptCount);
-      console.log('Using route points for polyline');
     } else {
       // Use all points (including waypoints) to create a path
-      console.log('Using all points for polyline');
     }
     
     // Extract start and end points
@@ -139,7 +133,6 @@ export async function GET(req: NextRequest) {
   try {
     const routes = await strapi("/routes?populate=*");
     
-    console.log('Raw Strapi routes data:', JSON.stringify(routes.data?.[0], null, 2));
     
     // Filter and transform routes data - only include routes with GPX data
     const routeOptions = await Promise.all(routes.data.filter((route: any) => {
@@ -208,7 +201,6 @@ export async function GET(req: NextRequest) {
       
       // If no polyline but we have a GPX URL, extract it
       if (!polyline && gpxUrl) {
-        console.log('No polyline found, extracting from GPX:', gpxUrl);
         const gpxResult = await extractPolylineFromGPX(gpxUrl);
         polyline = gpxResult.polyline;
         gpxStartPoint = gpxResult.startPoint;

@@ -89,12 +89,10 @@ const UserDropDown = (params: any) => {
   const checkSyncQuota = (userData?: any) => {
     try {
       const user = userData || userDetail;
-      console.log('Checking sync quota, user data:', user);
       
       // Check the total sync quota (16 total syncs)
       const totalQuota = user?.quota?.stravaSync ?? 16;
       
-      console.log('Total sync quota remaining:', totalQuota);
       
       setSyncsRemaining(totalQuota);
       setCanSync(totalQuota > 0);
@@ -127,7 +125,6 @@ const UserDropDown = (params: any) => {
         setSyncSuccess(true);
         // Parse the response to get the updated quota
         const syncData = await response.json();
-        console.log('Sync response:', syncData);
         
         // Update remaining syncs from the API response
         if (syncData.remainingQuota !== undefined) {
@@ -144,7 +141,6 @@ const UserDropDown = (params: any) => {
         });
         if (res.ok) {
           const record = await res.json();
-          console.log('User data after sync:', record.user);
           setUserDetail(record.user);
           // Double-check quota from user data if not in sync response
           if (syncData.remainingQuota === undefined) {

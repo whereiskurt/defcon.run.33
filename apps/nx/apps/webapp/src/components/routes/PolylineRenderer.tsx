@@ -1,15 +1,17 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useMemo } from 'react';
 
 interface PolylineRendererProps {
-  polyline: string;
+  polyline?: string;
+  gpxUrl?: string;
   width?: number;
   height?: number;
   strokeColor?: string;
   strokeWidth?: number;
   padding?: number;
   showMapTile?: boolean;
+  theme?: string;
 }
 
 // Decode Google polyline format
@@ -66,10 +68,45 @@ function tileToLatLng(x: number, y: number, zoom: number): { lat: number; lng: n
   return { lat, lng };
 }
 
+// Parse GPX XML and extract coordinates
+function parseGPX(gpxContent: string): [number, number][] {
+  const points: [number, number][] = [];
+  
+  try {
+    // Parse GPX XML
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(gpxContent, 'text/xml');
+    
+    // Look for trackpoints
+    const trackpoints = doc.getElementsByTagName('trkpt');
+    for (let i = 0; i < trackpoints.length; i++) {
+      const lat = parseFloat(trackpoints[i].getAttribute('lat') || '0');
+      const lon = parseFloat(trackpoints[i].getAttribute('lon') || '0');
+      if (!isNaN(lat) && !isNaN(lon)) {
+        points.push([lat, lon]);
+      }
+    }
+    
+    // Also check for route points if no trackpoints found
+    if (points.length === 0) {
+      const routepoints = doc.getElementsByTagName('rtept');
+      for (let i = 0; i < routepoints.length; i++) {
+        const lat = parseFloat(routepoints[i].getAttribute('lat') || '0');
+        const lon = parseFloat(routepoints[i].getAttribute('lon') || '0');
+        if (!isNaN(lat) && !isNaN(lon)) {
+          points.push([lat, lon]);
+        }
+      }
+    }
+  } catch (error) {
+    console.error('Error parsing GPX:', error);
+  }
+  
+  return points;
+}
+
 // Calculate optimal zoom level for the bounds
-function calculateZoomLevel(bounds: { minLat: number; maxLat: number; minLng: number; maxLng: number }, width: number, height: number): number {
-  const latDiff = bounds.maxLat - bounds.minLat;
-  const lngDiff = bounds.maxLng - bounds.minLng;
+function calculateZoomLevel(bounds: { minLat: number; maxLat: number; minLng: number; maxLng: number }): number {
   
   // Start from zoom 15 and work down until the bounds fit in one tile
   for (let zoom = 15; zoom >= 10; zoom--) {
@@ -86,46 +123,57 @@ function calculateZoomLevel(bounds: { minLat: number; maxLat: number; minLng: nu
 
 export default function PolylineRenderer({
   polyline,
+  gpxUrl,
   width = 200,
   height = 150,
   strokeColor = '#3B82F6',
   strokeWidth = 2,
   padding = 10,
   showMapTile = true,
+  theme = 'light',
 }: PolylineRendererProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  
+  // Unified theme detection: ONLY use the passed theme prop for consistency
+  const isDarkMode = theme === "dark";
+  
+  // Memoize polyline decoding to avoid re-computation on every render
+  const decodedPoints = useMemo(() => {
+    if (!polyline) return [];
+    return decodePolyline(polyline);
+  }, [polyline]);
+  
 
   useEffect(() => {
-    if (!polyline || !canvasRef.current) {
-      console.log('PolylineRenderer: Missing polyline or canvas ref', { polyline: !!polyline, canvas: !!canvasRef.current });
+    
+    if (!polyline || !canvasRef.current || decodedPoints.length === 0) {
       return;
     }
 
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
     if (!ctx) {
-      console.log('PolylineRenderer: Could not get 2d context');
       return;
     }
 
-    // Clear canvas
+    // Clear canvas and add debug background
     ctx.clearRect(0, 0, width, height);
+    
+    // Debug: Draw a light background to see if canvas is rendering
+    ctx.fillStyle = isDarkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)';
+    ctx.fillRect(0, 0, width, height);
 
     const renderPolylineOnly = async () => {
       try {
-        console.log('PolylineRenderer: Decoding polyline:', polyline.substring(0, 50) + '...');
-        
-        // Decode polyline
-        const points = decodePolyline(polyline);
-        console.log('PolylineRenderer: Decoded points:', points.length);
+        // Use pre-decoded points from useMemo
+        const points = decodedPoints;
         
         if (points.length < 2) {
-          console.log('PolylineRenderer: Not enough points to draw');
           // Draw "No data" text
-          ctx.fillStyle = '#999';
+          ctx.fillStyle = isDarkMode ? '#666' : '#999';
           ctx.font = '10px Arial';
           ctx.textAlign = 'center';
-          ctx.fillText('No data', width / 2, height / 2);
+          ctx.fillText('No route data', width / 2, height / 2);
           return;
         }
 
@@ -235,31 +283,32 @@ export default function PolylineRenderer({
         // Load map tile as background if enabled
         if (showMapTile) {
           try {
-            const zoom = calculateZoomLevel(bounds, width, height);
+            const zoom = calculateZoomLevel(bounds);
             const centerLat = (minLat + maxLat) / 2;
             const centerLng = (minLng + maxLng) / 2;
             const centerTile = latLngToTile(centerLat, centerLng, zoom);
             
             const tileUrl = `https://tile.openstreetmap.org/${zoom}/${centerTile.x}/${centerTile.y}.png`;
-            console.log('Loading tile:', tileUrl);
             
             const tileImage = new Image();
             tileImage.crossOrigin = 'anonymous';
             
             tileImage.onload = () => {
-              console.log('Tile loaded successfully');
-              
-              // Calculate tile bounds in lat/lng
-              const tileBounds = {
-                topLeft: tileToLatLng(centerTile.x, centerTile.y, zoom),
-                bottomRight: tileToLatLng(centerTile.x + 1, centerTile.y + 1, zoom)
-              };
               
               // Draw tile as background
-              ctx.drawImage(tileImage, 0, 0, width, height);
+              if (isDarkMode) {
+                // Apply dark mode filter to canvas - same as main map for consistency
+                ctx.filter = 'invert(1) hue-rotate(180deg) brightness(1.2) contrast(0.9)';
+                ctx.drawImage(tileImage, 0, 0, width, height);
+                ctx.filter = 'none'; // Reset filter for subsequent drawing
+              } else {
+                ctx.drawImage(tileImage, 0, 0, width, height);
+              }
               
               // Draw semi-transparent overlay to make polyline more visible
-              ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
+              ctx.fillStyle = isDarkMode 
+                ? 'rgba(0, 0, 0, 0.2)' 
+                : 'rgba(255, 255, 255, 0.2)';
               ctx.fillRect(0, 0, width, height);
               
               // Now draw the polyline on top
@@ -267,7 +316,6 @@ export default function PolylineRenderer({
             };
             
             tileImage.onerror = () => {
-              console.log('Tile failed to load, drawing polyline without background');
               drawPolyline();
             };
             
@@ -286,14 +334,18 @@ export default function PolylineRenderer({
     };
 
     renderPolylineOnly();
-  }, [polyline, width, height, strokeColor, strokeWidth, padding]);
+  }, [decodedPoints, width, height, strokeColor, strokeWidth, padding, showMapTile, isDarkMode]);
 
   return (
     <canvas
       ref={canvasRef}
       width={width}
       height={height}
-      className="border border-default-200 rounded-lg bg-default-50"
+      className={`border rounded-lg ${
+        isDarkMode 
+          ? 'border-default-600 bg-default-900' 
+          : 'border-default-200 bg-default-50'
+      }`}
       style={{ maxWidth: '100%', height: 'auto' }}
     />
   );

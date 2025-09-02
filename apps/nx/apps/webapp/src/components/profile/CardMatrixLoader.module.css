@@ -1,7 +1,7 @@
 .matrixContainer {
   position: relative;
   width: 100%;
-  background: #000;
+  background: var(--matrix-bg, #000);
   overflow: hidden;
   display: flex;
   align-items: center;
@@ -25,7 +25,7 @@
   flex-direction: column;
   font-family: 'Courier New', monospace;
   font-size: 10px;
-  color: #00ff00;
+  color: var(--matrix-primary, #00ff00);
   animation: fall 2s linear infinite;
   opacity: 0.7;
 }
@@ -62,7 +62,7 @@
 .char {
   display: block;
   line-height: 1.1;
-  text-shadow: 0 0 3px #00ff00;
+  text-shadow: 0 0 3px var(--matrix-primary, #00ff00);
   animation: flicker 0.15s linear infinite;
 }
 
@@ -79,9 +79,9 @@
   position: relative;
   z-index: 10;
   text-align: center;
-  color: #00ff00;
+  color: var(--matrix-primary, #00ff00);
   font-family: 'Courier New', monospace;
-  text-shadow: 0 0 8px #00ff00;
+  text-shadow: 0 0 8px var(--matrix-primary, #00ff00);
 }
 
 .loadingText {
@@ -93,10 +93,10 @@
 
 @keyframes glow {
   from {
-    text-shadow: 0 0 3px #00ff00, 0 0 6px #00ff00, 0 0 9px #00ff00;
+    text-shadow: 0 0 3px var(--matrix-primary, #00ff00), 0 0 6px var(--matrix-primary, #00ff00), 0 0 9px var(--matrix-primary, #00ff00);
   }
   to {
-    text-shadow: 0 0 6px #00ff00, 0 0 12px #00ff00, 0 0 18px #00ff00;
+    text-shadow: 0 0 6px var(--matrix-primary, #00ff00), 0 0 12px var(--matrix-primary, #00ff00), 0 0 18px var(--matrix-primary, #00ff00);
   }
 }
 

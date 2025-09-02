@@ -42,7 +42,6 @@ export default function FlagSubmission({ ghosts, onFlagSubmissionSuccess }: Flag
   useEffect(() => {
     const fetchCtfOptions = async () => {
       if (ghosts && ghosts.length > 0) {
-        // console.log(JSON.stringify(ghosts));
         const ctfOptionsFromGhosts: CtfOption[] = ghosts.map(ghost => ({
           id: ghost.handle,
           name: `${ghost.name} aka ${ghost.handle}`,

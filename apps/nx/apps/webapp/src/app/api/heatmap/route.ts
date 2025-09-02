@@ -20,7 +20,6 @@ const CACHE_DURATION = 2 * 60 * 1000; // 2 minutes in milliseconds (reduced from
 
 // Function to clear cache (internal use only)
 function clearHeatmapCache() {
-  console.log('[Heatmap] Cache cleared manually');
   heatMapCache.generatedAt = 0;
 }
 
@@ -97,15 +96,12 @@ async function fetchGPXFromStrapi(url: string): Promise<string | null> {
 // Function to generate heat map data from accomplishments
 async function generateHeatMapData() {
   try {
-    console.log(`[Heatmap] Starting heat map generation at ${new Date().toISOString()}`);
     
     // Fetch all activity accomplishments (which contain Strava data with polylines)
     const accomplishments = await getAllAccomplishmentsForType('activity');
-    console.log(`[Heatmap] Fetched ${accomplishments.length} total activity accomplishments`);
     
     // Track unique users
     const uniqueUsers = new Set(accomplishments.map(a => a.userId));
-    console.log(`[Heatmap] Found ${uniqueUsers.size} unique users with activities`);
     
     // Group accomplishments by year to create separate layers
     const accomplishmentsByYear = new Map<number, any[]>();
@@ -123,7 +119,6 @@ async function generateHeatMapData() {
             const coordArray = JSON.parse(metadata.summary_polyline);
             if (Array.isArray(coordArray) && coordArray.length > 0 && Array.isArray(coordArray[0])) {
               decodedPoints = coordArray as [number, number][];
-              console.log(`Parsed ${decodedPoints.length} points from JSON coordinate array`);
             }
           } catch {
             // If JSON parsing fails, try polyline decoding (for Strava data)
@@ -133,11 +128,9 @@ async function generateHeatMapData() {
         
         // If no Strava polyline, check for pre-selected route GPX URL
         if (decodedPoints.length === 0 && metadata?.gpxUrl) {
-          console.log(`No Strava polyline for activity, fetching GPX from: ${metadata.gpxUrl}`);
           const gpxContent = await fetchGPXFromStrapi(metadata.gpxUrl);
           if (gpxContent) {
             decodedPoints = parseGPXToPoints(gpxContent);
-            console.log(`Parsed ${decodedPoints.length} points from GPX`);
           }
         }
         
@@ -156,12 +149,10 @@ async function generateHeatMapData() {
           
           for (const gpxField of possibleGpxFields) {
             if (gpxField && typeof gpxField === 'string') {
-              console.log(`Found GPX URL in metadata: ${gpxField}`);
               const gpxContent = await fetchGPXFromStrapi(gpxField);
               if (gpxContent) {
                 decodedPoints = parseGPXToPoints(gpxContent);
                 if (decodedPoints.length > 0) {
-                  console.log(`Successfully parsed ${decodedPoints.length} points from GPX`);
                   break;
                 }
               }
@@ -171,10 +162,6 @@ async function generateHeatMapData() {
         
         // Log debug info for activities without points
         if (decodedPoints.length === 0 && metadata) {
-          console.log(`No points found for accomplishment: ${accomplishment.name}`);
-          if (accomplishment.year === 2025) {
-            console.log('DC33 activity with no points - full metadata:', JSON.stringify(metadata, null, 2));
-          }
         }
         
         return {
@@ -208,8 +195,6 @@ async function generateHeatMapData() {
       }
     }
     
-    console.log(`[Heatmap] ${noPolylineCount} accomplishments have no polyline data`);
-    console.log(`[Heatmap] ${usersWithoutPolylines.size} users have accomplishments without polylines`);
     
     const routes: any[] = [];
     
@@ -296,8 +281,6 @@ async function generateHeatMapData() {
       usersWithoutPolylines: usersWithoutPolylines.size
     };
     
-    console.log(`[Heatmap] Generated ${routes.length} routes for visualization`);
-    console.log(`[Heatmap] Stats:`, stats);
     
     return { routes, stats };
   } catch (error) {

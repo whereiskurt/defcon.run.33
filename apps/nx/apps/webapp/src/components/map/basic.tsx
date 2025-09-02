@@ -9,7 +9,7 @@ import 'leaflet-polylinedecorator';
 import 'leaflet/dist/leaflet.css';
 import { useTheme } from 'next-themes';
 import Link from 'next/link';
-import { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { MapContainer, TileLayer, useMap } from 'react-leaflet';
 
 interface MapProps {
@@ -138,7 +138,41 @@ function parseGPX(gpxString: string): [number, number][] {
   return coordinates;
 }
 
-const Map = ({ center: posix, raw, zoom = defaults.zoom, live_nodes, theme, externalGhostState, disablePopups }: MapProps) => {
+const Map = ({ center: posix, raw, zoom = defaults.zoom, live_nodes, theme, externalGhostState, disablePopups, onMapReady }: MapProps & { onMapReady?: (mapInstance: any) => void }) => {
+  // Unified theme detection: ONLY use the passed theme prop
+  // This ensures consistent behavior across all map components
+  const isDarkMode = theme === "dark";
+  
+  
+  // Add/update dark mode CSS for tiles based on current theme
+  React.useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const styleId = 'leaflet-dark-mode-style';
+      let styleElement = document.getElementById(styleId);
+      
+      if (!styleElement) {
+        styleElement = document.createElement('style');
+        styleElement.id = styleId;
+        document.head.appendChild(styleElement);
+      }
+      
+      // Update CSS based on current mode - always set the CSS to ensure proper switching
+      if (isDarkMode) {
+        styleElement.textContent = `
+          .dark-mode-tiles img {
+            filter: invert(1) hue-rotate(180deg) brightness(1.2) contrast(0.9) !important;
+          }
+        `;
+      } else {
+        styleElement.textContent = `
+          .dark-mode-tiles img {
+            filter: none !important;
+          }
+        `;
+      }
+    }
+  }, [isDarkMode]);
+  
   return (
     <MapContainer
       center={posix}
@@ -146,13 +180,16 @@ const Map = ({ center: posix, raw, zoom = defaults.zoom, live_nodes, theme, exte
       style={{ zIndex: '0', height: '100%', width: '100%' }}
     >
 
-      {theme === "dark" ? (
+      {isDarkMode ? (
         <TileLayer
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          key="dark-tiles"
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" 
           attribution='&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
+          className="dark-mode-tiles"
         />
       ) : (
         <TileLayer
+          key="light-tiles"
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" 
           attribution='&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
         />
@@ -168,7 +205,7 @@ const Map = ({ center: posix, raw, zoom = defaults.zoom, live_nodes, theme, exte
         attribution='&copy; <a href="https://stadiamaps.com/" target="_blank">Stadia Maps</a> &copy; <a href="https://stamen.com/" target="_blank">Stamen Design</a> &copy; <a href="https://openmaptiles.org/" target="_blank">OpenMapTiles</a> &copy; <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a>'
       /> */}
 
-      <AddGPXLayer raw={raw} live_nodes={live_nodes} externalGhostState={externalGhostState} disablePopups={disablePopups} />
+      <AddGPXLayer raw={raw} live_nodes={live_nodes} externalGhostState={externalGhostState} disablePopups={disablePopups} onMapReady={onMapReady} />
     </MapContainer>
   );
 };
@@ -184,7 +221,7 @@ const Map = ({ center: posix, raw, zoom = defaults.zoom, live_nodes, theme, exte
     return '#00ff00';
   }
 
-const AddGPXLayer = ({ raw, live_nodes, externalGhostState, disablePopups }: { raw: string, live_nodes: string, externalGhostState?: boolean, disablePopups?: boolean }) => {
+const AddGPXLayer = ({ raw, live_nodes, externalGhostState, disablePopups, onMapReady }: { raw: string, live_nodes: string, externalGhostState?: boolean, disablePopups?: boolean, onMapReady?: (mapInstance: any) => void }) => {
   const hasMounted = useRef(false);
   const map = useMap();
   const routes = JSON.parse(raw);
@@ -279,6 +316,11 @@ const AddGPXLayer = ({ raw, live_nodes, externalGhostState, disablePopups }: { r
     if (hasMounted.current) return;
 
     if (map) {
+      // Call onMapReady callback if provided
+      if (onMapReady) {
+        onMapReady(map);
+      }
+      
       var rawOverlay: RawOverlayMap = {};
 
       const liveLayer = new L.LayerGroup();
@@ -436,7 +478,6 @@ const AddGPXLayer = ({ raw, live_nodes, externalGhostState, disablePopups }: { r
       const layerControl = L.control.layers({}, overlayMaps).addTo(map);
       
       // Add mutual exclusion logic between "ALL" and individual DC layers
-      console.log('Setting up layer control events, available layers:', Object.keys(overlayMaps));
       let isUpdatingLayers = false; // Prevent recursive updates
       
       // Intercept checkbox clicks BEFORE Leaflet processes them
@@ -456,23 +497,20 @@ const AddGPXLayer = ({ raw, live_nodes, externalGhostState, disablePopups }: { r
                 label = checkbox.parentNode.textContent.trim();
               }
               
-              console.log(`Checkbox clicked: ${label}, will be checked: ${!checkbox.checked}`);
               
               if (label === 'ALL' && !checkbox.checked) {
                 // ALL is being checked - uncheck all DC layers
-                console.log('ALL being checked, will hide all DC layers');
                 setTimeout(() => {
                   Object.keys(overlayMaps).forEach(name => {
-                    if (name.startsWith('DC') && map.hasLayer(overlayMaps[name])) {
+                    if (name.startsWith('DC') && overlayMaps[name] && map.hasLayer(overlayMaps[name])) {
                       map.removeLayer(overlayMaps[name]);
                     }
                   });
                 }, 10);
               } else if (label.startsWith('DC') && !checkbox.checked) {
                 // DC layer is being checked - uncheck ALL
-                console.log(`${label} being checked, will hide ALL`);
                 setTimeout(() => {
-                  if (map.hasLayer(overlayMaps['ALL'])) {
+                  if (overlayMaps['ALL'] && map.hasLayer(overlayMaps['ALL'])) {
                     map.removeLayer(overlayMaps['ALL']);
                   }
                 }, 10);
@@ -485,27 +523,22 @@ const AddGPXLayer = ({ raw, live_nodes, externalGhostState, disablePopups }: { r
       map.on('overlayadd', function(e: any) {
         if (isUpdatingLayers) return; // Skip if we're in the middle of updating
         
-        console.log('Layer added:', e.name);
         const layerName = e.name;
         
         isUpdatingLayers = true;
         
         if (layerName === 'ALL') {
           // When ALL is checked, hide all DC layers by removing them
-          console.log('ALL layer checked, hiding DC layers...');
           Object.keys(overlayMaps).forEach(name => {
-            if (name.startsWith('DC') && map.hasLayer(overlayMaps[name])) {
-              console.log('Hiding layer:', name);
+            if (name.startsWith('DC') && overlayMaps[name] && map.hasLayer(overlayMaps[name])) {
               map.removeLayer(overlayMaps[name]);
             }
           });
         } else if (layerName.startsWith('DC')) {
           // When any DC layer is checked, hide ALL layer (but leave other DC layers alone)
-          console.log('DC layer checked:', layerName, ', hiding ALL layer only...');
           
           // Hide ALL layer by removing it from map
-          if (map.hasLayer(overlayMaps['ALL'])) {
-            console.log('Hiding ALL layer');
+          if (overlayMaps['ALL'] && map.hasLayer(overlayMaps['ALL'])) {
             map.removeLayer(overlayMaps['ALL']);
           }
         }
@@ -524,24 +557,23 @@ const AddGPXLayer = ({ raw, live_nodes, externalGhostState, disablePopups }: { r
                 label = checkbox.parentNode.textContent.trim();
               }
               
-              console.log(`Found checkbox with label: "${label}"`);
               
               if (label && overlayMaps[label]) {
-                const shouldBeChecked = map.hasLayer(overlayMaps[label]);
-                console.log(`${label}: checkbox.checked=${checkbox.checked}, shouldBeChecked=${shouldBeChecked}, hasLayer=${map.hasLayer(overlayMaps[label])}`);
-                
-                if (checkbox.checked !== shouldBeChecked) {
-                  console.log(`FORCE updating checkbox for ${label}: ${checkbox.checked} -> ${shouldBeChecked}`);
-                  checkbox.checked = shouldBeChecked;
+                const layer = overlayMaps[label];
+                if (layer) {
+                  const shouldBeChecked = map.hasLayer(layer);
                   
-                  // Force a visual update
-                  if (shouldBeChecked) {
-                    checkbox.setAttribute('checked', 'checked');
+                  if (checkbox.checked !== shouldBeChecked) {
+                    checkbox.checked = shouldBeChecked;
+                  
+                    // Force a visual update
+                    if (shouldBeChecked) {
+                      checkbox.setAttribute('checked', 'checked');
+                    } else {
+                      checkbox.removeAttribute('checked');
+                    }
                   } else {
-                    checkbox.removeAttribute('checked');
                   }
-                } else {
-                  console.log(`${label}: no update needed (already correct)`);
                 }
               }
             });
@@ -553,27 +585,22 @@ const AddGPXLayer = ({ raw, live_nodes, externalGhostState, disablePopups }: { r
       map.on('overlayremove', function(e: any) {
         if (isUpdatingLayers) return; // Skip if we're in the middle of updating
         
-        console.log('Layer removed:', e.name);
         const layerName = e.name;
         
         isUpdatingLayers = true;
         
         if (layerName === 'ALL') {
-          console.log('ALL layer unchecked');
           // When ALL is unchecked, don't auto-check anything
           // User can manually check individual DC layers
         } else if (layerName.startsWith('DC')) {
-          console.log('DC layer unchecked:', layerName);
           // Check if no DC layers are visible
           const anyDCVisible = Object.keys(overlayMaps).some(name => 
-            name.startsWith('DC') && map.hasLayer(overlayMaps[name])
+            name.startsWith('DC') && overlayMaps[name] && map.hasLayer(overlayMaps[name])
           );
           
-          console.log('Any DC layers still visible?', anyDCVisible);
           
           // If no DC layers are visible and ALL is not visible, auto-check ALL
-          if (!anyDCVisible && !map.hasLayer(overlayMaps['ALL'])) {
-            console.log('Auto-checking ALL layer');
+          if (!anyDCVisible && overlayMaps['ALL'] && !map.hasLayer(overlayMaps['ALL'])) {
             map.addLayer(overlayMaps['ALL']);
           }
         }
@@ -586,9 +613,9 @@ const AddGPXLayer = ({ raw, live_nodes, externalGhostState, disablePopups }: { r
             checkboxes.forEach((checkbox: any) => {
               const label = checkbox.parentNode?.textContent?.trim() || checkbox.nextSibling?.textContent?.trim();
               if (label && overlayMaps[label]) {
-                const shouldBeChecked = map.hasLayer(overlayMaps[label]);
+                const layer = overlayMaps[label];
+                const shouldBeChecked = layer ? map.hasLayer(layer) : false;
                 if (checkbox.checked !== shouldBeChecked) {
-                  console.log(`Updating checkbox for ${label}: ${checkbox.checked} -> ${shouldBeChecked}`);
                   checkbox.checked = shouldBeChecked;
                   // Trigger change event to make sure Leaflet knows
                   checkbox.dispatchEvent(new Event('change', { bubbles: true }));
@@ -815,7 +842,6 @@ function drawRoute(data: any, layer: L.LayerGroup<any>, disablePopups = false) {
       if (fullUrl.startsWith('http://') || fullUrl.startsWith('https://')) {
         // For remote URLs, proxy through our API to avoid CORS issues
         const proxyUrl = `/api/gpx/fetch?url=${encodeURIComponent(fullUrl)}`;
-        console.log(`Fetching GPX via proxy: ${fullUrl}`);
         
         const xhr = new XMLHttpRequest();
         xhr.open('GET', proxyUrl, false); // Synchronous request to our proxy
@@ -1191,5 +1217,4 @@ function drawRoute(data: any, layer: L.LayerGroup<any>, disablePopups = false) {
 
 // const flexPolyline = encode({ polyline: coordinates });
 // const d = decode(polystring)
-// console.log(JSON.stringify(d));
 // const polylineCoordinates: [number, number][] = d.polyline.map((coord: number[]) => [coord[0], coord[1]]);

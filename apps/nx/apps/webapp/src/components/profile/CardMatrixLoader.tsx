@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useTheme } from 'next-themes';
 import styles from './CardMatrixLoader.module.css';
 
 interface CardMatrixLoaderProps {
@@ -12,6 +13,7 @@ export default function CardMatrixLoader({
   text = 'LOADING...', 
   height = '200px' 
 }: CardMatrixLoaderProps) {
+  const { resolvedTheme } = useTheme();
   const [isClient, setIsClient] = useState(false);
 
   // Japanese birthday messages for Elkentaro
@@ -39,8 +41,20 @@ export default function CardMatrixLoader({
     return birthdayChars[Math.floor(Math.random() * birthdayChars.length)];
   };
 
+  // Theme-aware colors
+  const isDarkMode = resolvedTheme === 'dark';
+  const themeVars = isDarkMode 
+    ? {
+        '--matrix-bg': '#000',
+        '--matrix-primary': '#00ff00'
+      }
+    : {
+        '--matrix-bg': '#ffffff',
+        '--matrix-primary': '#006600'
+      };
+
   return (
-    <div className={styles.matrixContainer} style={{ height }}>
+    <div className={styles.matrixContainer} style={{ height, ...themeVars } as React.CSSProperties}>
       <div className={styles.matrix}>
         {Array.from({ length: 15 }, (_, i) => (
           <div key={i} className={styles.column}>

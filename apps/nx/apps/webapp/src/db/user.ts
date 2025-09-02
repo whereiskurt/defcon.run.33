@@ -703,7 +703,6 @@ export async function getTotalUserCount() {
     count += result.data.length;
     lastKey = result.cursor;
     
-    console.log(`[Count] Batch: ${result.data.length}, Total: ${count}, HasMore: ${!!lastKey}`);
   } while (lastKey);
   
   return count;
@@ -723,10 +722,8 @@ export async function getAllUsersWithAccomplishmentCounts() {
     allUsers.push(...result.data);
     lastKey = result.cursor;
     
-    console.log(`[Leaderboard] Page ${pageNum}: ${result.data.length} users, Total: ${allUsers.length}, HasMore: ${!!lastKey}`);
   } while (lastKey);
   
-  console.log(`[Leaderboard] Total users fetched from DynamoDB: ${allUsers.length}`);
   
   // Get all users with their latest accomplishment
   const usersWithLatest = await Promise.all(allUsers.map(async (user) => {

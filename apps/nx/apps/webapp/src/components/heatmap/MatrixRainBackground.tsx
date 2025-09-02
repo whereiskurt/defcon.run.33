@@ -1,12 +1,14 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
+import { useTheme } from 'next-themes';
 
 interface MatrixRainBackgroundProps {
   isActive: boolean;
 }
 
 export function MatrixRainBackground({ isActive }: MatrixRainBackgroundProps) {
+  const { resolvedTheme } = useTheme();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationRef = useRef<number | undefined>(undefined);
 
@@ -42,31 +44,57 @@ export function MatrixRainBackground({ isActive }: MatrixRainBackgroundProps) {
     const drops: number[] = Array(columns).fill(1);
 
     const draw = () => {
-      // Black background with transparency for trailing effect
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.035)';
+      // Theme-aware background and colors
+      const isDarkMode = resolvedTheme === 'dark';
+      
+      // Background fade effect with theme-appropriate color
+      if (isDarkMode) {
+        // Dark mode: black background with transparency for trailing effect
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.035)';
+      } else {
+        // Light mode: white/light background with transparency for trailing effect
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.035)';
+      }
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-      ctx.fillStyle = '#00ff00';
       ctx.font = `bold ${fontSize}px monospace`;
 
       for (let i = 0; i < drops.length; i++) {
         // Random character
         const char = charArray[Math.floor(Math.random() * charArray.length)];
         
-        // Different shades of green for depth - more bright characters
+        // Theme-appropriate colors for matrix characters
         const alpha = Math.random();
-        if (alpha > 0.85) {
-          ctx.fillStyle = '#ffffff'; // Bright white (more frequent)
-          ctx.shadowBlur = 20;
-          ctx.shadowColor = '#00ff00';
-        } else if (alpha > 0.3) {
-          ctx.fillStyle = '#00ff00'; // Standard bright green (more frequent)
-          ctx.shadowBlur = 15;
-          ctx.shadowColor = '#00ff00';
+        if (isDarkMode) {
+          // Dark mode: traditional green matrix colors
+          if (alpha > 0.85) {
+            ctx.fillStyle = '#ffffff'; // Bright white highlights
+            ctx.shadowBlur = 20;
+            ctx.shadowColor = '#00ff00';
+          } else if (alpha > 0.3) {
+            ctx.fillStyle = '#00ff00'; // Standard bright green
+            ctx.shadowBlur = 15;
+            ctx.shadowColor = '#00ff00';
+          } else {
+            ctx.fillStyle = '#00cc00'; // Lighter green
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = '#00aa00';
+          }
         } else {
-          ctx.fillStyle = '#00cc00'; // Lighter green instead of dark
-          ctx.shadowBlur = 10;
-          ctx.shadowColor = '#00aa00';
+          // Light mode: darker, more visible colors on light background
+          if (alpha > 0.85) {
+            ctx.fillStyle = '#000000'; // Black highlights for contrast
+            ctx.shadowBlur = 20;
+            ctx.shadowColor = '#006600';
+          } else if (alpha > 0.3) {
+            ctx.fillStyle = '#006600'; // Dark green for visibility
+            ctx.shadowBlur = 15;
+            ctx.shadowColor = '#006600';
+          } else {
+            ctx.fillStyle = '#004400'; // Darker green
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = '#004400';
+          }
         }
 
         ctx.fillText(char, i * fontSize, drops[i] * fontSize);
@@ -92,7 +120,7 @@ export function MatrixRainBackground({ isActive }: MatrixRainBackgroundProps) {
         cancelAnimationFrame(animationRef.current);
       }
     };
-  }, [isActive]);
+  }, [isActive, resolvedTheme]);
 
   if (!isActive) return null;
 

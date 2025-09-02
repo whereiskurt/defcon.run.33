@@ -95,12 +95,12 @@ const MenuDropDown = (params: any) => {
 
           <DropdownItem
             className="pb-2"
-            textValue="routes-list"
+            textValue="routes-map"
             startContent={<GrMapLocation size={24} className={iconClasses} />}
-            key="routes-list"
-            onClick={() => handleNavigation('/routes-list')}
+            key="routes-map"
+            onClick={() => handleNavigation('/routes-map')}
           >
-            <span className="text-2xl">Routes List</span>
+            <span className="text-2xl">Routes Map</span>
           </DropdownItem>
 
           <DropdownItem

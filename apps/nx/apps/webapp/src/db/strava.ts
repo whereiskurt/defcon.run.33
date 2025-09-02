@@ -67,7 +67,6 @@ function hasDefconInName(activityName: string): boolean {
  * Filters activities to only those in Nevada during DEFCON dates
  */
 function filterDefconRelevantActivities(activities: StravaActivity[]): StravaActivity[] {
-  console.log(`Starting filter: ${activities.length} total activities`);
   
   let noLocationCount = 0;
   let outsideNevadaCount = 0;
@@ -86,7 +85,6 @@ function filterDefconRelevantActivities(activities: StravaActivity[]): StravaAct
       if (activityYear === 2020 && hasDefconInName(activity.name || '')) {
         textMatchCount++;
         passedFilterCount++;
-        console.log(`✅ ${activityInfo} - DC2020 Virtual (DEFCON text match)`);
         return true;
       }
     }
@@ -97,7 +95,6 @@ function filterDefconRelevantActivities(activities: StravaActivity[]): StravaAct
     
     if (!hasStartLocation && !hasEndLocation) {
       noLocationCount++;
-      console.log(`❌ ${activityInfo} - No GPS coordinates available`);
       return false;
     }
 
@@ -127,7 +124,6 @@ function filterDefconRelevantActivities(activities: StravaActivity[]): StravaAct
 
     if (!inNevada) {
       outsideNevadaCount++;
-      console.log(`❌ ${activityInfo} - Outside Nevada (${locationDetails})`);
       return false;
     }
 
@@ -144,26 +140,16 @@ function filterDefconRelevantActivities(activities: StravaActivity[]): StravaAct
       
       if (matchingDefcon) {
         passedFilterCount++;
-        console.log(`✅ ${activityInfo} - DC${matchingDefcon.year} (${locationDetails})`);
         return true;
       } else {
         outsideDefconDatesCount++;
-        console.log(`❌ ${activityInfo} - Date outside all DEFCON periods (${locationDetails})`);
         return false;
       }
     } else {
-      console.log(`❌ ${activityInfo} - No start date available`);
       return false;
     }
   });
 
-  console.log(`\n📊 Filter results:`);
-  console.log(`  - ❌ No location data: ${noLocationCount}`);
-  console.log(`  - ❌ Outside Nevada: ${outsideNevadaCount}`);
-  console.log(`  - ❌ Outside DEFCON dates: ${outsideDefconDatesCount}`);
-  console.log(`  - ✅ 2020 DEFCON text matches: ${textMatchCount}`);
-  console.log(`  - ✅ Passed filter: ${passedFilterCount}`);
-  console.log(`\n🗺️  Nevada bounds: N:${NEVADA_BOUNDS.north}° S:${NEVADA_BOUNDS.south}° E:${NEVADA_BOUNDS.east}° W:${NEVADA_BOUNDS.west}°`);
 
   return filtered;
 }
@@ -292,7 +278,6 @@ export async function getAllDefconActivitiesForUser(email: string): Promise<Stra
     const beforeUnix = Math.floor(defcon.end.getTime() / 1000);
     const afterUnix = Math.floor(defcon.start.getTime() / 1000);
     
-    console.log(`Fetching activities for DEFCON ${defcon.year}: ${defcon.start.toISOString()} to ${defcon.end.toISOString()}`);
     
     try {
       const result = await fetchAllActivitiesInRange({ 
@@ -307,7 +292,6 @@ export async function getAllDefconActivitiesForUser(email: string): Promise<Stra
       }
 
       const activities = result.data as StravaActivity[];
-      console.log(`DEFCON ${defcon.year}: Found ${activities.length} total activities before filtering`);
       allActivities.push(...activities);
       
       // Add a delay between years to be nice to Strava API
@@ -321,7 +305,6 @@ export async function getAllDefconActivitiesForUser(email: string): Promise<Stra
   // Filter to only Nevada activities during DEFCON dates
   const defconRelevantActivities = filterDefconRelevantActivities(allActivities);
   
-  console.log(`Found ${allActivities.length} total activities, ${defconRelevantActivities.length} DEFCON-relevant activities in Nevada`);
   
   return defconRelevantActivities;
 }
@@ -362,7 +345,6 @@ export async function addStravaActivitiesToUser(
       const accomplishment = await createStravaAccomplishment(user.id, email, activity);
       if (accomplishment) {
         accomplishmentsCreated++;
-        console.log(`Created accomplishment for Strava activity: ${activity.name}`);
       }
     } catch (error) {
       console.error(`Error creating accomplishment for activity ${activity.id}:`, error);
@@ -496,7 +478,6 @@ export async function syncStravaActivitiesForUser(
     // Store activities in user record (this will merge with existing, overwriting duplicates)
     const { accomplishmentsCreated } = await addStravaActivitiesToUser(email, activities);
     
-    console.log(`Synced ${activities.length} Strava activities for ${email} (${newActivities} new, ${activities.length - newActivities} existing, ${accomplishmentsCreated} accomplishments created)`);
     
     return {
       activitiesCount: activities.length,
@@ -544,7 +525,6 @@ export async function syncStravaActivitiesSmartForUser(
 
     if (syncCheck.syncType === 'first-time') {
       // First time: sync all historical DEFCON activities
-      console.log(`First-time sync: fetching all historical DEFCON activities for ${email}`);
       activities = await getAllDefconActivitiesForUser(email);
       yearsScanned = DEFCON_DATES.map(d => d.year);
       
@@ -553,7 +533,6 @@ export async function syncStravaActivitiesSmartForUser(
       
     } else {
       // Subsequent syncs: only current year
-      console.log(`Current year sync: fetching DC33 activities for ${email}`);
       activities = await getStravaActivitiesForUser(email, DC33_UNIX_END, DC33_UNIX_START);
     }
     
@@ -572,7 +551,6 @@ export async function syncStravaActivitiesSmartForUser(
       ? `First-time sync: ${activities.length} DEFCON activities across ${yearsScanned?.length} years`
       : `Current sync: ${activities.length} DC33 activities`;
     
-    console.log(`${logMessage} for ${email} (${newActivities} new, ${activities.length - newActivities} existing, ${accomplishmentsCreated} accomplishments created)`);
     
     return {
       activitiesCount: activities.length,
@@ -633,7 +611,6 @@ async function updateStravaToken({ email, strava_account, unixNow }: {
   const clientSecret = process.env['AUTH_STRAVA_CLIENT_SECRET'] ?? process.env['STRAVA_CLIENT_SECRET'] as string;
 
   if (!strava_account) {
-    console.log(`Not a Strava connected user: ${email}`);
     return null;
   } else if (!(clientId || clientSecret)) {
     console.error(`ERROR: No Strava OAuth credentials - missing client id+secret`);
@@ -643,7 +620,6 @@ async function updateStravaToken({ email, strava_account, unixNow }: {
 
   const expiredSecs = unixNow - Number(strava_account.expires_at);
   if (expiredSecs <= 0) { // Not expired yet!
-    console.log(`INFO: ${email} still valid for ${fmtAsWeeksDaysHours(-expiredSecs)}`);
     return strava_account;
   }
 
@@ -678,7 +654,6 @@ async function updateStravaToken({ email, strava_account, unixNow }: {
     strava_account: updatedStravaAccount,
   }).go();
 
-  console.log(`INFO: ${email} retrieved new API token from Strava`);
 
   return updatedStravaAccount;
 }
@@ -724,11 +699,9 @@ async function fetchAllActivitiesInRange({ strava_account, beforeUnix, afterUnix
     const perPage = 100; // Max allowed by Strava
     
     // Debug logging
-    console.log(`Fetching all Strava activities: after=${afterUnix} (${new Date(afterUnix * 1000).toISOString()}) before=${beforeUnix} (${new Date(beforeUnix * 1000).toISOString()})`);
 
     while (true) {
       const url = `https://www.strava.com/api/v3/athlete/activities?before=${beforeUnix}&after=${afterUnix}&page=${page}&per_page=${perPage}`;
-      console.log(`Strava API URL (page ${page}): ${url}`);
 
       const response = await fetch(url, {
         method: 'GET',
@@ -746,24 +719,18 @@ async function fetchAllActivitiesInRange({ strava_account, beforeUnix, afterUnix
       }
       
       const pageData = await response.json();
-      console.log(`Page ${page}: Got ${pageData.length} activities`);
       
       // Log details of each activity for debugging
       if (pageData.length > 0) {
-        pageData.forEach((activity: any, index: number) => {
-          console.log(`  Activity ${index + 1}: "${activity.name}" on ${activity.start_date} (${activity.start_latlng?.join(', ') || 'no GPS'})`);
-        });
       }
       
       if (pageData.length === 0) {
-        console.log(`No more activities, stopping at page ${page}`);
         break; // No more activities
       }
       
       allActivities.push(...pageData);
       
       if (pageData.length < perPage) {
-        console.log(`Got less than ${perPage} activities (${pageData.length}), assuming last page`);
         break; // Last page
       }
       
@@ -773,7 +740,6 @@ async function fetchAllActivitiesInRange({ strava_account, beforeUnix, afterUnix
       await new Promise(resolve => setTimeout(resolve, 100));
     }
 
-    console.log(`Total activities fetched: ${allActivities.length}`);
     return { data: allActivities };
 
   } catch (error) {

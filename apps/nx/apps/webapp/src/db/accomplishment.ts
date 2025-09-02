@@ -316,11 +316,9 @@ export async function getAllAccomplishmentsForLeaderboard() {
     // Update cursor for next iteration
     cursor = result.cursor;
     
-    console.log(`Fetched ${result.data.length} leaderboard accomplishments (total so far: ${allAccomplishments.length})`);
     
   } while (cursor); // Continue while there are more pages
   
-  console.log(`Total leaderboard accomplishments fetched: ${allAccomplishments.length}`);
   return allAccomplishments;
 }
 
@@ -352,11 +350,9 @@ export async function getAllAccomplishmentsForType(type: 'activity' | 'social' |
     // Update cursor for next iteration
     cursor = result.cursor;
     
-    console.log(`Fetched ${result.data.length} ${type} accomplishments (total so far: ${allAccomplishments.length})`);
     
   } while (cursor); // Continue while there are more pages
   
-  console.log(`Total ${type} accomplishments fetched: ${allAccomplishments.length}`);
   return allAccomplishments;
 }
 
@@ -443,7 +439,6 @@ export async function createStravaAccomplishment(
   );
 
   if (isDuplicate) {
-    console.log(`Skipping duplicate accomplishment: ${name}`);
     return null;
   }
 

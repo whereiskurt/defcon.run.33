@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useTheme } from 'next-themes';
 import styles from './MatrixLoader.module.css';
 
 interface MatrixLoaderProps {
@@ -10,6 +11,7 @@ interface MatrixLoaderProps {
 }
 
 export default function MatrixLoader({ onComplete, text = "LOADING ROUTES", loadingIndicator = "..." }: MatrixLoaderProps) {
+  const { resolvedTheme } = useTheme();
   const [isComplete, setIsComplete] = useState(false);
 
   // Japanese birthday messages for Elkentaro
@@ -34,8 +36,20 @@ export default function MatrixLoader({ onComplete, text = "LOADING ROUTES", load
     return () => clearTimeout(timer);
   }, [onComplete]);
 
+  // Theme-aware colors
+  const isDarkMode = resolvedTheme === 'dark';
+  const themeVars = isDarkMode 
+    ? {
+        '--matrix-bg': '#000',
+        '--matrix-primary': '#00ff00'
+      }
+    : {
+        '--matrix-bg': '#ffffff',
+        '--matrix-primary': '#006600'
+      };
+
   return (
-    <div className={styles.matrixContainer}>
+    <div className={styles.matrixContainer} style={themeVars as React.CSSProperties}>
       <div className={styles.matrix}>
         {Array.from({ length: 40 }, (_, i) => (
           <div key={i} className={styles.column}>

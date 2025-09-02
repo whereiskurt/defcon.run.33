@@ -45,7 +45,6 @@ async function loadFromFileCache() {
       }
     };
   } catch (error) {
-    console.log('[Leaderboard Cache] No file cache found, will fetch from DB');
     return null;
   }
 }
@@ -68,7 +67,6 @@ async function saveToFileCache(cacheData: LeaderboardCache) {
     };
     
     await fs.writeFile(CACHE_FILE_PATH, JSON.stringify(serializable, null, 2));
-    console.log('[Leaderboard Cache] Saved cache to file');
   } catch (error) {
     console.error('[Leaderboard Cache] Error saving cache to file:', error);
   }
@@ -91,11 +89,9 @@ async function fetchLeaderboardData() {
     allFullUsers.push(...result.data);
     cursor = result.cursor;
     
-    console.log(`Fetched ${result.data.length} users for leaderboard (total so far: ${allFullUsers.length})`);
     
   } while (cursor);
   
-  console.log(`Total users fetched for leaderboard: ${allFullUsers.length}`);
   const allUsersMap = new Map(allFullUsers.map(user => [user.id, user]));
   const allAccomplishments = await getAllAccomplishmentsForLeaderboard();
   
@@ -115,7 +111,6 @@ async function refreshCache() {
     const newData = await fetchLeaderboardData();
     cache.data = newData;
     cache.timestamp = Date.now();
-    console.log(`[Leaderboard Cache] Cache refreshed at ${new Date(cache.timestamp).toISOString()}`);
     
     // Save to file in development
     if (isDevelopment) {
@@ -149,7 +144,6 @@ export async function GET(req: NextRequest) {
       if (fileCache) {
         cache.data = fileCache.data;
         cache.timestamp = fileCache.timestamp;
-        console.log(`[Leaderboard Cache] Loaded from file cache, timestamp: ${new Date(cache.timestamp).toISOString()}`);
       }
     }
     
@@ -165,7 +159,6 @@ export async function GET(req: NextRequest) {
       // In development, only refresh if explicitly needed (file cache handles most cases)
       if (!isDevelopment) {
         refreshCache(); // Don't await - let it run in background
-        console.log('[Leaderboard Cache] Serving stale data, background refresh triggered');
       }
     }
     
@@ -175,7 +168,6 @@ export async function GET(req: NextRequest) {
     }
     
     const { allUsers, allUsersMap, allAccomplishments, totalDbCount } = cache.data;
-    console.log(`[Leaderboard API] Using cached data from ${new Date(cache.timestamp).toISOString()}, Total users in DB: ${totalDbCount}, Users with accomplishments: ${allUsers.length}`);
     
     // Apply filter if provided (but keep original list for ranking)
     let filteredUsers = allUsers;

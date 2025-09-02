@@ -212,7 +212,6 @@ export default function CheckInModal({ isOpen, onClose, userEmail, remainingQuot
           setSamples(prev => [...prev, sample]);
           sampleCount++;
           
-          console.log(`GPS sample ${sampleCount}/${TOTAL_SAMPLES} collected:`, sample);
 
           // Update progress based on samples collected
           const progressPercent = Math.min((sampleCount / TOTAL_SAMPLES) * 100, 100);
@@ -229,7 +228,6 @@ export default function CheckInModal({ isOpen, onClose, userEmail, remainingQuot
             if (timeoutId) {
               clearTimeout(timeoutId);
             }
-            console.log(`GPS collection complete: ${sampleCount} samples collected`);
           }
         },
         (positionError) => {
@@ -245,7 +243,6 @@ export default function CheckInModal({ isOpen, onClose, userEmail, remainingQuot
     };
 
     // Collect first sample immediately
-    console.log(`Starting GPS collection: ${TOTAL_SAMPLES} samples needed`);
     collectSample();
 
     // Set up interval for remaining samples
@@ -328,11 +325,9 @@ export default function CheckInModal({ isOpen, onClose, userEmail, remainingQuot
         setOtpCode('');
         setFlagText('');
         // Keep privacy setting
-        console.log('Manual check-in successful! Reset to Manual form');
       } else {
         // For other types: Show success dialog
         setIsSuccess(true);
-        console.log('Check-in successful! Showing success dialog');
       }
       
       // Dispatch custom event to refresh profile data

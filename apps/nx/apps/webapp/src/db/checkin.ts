@@ -409,7 +409,6 @@ export async function updateCheckInPrivacy(
 export async function migrateUserCheckIns(userEmail: string) {
   const user = await getUser(userEmail);
   if (!user || !user.checkIns || user.checkIns.length === 0) {
-    console.log(`No check-ins to migrate for user ${userEmail}`);
     return 0;
   }
 
@@ -452,7 +451,6 @@ export async function migrateUserCheckIns(userEmail: string) {
     invalidateCache(userEmail, 'users');
   }
 
-  console.log(`Migrated ${migrated} check-ins for user ${userEmail}`);
   return migrated;
 }
 
